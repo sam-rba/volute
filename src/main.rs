@@ -1,16 +1,149 @@
-use std::time::Duration;
-use volute::{flow_rate::MassFlowRate, mass::Mass, pressure::Pressure};
+use crossterm::{
+    event::{
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers,
+    },
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use std::{error::Error, io};
+use tui::{
+    backend::{Backend, CrosstermBackend},
+    layout::{Constraint, Direction, Layout},
+    style::{Color, Modifier, Style},
+    text::{Span, Spans},
+    widgets::{Block, Borders, Tabs},
+    Frame, Terminal,
+};
 
-fn main() {
-    let mass = Mass::from_grams(1600.);
-    println!("{} Kg", mass.as_kilograms());
+struct App<'a> {
+    pub titles: Vec<&'a str>,
+    pub index: usize,
+}
 
-    let mass_flow_rate = MassFlowRate {
-        mass: mass,
-        duration: Duration::from_secs(5),
+impl<'a> App<'a> {
+    fn new() -> App<'a> {
+        App {
+            titles: vec!["constants", "compressor", "power"],
+            index: 0,
+        }
+    }
+
+    pub fn next(&mut self) {
+        self.index = (self.index + 1) % self.titles.len();
+    }
+
+    pub fn previous(&mut self) {
+        if self.index > 0 {
+            self.index -= 1;
+        } else {
+            self.index = self.titles.len() - 1;
+        }
+    }
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    // setup terminal
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    // create app and run it
+    let app = App::new();
+    let res = run_app(&mut terminal, app);
+
+    // restore terminal
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
+
+    if let Err(err) = res {
+        println!("{:?}", err)
+    }
+    Ok(())
+}
+
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
+    loop {
+        terminal.draw(|f| ui(f, &app))?;
+        if let Event::Key(key) = event::read()? {
+            match key {
+                KeyEvent {
+                    modifiers: KeyModifiers::CONTROL,
+                    code,
+                } => match code {
+                    KeyCode::Char('h') => app.previous(),
+                    KeyCode::Char('l') => app.next(),
+                    KeyCode::Char('c') => return Ok(()),
+                    _ => {}
+                },
+                KeyEvent {
+                    modifiers: KeyModifiers::NONE,
+                    code,
+                } => match code {
+                    KeyCode::Char('q') => return Ok(()),
+                    KeyCode::Esc => return Ok(()),
+                    _ => {}
+                },
+                _ => {}
+            }
+        }
+    }
+}
+
+fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+    let size = f.size();
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Length(3),      // tabs
+                Constraint::Percentage(45), // inputs
+                Constraint::Percentage(45), // graph
+            ]
+            .as_ref(),
+        )
+        .split(size);
+
+    let block = Block::default().style(Style::default().bg(Color::Black).fg(Color::White));
+    f.render_widget(block, size);
+    let titles = app
+        .titles
+        .iter()
+        .map(|t| Spans::from(Span::styled(*t, Style::default().fg(Color::Green))))
+        .collect();
+    let tabs = Tabs::new(titles)
+        .block(Block::default().borders(Borders::ALL).title("Tabs"))
+        .select(app.index)
+        .style(Style::default().fg(Color::Cyan))
+        .highlight_style(
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .bg(Color::Black),
+        );
+    f.render_widget(tabs, chunks[0]);
+    let (inputs, graph) = match app.index {
+        0 => (
+            Block::default().title("Constants").borders(Borders::ALL),
+            Block::default(),
+        ),
+        1 => (
+            Block::default().title("Compressor").borders(Borders::ALL),
+            Block::default()
+                .title("Compressor Graph")
+                .borders(Borders::ALL),
+        ),
+        2 => (
+            Block::default().title("Power").borders(Borders::ALL),
+            Block::default().title("Power Graph").borders(Borders::ALL),
+        ),
+        _ => unreachable!(),
     };
-    println!("{:.2} Kg/min.", mass_flow_rate.as_kilograms_per_minute());
-
-    let pressure = Pressure::from_pascals(1500.52);
-    println!("{} Pa", pressure.as_pascals());
+    f.render_widget(inputs, chunks[1]);
+    f.render_widget(graph, chunks[2]);
 }
