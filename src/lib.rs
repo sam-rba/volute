@@ -1,14 +1,10 @@
-pub mod flow_rate;
-pub mod mass;
-pub mod pressure;
-pub mod temperature;
-pub mod volume;
+pub mod unit_of_measurement;
 
-use crate::{pressure::Pressure, temperature::Temperature, volume::Volume};
+use crate::unit_of_measurement::{Pressure, Temperature, Volume};
 
 const GAS_CONSTANT: f64 = 8.314472;
 const MOLAR_MASS_OF_AIR: f64 = 0.0289647; // Kg/mol
 
-fn moles_from_gas_law(pressure: Pressure, volume: Volume, temperature: Temperature) -> f64 {
-    (pressure.as_pascals() * volume.as_cubic_metres()) / (GAS_CONSTANT * temperature.as_kelvin())
+fn moles_from_gas_law(pres: Pressure, vol: Volume, temp: Temperature) -> f64 {
+    (pres.as_pascals() * vol.as_cubic_metres()) / (GAS_CONSTANT * temp.as_kelvin())
 }

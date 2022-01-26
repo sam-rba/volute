@@ -1,7 +1,5 @@
 use crossterm::{
-    event::{
-        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers,
-    },
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -9,34 +7,108 @@ use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    text::{Span, Spans},
-    widgets::{Block, Borders, Tabs},
+    style::{Color, Style},
+    widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
+use unicode_width::UnicodeWidthStr;
 
-struct App<'a> {
-    pub titles: Vec<&'a str>,
-    pub index: usize,
+enum InputMode {
+    Normal,
+    Insert,
 }
 
-impl<'a> App<'a> {
-    fn new() -> App<'a> {
-        App {
-            titles: vec!["constants", "compressor", "power"],
-            index: 0,
+enum Row {
+    Rpm(String),
+    Ve(String),
+    Map(String),
+}
+
+impl Row {
+    fn push(&mut self, c: char) {
+        match self {
+            Row::Rpm(rpm) => {
+                rpm.push(c);
+                *self = Row::Rpm(rpm.to_string());
+            }
+            Row::Ve(ve) => {
+                ve.push(c);
+                *self = Row::Ve(ve.to_string());
+            }
+            Row::Map(map) => {
+                map.push(c);
+                *self = Row::Map(map.to_string());
+            }
         }
     }
 
-    pub fn next(&mut self) {
-        self.index = (self.index + 1) % self.titles.len();
+    fn pop(&mut self) {
+        match self {
+            Row::Rpm(rpm) => {
+                rpm.pop();
+                *self = Row::Rpm(rpm.to_string());
+            }
+            Row::Ve(ve) => {
+                ve.pop();
+                *self = Row::Rpm(ve.to_string());
+            }
+            Row::Map(map) => {
+                map.pop();
+                *self = Row::Map(map.to_string());
+            }
+        }
     }
 
-    pub fn previous(&mut self) {
-        if self.index > 0 {
-            self.index -= 1;
-        } else {
-            self.index = self.titles.len() - 1;
+    fn string(&self) -> String {
+        match self {
+            Row::Rpm(rpm) => rpm.to_string(),
+            Row::Ve(ve) => ve.to_string(),
+            Row::Map(map) => map.to_string(),
+        }
+    }
+
+    fn next(&self) -> Self {
+        match self {
+            Row::Rpm(_) => Row::Ve(String::new()),
+            Row::Ve(_) => Row::Map(String::new()),
+            Row::Map(_) => Row::Rpm(String::new()),
+        }
+    }
+
+    fn previous(&self) -> Self {
+        match self {
+            Row::Rpm(_) => Row::Map(String::new()),
+            Row::Ve(_) => Row::Rpm(String::new()),
+            Row::Map(_) => Row::Ve(String::new()),
+        }
+    }
+}
+
+struct Column {
+    rpm: Row,
+    ve: Row,
+    map: Row,
+}
+
+/// App holds the state of the application
+struct App {
+    column: Column,
+
+    selected_row: Row,
+
+    input_mode: InputMode,
+}
+
+impl Default for App {
+    fn default() -> App {
+        App {
+            column: Column {
+                rpm: Row::Rpm(String::from("7000")),
+                ve: Row::Ve(String::from("95")),
+                map: Row::Map(String::from("150")),
+            },
+            selected_row: Row::Rpm(String::new()),
+            input_mode: InputMode::Normal,
         }
     }
 }
@@ -50,7 +122,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     // create app and run it
-    let app = App::new();
+    let app = App::default();
     let res = run_app(&mut terminal, app);
 
     // restore terminal
@@ -65,85 +137,95 @@ fn main() -> Result<(), Box<dyn Error>> {
     if let Err(err) = res {
         println!("{:?}", err)
     }
+
     Ok(())
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
         terminal.draw(|f| ui(f, &app))?;
+
         if let Event::Key(key) = event::read()? {
-            match key {
-                KeyEvent {
-                    modifiers: KeyModifiers::CONTROL,
-                    code,
-                } => match code {
-                    KeyCode::Char('h') => app.previous(),
-                    KeyCode::Char('l') => app.next(),
-                    KeyCode::Char('c') => return Ok(()),
+            match app.input_mode {
+                InputMode::Normal => match key.code {
+                    KeyCode::Char('i') => {
+                        app.input_mode = InputMode::Insert;
+                    }
+                    KeyCode::Char('q') => {
+                        return Ok(());
+                    }
+                    KeyCode::Char('j') => {
+                        app.selected_row = app.selected_row.next();
+                    }
+                    KeyCode::Char('k') => {
+                        app.selected_row = app.selected_row.previous();
+                    }
                     _ => {}
                 },
-                KeyEvent {
-                    modifiers: KeyModifiers::NONE,
-                    code,
-                } => match code {
-                    KeyCode::Char('q') => return Ok(()),
-                    KeyCode::Esc => return Ok(()),
+                InputMode::Insert => match key.code {
+                    KeyCode::Enter => {
+                        app.input_mode = InputMode::Normal;
+                    }
+                    KeyCode::Char(c) => match app.selected_row {
+                        Row::Rpm(_) => {
+                            app.column.rpm.push(c);
+                        }
+                        Row::Ve(_) => {
+                            app.column.ve.push(c);
+                        }
+                        Row::Map(_) => {
+                            app.column.map.push(c);
+                        }
+                    },
+                    KeyCode::Backspace => match app.selected_row {
+                        Row::Rpm(_) => {
+                            app.column.rpm.pop();
+                        }
+                        Row::Ve(_) => {
+                            app.column.ve.pop();
+                        }
+                        Row::Map(_) => {
+                            app.column.map.pop();
+                        }
+                    },
+                    KeyCode::Esc => {
+                        app.input_mode = InputMode::Normal;
+                    }
                     _ => {}
                 },
-                _ => {}
             }
         }
     }
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
-    let size = f.size();
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Length(3),      // tabs
-                Constraint::Percentage(45), // inputs
-                Constraint::Percentage(45), // graph
-            ]
-            .as_ref(),
-        )
-        .split(size);
+        .margin(2)
+        .constraints([Constraint::Length(3), Constraint::Length(3), Constraint::Length(3)].as_ref())
+        .split(f.size());
 
-    let block = Block::default().style(Style::default().bg(Color::Black).fg(Color::White));
-    f.render_widget(block, size);
-    let titles = app
-        .titles
-        .iter()
-        .map(|t| Spans::from(Span::styled(*t, Style::default().fg(Color::Green))))
-        .collect();
-    let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::ALL).title("Tabs"))
-        .select(app.index)
-        .style(Style::default().fg(Color::Cyan))
-        .highlight_style(
-            Style::default()
-                .add_modifier(Modifier::BOLD)
-                .bg(Color::Black),
-        );
-    f.render_widget(tabs, chunks[0]);
-    let (inputs, graph) = match app.index {
-        0 => (
-            Block::default().title("Constants").borders(Borders::ALL),
-            Block::default(),
-        ),
-        1 => (
-            Block::default().title("Compressor").borders(Borders::ALL),
-            Block::default()
-                .title("Compressor Graph")
-                .borders(Borders::ALL),
-        ),
-        2 => (
-            Block::default().title("Power").borders(Borders::ALL),
-            Block::default().title("Power Graph").borders(Borders::ALL),
-        ),
-        _ => unreachable!(),
-    };
-    f.render_widget(inputs, chunks[1]);
-    f.render_widget(graph, chunks[2]);
+    let rpm = Paragraph::new(app.column.rpm.string())
+        .style(match app.selected_row {
+            Row::Rpm(_) => Style::default().fg(Color::Yellow),
+            _ => Style::default(),
+        })
+        .block(Block::default().borders(Borders::ALL).title("rpm"));
+    f.render_widget(rpm, chunks[0]);
+
+    let ve = Paragraph::new(app.column.ve.string())
+        .style(match app.selected_row {
+            Row::Ve(_) => Style::default().fg(Color::Yellow),
+            _ => Style::default(),
+        })
+        .block(Block::default().borders(Borders::ALL).title("ve"));
+    f.render_widget(ve, chunks[1]);
+
+    let map = Paragraph::new(app.column.map.string())
+        .style(match app.selected_row {
+            Row::Map(_) => Style::default().fg(Color::Yellow),
+            _ => Style::default(),
+        })
+        .block(Block::default().borders(Borders::ALL).title("map"));
+    f.render_widget(map, chunks[2]);
 }
