@@ -6,95 +6,107 @@ use crossterm::{
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
-    widgets::{Block, Borders, Paragraph},
+    layout::{Constraint, Layout},
+    style::{Color, Modifier, Style},
+    widgets::{self, Block, Borders, Cell, Table},
     Frame, Terminal,
 };
-use unicode_width::UnicodeWidthStr;
 
 enum InputMode {
     Normal,
     Insert,
 }
 
-enum Row {
+#[derive(Clone)]
+enum InputParam {
     Rpm(String),
     Ve(String),
     Map(String),
 }
 
-impl Row {
+impl InputParam {
     fn push(&mut self, c: char) {
         match self {
-            Row::Rpm(rpm) => {
+            Self::Rpm(rpm) => {
                 rpm.push(c);
-                *self = Row::Rpm(rpm.to_string());
+                *self = Self::Rpm(rpm.to_string());
             }
-            Row::Ve(ve) => {
+            Self::Ve(ve) => {
                 ve.push(c);
-                *self = Row::Ve(ve.to_string());
+                *self = Self::Ve(ve.to_string());
             }
-            Row::Map(map) => {
+            Self::Map(map) => {
                 map.push(c);
-                *self = Row::Map(map.to_string());
+                *self = Self::Map(map.to_string());
             }
         }
     }
 
     fn pop(&mut self) {
         match self {
-            Row::Rpm(rpm) => {
+            Self::Rpm(rpm) => {
                 rpm.pop();
-                *self = Row::Rpm(rpm.to_string());
+                *self = Self::Rpm(rpm.to_string());
             }
-            Row::Ve(ve) => {
+            Self::Ve(ve) => {
                 ve.pop();
-                *self = Row::Rpm(ve.to_string());
+                *self = Self::Rpm(ve.to_string());
             }
-            Row::Map(map) => {
+            Self::Map(map) => {
                 map.pop();
-                *self = Row::Map(map.to_string());
+                *self = Self::Map(map.to_string());
             }
         }
     }
 
     fn string(&self) -> String {
         match self {
-            Row::Rpm(rpm) => rpm.to_string(),
-            Row::Ve(ve) => ve.to_string(),
-            Row::Map(map) => map.to_string(),
+            Self::Rpm(rpm) => rpm.to_string(),
+            Self::Ve(ve) => ve.to_string(),
+            Self::Map(map) => map.to_string(),
         }
     }
 
     fn next(&self) -> Self {
         match self {
-            Row::Rpm(_) => Row::Ve(String::new()),
-            Row::Ve(_) => Row::Map(String::new()),
-            Row::Map(_) => Row::Rpm(String::new()),
+            Self::Rpm(_) => Self::Ve(String::new()),
+            Self::Ve(_) => Self::Map(String::new()),
+            Self::Map(_) => Self::Rpm(String::new()),
         }
     }
 
     fn previous(&self) -> Self {
         match self {
-            Row::Rpm(_) => Row::Map(String::new()),
-            Row::Ve(_) => Row::Rpm(String::new()),
-            Row::Map(_) => Row::Ve(String::new()),
+            Self::Rpm(_) => Self::Map(String::new()),
+            Self::Ve(_) => Self::Rpm(String::new()),
+            Self::Map(_) => Self::Ve(String::new()),
         }
     }
 }
 
-struct Column {
-    rpm: Row,
-    ve: Row,
-    map: Row,
+#[derive(Clone)]
+struct Row {
+    rpm: InputParam,
+    ve: InputParam,
+    map: InputParam,
+}
+
+impl Default for Row {
+    fn default() -> Self {
+        Self {
+            rpm: InputParam::Rpm(String::from("7000")),
+            ve: InputParam::Ve(String::from("95")),
+            map: InputParam::Map(String::from("200")),
+        }
+    }
 }
 
 /// App holds the state of the application
 struct App {
-    column: Column,
+    rows: Vec<Row>,
 
-    selected_row: Row,
+    selected_row: usize,
+    selected_column: InputParam,
 
     input_mode: InputMode,
 }
@@ -102,12 +114,9 @@ struct App {
 impl Default for App {
     fn default() -> App {
         App {
-            column: Column {
-                rpm: Row::Rpm(String::from("7000")),
-                ve: Row::Ve(String::from("95")),
-                map: Row::Map(String::from("150")),
-            },
-            selected_row: Row::Rpm(String::new()),
+            rows: vec![Row::default()],
+            selected_row: 0,
+            selected_column: InputParam::Rpm(String::new()),
             input_mode: InputMode::Normal,
         }
     }
@@ -148,49 +157,86 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
         if let Event::Key(key) = event::read()? {
             match app.input_mode {
                 InputMode::Normal => match key.code {
+                    // Enter insert mode
                     KeyCode::Char('i') => {
                         app.input_mode = InputMode::Insert;
                     }
+                    // Quit
                     KeyCode::Char('q') => {
                         return Ok(());
                     }
-                    KeyCode::Char('j') => {
-                        app.selected_row = app.selected_row.next();
-                    }
+                    // Navigate up
                     KeyCode::Char('k') => {
-                        app.selected_row = app.selected_row.previous();
+                        if app.selected_row > 0 {
+                            app.selected_row -= 1;
+                        } else {
+                            app.selected_row = app.rows.len() - 1;
+                        }
+                    }
+                    // Navigate down
+                    KeyCode::Char('j') => {
+                        if app.selected_row < app.rows.len() - 1 {
+                            app.selected_row += 1;
+                        } else {
+                            app.selected_row = 0;
+                        }
+                    }
+                    // Navigate right
+                    KeyCode::Char('l') => {
+                        app.selected_column = app.selected_column.next();
+                    }
+                    // Navigate left
+                    KeyCode::Char('h') => {
+                        app.selected_column = app.selected_column.previous();
+                    }
+                    // Add row
+                    KeyCode::Char('p') => {
+                        app.rows
+                            .insert(app.selected_row, app.rows[app.selected_row].clone());
+                    }
+                    // Remove row
+                    KeyCode::Char('d') => {
+                        if app.rows.len() > 1 {
+                            app.rows.remove(app.selected_row);
+                            if app.selected_row > 0 {
+                                app.selected_row -= 1;
+                            }
+                        }
                     }
                     _ => {}
                 },
                 InputMode::Insert => match key.code {
-                    KeyCode::Enter => {
-                        app.input_mode = InputMode::Normal;
-                    }
-                    KeyCode::Char(c) => match app.selected_row {
-                        Row::Rpm(_) => {
-                            app.column.rpm.push(c);
-                        }
-                        Row::Ve(_) => {
-                            app.column.ve.push(c);
-                        }
-                        Row::Map(_) => {
-                            app.column.map.push(c);
-                        }
-                    },
-                    KeyCode::Backspace => match app.selected_row {
-                        Row::Rpm(_) => {
-                            app.column.rpm.pop();
-                        }
-                        Row::Ve(_) => {
-                            app.column.ve.pop();
-                        }
-                        Row::Map(_) => {
-                            app.column.map.pop();
-                        }
-                    },
+                    // Exit insert mode
                     KeyCode::Esc => {
                         app.input_mode = InputMode::Normal;
                     }
+                    // Exit insert mode
+                    KeyCode::Enter => {
+                        app.input_mode = InputMode::Normal;
+                    }
+                    KeyCode::Char(c) => match app.selected_column {
+                        InputParam::Rpm(_) => {
+                            app.rows[app.selected_row].rpm.push(c);
+                        }
+                        InputParam::Ve(_) => {
+                            app.rows[app.selected_row].ve.push(c);
+                        }
+                        InputParam::Map(_) => {
+                            app.rows[app.selected_row].map.push(c);
+                        }
+                    },
+                    KeyCode::Backspace => match app.selected_column {
+                        InputParam::Rpm(_) => {
+                            app.rows[app.selected_row].rpm.pop();
+                        }
+                        InputParam::Ve(_) => {
+                            app.rows[app.selected_row].ve.pop();
+                        }
+                        InputParam::Map(_) => {
+                            app.rows[app.selected_row].map.pop();
+                        }
+                    },
+
                     _ => {}
                 },
             }
@@ -199,33 +245,78 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(2)
-        .constraints([Constraint::Length(3), Constraint::Length(3), Constraint::Length(3)].as_ref())
+    let layout = Layout::default()
+        .constraints([Constraint::Percentage(100)].as_ref())
+        .margin(5)
         .split(f.size());
 
-    let rpm = Paragraph::new(app.column.rpm.string())
-        .style(match app.selected_row {
-            Row::Rpm(_) => Style::default().fg(Color::Yellow),
-            _ => Style::default(),
-        })
-        .block(Block::default().borders(Borders::ALL).title("rpm"));
-    f.render_widget(rpm, chunks[0]);
+    struct VirtualRow<'a> {
+        rpm: Cell<'a>,
+        ve: Cell<'a>,
+        map: Cell<'a>,
+    }
 
-    let ve = Paragraph::new(app.column.ve.string())
-        .style(match app.selected_row {
-            Row::Ve(_) => Style::default().fg(Color::Yellow),
-            _ => Style::default(),
+    let mut rows: Vec<VirtualRow> = app
+        .rows
+        .iter()
+        .map(|row| VirtualRow {
+            rpm: Cell::from(row.rpm.string()),
+            ve: Cell::from(row.ve.string()),
+            map: Cell::from(row.map.string()),
         })
-        .block(Block::default().borders(Borders::ALL).title("ve"));
-    f.render_widget(ve, chunks[1]);
+        .collect();
 
-    let map = Paragraph::new(app.column.map.string())
-        .style(match app.selected_row {
-            Row::Map(_) => Style::default().fg(Color::Yellow),
-            _ => Style::default(),
-        })
-        .block(Block::default().borders(Borders::ALL).title("map"));
-    f.render_widget(map, chunks[2]);
+    match app.selected_column {
+        InputParam::Rpm(_) => {
+            rows[app.selected_row].rpm =
+                rows[app.selected_row]
+                    .rpm
+                    .clone()
+                    .style(match app.input_mode {
+                        InputMode::Normal => Style::default().fg(Color::Yellow),
+                        InputMode::Insert => Style::default()
+                            .fg(Color::Yellow)
+                            .add_modifier(Modifier::ITALIC),
+                    });
+        }
+        InputParam::Ve(_) => {
+            rows[app.selected_row].ve =
+                rows[app.selected_row]
+                    .ve
+                    .clone()
+                    .style(match app.input_mode {
+                        InputMode::Normal => Style::default().fg(Color::Yellow),
+                        InputMode::Insert => Style::default()
+                            .fg(Color::Yellow)
+                            .add_modifier(Modifier::ITALIC),
+                    });
+        }
+        InputParam::Map(_) => {
+            rows[app.selected_row].map =
+                rows[app.selected_row]
+                    .map
+                    .clone()
+                    .style(match app.input_mode {
+                        InputMode::Normal => Style::default().fg(Color::Yellow),
+                        InputMode::Insert => Style::default()
+                            .fg(Color::Yellow)
+                            .add_modifier(Modifier::ITALIC),
+                    });
+        }
+    };
+
+    let table = Table::new(
+        rows.iter()
+            .map(|row| widgets::Row::new(vec![row.rpm.clone(), row.ve.clone(), row.map.clone()]))
+            .collect::<Vec<widgets::Row>>(),
+    )
+    .header(widgets::Row::new(vec!["rpm", "ve", "map"]))
+    .block(Block::default().borders(Borders::ALL).title("Table"))
+    .widths(&[
+        Constraint::Length(5),
+        Constraint::Length(3),
+        Constraint::Length(3),
+    ]);
+
+    f.render_widget(table, layout[0]);
 }
