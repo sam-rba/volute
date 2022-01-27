@@ -6,9 +6,9 @@ use crossterm::{
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Layout},
+    layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    widgets::{self, Block, Borders, Cell, Table},
+    widgets::{self, Block, Borders, Cell, Paragraph, Table},
     Frame, Terminal,
 };
 
@@ -19,67 +19,62 @@ enum InputMode {
 
 #[derive(Clone)]
 enum InputParam {
-    Rpm(String),
-    Ve(String),
-    Map(String),
+    RPM(String), // Revolutions per minute
+    VE(String),  // Volumetric efficiency
+    MAP(String), // Manifold absolute pressure
 }
-
 impl InputParam {
     fn push(&mut self, c: char) {
         match self {
-            Self::Rpm(rpm) => {
+            Self::RPM(rpm) => {
                 rpm.push(c);
-                *self = Self::Rpm(rpm.to_string());
+                *self = Self::RPM(rpm.to_string());
             }
-            Self::Ve(ve) => {
+            Self::VE(ve) => {
                 ve.push(c);
-                *self = Self::Ve(ve.to_string());
+                *self = Self::VE(ve.to_string());
             }
-            Self::Map(map) => {
+            Self::MAP(map) => {
                 map.push(c);
-                *self = Self::Map(map.to_string());
+                *self = Self::MAP(map.to_string());
             }
         }
     }
-
     fn pop(&mut self) {
         match self {
-            Self::Rpm(rpm) => {
+            Self::RPM(rpm) => {
                 rpm.pop();
-                *self = Self::Rpm(rpm.to_string());
+                *self = Self::RPM(rpm.to_string());
             }
-            Self::Ve(ve) => {
+            Self::VE(ve) => {
                 ve.pop();
-                *self = Self::Rpm(ve.to_string());
+                *self = Self::RPM(ve.to_string());
             }
-            Self::Map(map) => {
+            Self::MAP(map) => {
                 map.pop();
-                *self = Self::Map(map.to_string());
+                *self = Self::MAP(map.to_string());
             }
         }
     }
-
     fn string(&self) -> String {
         match self {
-            Self::Rpm(rpm) => rpm.to_string(),
-            Self::Ve(ve) => ve.to_string(),
-            Self::Map(map) => map.to_string(),
+            Self::RPM(rpm) => rpm.to_string(),
+            Self::VE(ve) => ve.to_string(),
+            Self::MAP(map) => map.to_string(),
         }
     }
-
     fn next(&self) -> Self {
         match self {
-            Self::Rpm(_) => Self::Ve(String::new()),
-            Self::Ve(_) => Self::Map(String::new()),
-            Self::Map(_) => Self::Rpm(String::new()),
+            Self::RPM(_) => Self::VE(String::new()),
+            Self::VE(_) => Self::MAP(String::new()),
+            Self::MAP(_) => Self::RPM(String::new()),
         }
     }
-
     fn previous(&self) -> Self {
         match self {
-            Self::Rpm(_) => Self::Map(String::new()),
-            Self::Ve(_) => Self::Rpm(String::new()),
-            Self::Map(_) => Self::Ve(String::new()),
+            Self::RPM(_) => Self::MAP(String::new()),
+            Self::VE(_) => Self::RPM(String::new()),
+            Self::MAP(_) => Self::VE(String::new()),
         }
     }
 }
@@ -90,18 +85,16 @@ struct Row {
     ve: InputParam,
     map: InputParam,
 }
-
 impl Default for Row {
     fn default() -> Self {
         Self {
-            rpm: InputParam::Rpm(String::from("7000")),
-            ve: InputParam::Ve(String::from("95")),
-            map: InputParam::Map(String::from("200")),
+            rpm: InputParam::RPM(String::from("7000")),
+            ve: InputParam::VE(String::from("95")),
+            map: InputParam::MAP(String::from("200")),
         }
     }
 }
 
-/// App holds the state of the application
 struct App {
     rows: Vec<Row>,
 
@@ -110,13 +103,12 @@ struct App {
 
     input_mode: InputMode,
 }
-
 impl Default for App {
     fn default() -> App {
         App {
             rows: vec![Row::default()],
             selected_row: 0,
-            selected_column: InputParam::Rpm(String::new()),
+            selected_column: InputParam::RPM(String::new()),
             input_mode: InputMode::Normal,
         }
     }
@@ -215,24 +207,24 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                         app.input_mode = InputMode::Normal;
                     }
                     KeyCode::Char(c) => match app.selected_column {
-                        InputParam::Rpm(_) => {
+                        InputParam::RPM(_) => {
                             app.rows[app.selected_row].rpm.push(c);
                         }
-                        InputParam::Ve(_) => {
+                        InputParam::VE(_) => {
                             app.rows[app.selected_row].ve.push(c);
                         }
-                        InputParam::Map(_) => {
+                        InputParam::MAP(_) => {
                             app.rows[app.selected_row].map.push(c);
                         }
                     },
                     KeyCode::Backspace => match app.selected_column {
-                        InputParam::Rpm(_) => {
+                        InputParam::RPM(_) => {
                             app.rows[app.selected_row].rpm.pop();
                         }
-                        InputParam::Ve(_) => {
+                        InputParam::VE(_) => {
                             app.rows[app.selected_row].ve.pop();
                         }
-                        InputParam::Map(_) => {
+                        InputParam::MAP(_) => {
                             app.rows[app.selected_row].map.pop();
                         }
                     },
@@ -246,8 +238,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let layout = Layout::default()
-        .constraints([Constraint::Percentage(100)].as_ref())
-        .margin(5)
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Min(app.rows.len() as u16 + 2),
+                Constraint::Length(1),
+            ]
+            .as_ref(),
+        )
         .split(f.size());
 
     struct VirtualRow<'a> {
@@ -266,44 +264,18 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         })
         .collect();
 
-    match app.selected_column {
-        InputParam::Rpm(_) => {
-            rows[app.selected_row].rpm =
-                rows[app.selected_row]
-                    .rpm
-                    .clone()
-                    .style(match app.input_mode {
-                        InputMode::Normal => Style::default().fg(Color::Yellow),
-                        InputMode::Insert => Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::ITALIC),
-                    });
-        }
-        InputParam::Ve(_) => {
-            rows[app.selected_row].ve =
-                rows[app.selected_row]
-                    .ve
-                    .clone()
-                    .style(match app.input_mode {
-                        InputMode::Normal => Style::default().fg(Color::Yellow),
-                        InputMode::Insert => Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::ITALIC),
-                    });
-        }
-        InputParam::Map(_) => {
-            rows[app.selected_row].map =
-                rows[app.selected_row]
-                    .map
-                    .clone()
-                    .style(match app.input_mode {
-                        InputMode::Normal => Style::default().fg(Color::Yellow),
-                        InputMode::Insert => Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::ITALIC),
-                    });
-        }
+    // Highlight the selected parameter
+    let selected_parameter = match app.selected_column {
+        InputParam::RPM(_) => &mut rows[app.selected_row].rpm,
+        InputParam::VE(_) => &mut rows[app.selected_row].ve,
+        InputParam::MAP(_) => &mut rows[app.selected_row].map,
     };
+    *selected_parameter = selected_parameter.clone().style(match app.input_mode {
+        InputMode::Normal => Style::default().fg(Color::Yellow),
+        InputMode::Insert => Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::ITALIC),
+    });
 
     let table = Table::new(
         rows.iter()
@@ -317,6 +289,15 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         Constraint::Length(3),
         Constraint::Length(3),
     ]);
-
     f.render_widget(table, layout[0]);
+
+    let footer = match app.input_mode {
+        InputMode::Normal => {
+            Paragraph::new("Normal").style(Style::default().fg(Color::Black).bg(Color::Yellow))
+        }
+        InputMode::Insert => {
+            Paragraph::new("Insert").style(Style::default().fg(Color::Black).bg(Color::Blue))
+        }
+    };
+    f.render_widget(footer, layout[1]);
 }
