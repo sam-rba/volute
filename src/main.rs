@@ -12,73 +12,91 @@ use tui::{
     Frame, Terminal,
 };
 
+// Intended to emulate vim modes.
 enum InputMode {
-    Normal,
-    Insert,
+    Normal, // Navigating the ui.
+    Insert, // Editing a parameter.
 }
 
+// A row in the inputs table has one of each variation.
 #[derive(Clone)]
 enum InputParam {
-    RPM(String), // Revolutions per minute
-    VE(String),  // Volumetric efficiency
-    MAP(String), // Manifold absolute pressure
+    Rpm(String), // Revolutions per minute
+    Ve(String),  // Volumetric efficiency
+    Map(String), // Manifold absolute pressure
 }
 impl InputParam {
+    /* Acts like the push() method of a Vec.
+     * Appends the given char to the end of the string contained by the
+     * InputParam.
+     */
     fn push(&mut self, c: char) {
         match self {
-            Self::RPM(rpm) => {
+            Self::Rpm(rpm) => {
                 rpm.push(c);
-                *self = Self::RPM(rpm.to_string());
+                *self = Self::Rpm(rpm.to_string());
             }
-            Self::VE(ve) => {
+            Self::Ve(ve) => {
                 ve.push(c);
-                *self = Self::VE(ve.to_string());
+                *self = Self::Ve(ve.to_string());
             }
-            Self::MAP(map) => {
+            Self::Map(map) => {
                 map.push(c);
-                *self = Self::MAP(map.to_string());
+                *self = Self::Map(map.to_string());
             }
         }
     }
+    /* Acts like the pop() method of a Vec.
+     * Removes the last char from the string contained by the InputParam.
+     */
     fn pop(&mut self) {
         match self {
-            Self::RPM(rpm) => {
+            Self::Rpm(rpm) => {
                 rpm.pop();
-                *self = Self::RPM(rpm.to_string());
+                *self = Self::Rpm(rpm.to_string());
             }
-            Self::VE(ve) => {
+            Self::Ve(ve) => {
                 ve.pop();
-                *self = Self::RPM(ve.to_string());
+                *self = Self::Rpm(ve.to_string());
             }
-            Self::MAP(map) => {
+            Self::Map(map) => {
                 map.pop();
-                *self = Self::MAP(map.to_string());
+                *self = Self::Map(map.to_string());
             }
         }
     }
+    // Return a copy of the string contained by the InputParam.
     fn string(&self) -> String {
         match self {
-            Self::RPM(rpm) => rpm.to_string(),
-            Self::VE(ve) => ve.to_string(),
-            Self::MAP(map) => map.to_string(),
+            Self::Rpm(rpm) => rpm.to_string(),
+            Self::Ve(ve) => ve.to_string(),
+            Self::Map(map) => map.to_string(),
         }
     }
+    /* next() and previous() allow InputParam to act as a circular iterator of
+     * sorts. next() will return the next variation as they are defined. When
+     * it reaches the end, the first variation will be returned:
+     *     RPM->VE->MAP->RPM->etc...
+     * previous() simply goes the opposite direction:
+     *     MAP->VE->RPM->MAP->etc...
+     */
     fn next(&self) -> Self {
         match self {
-            Self::RPM(_) => Self::VE(String::new()),
-            Self::VE(_) => Self::MAP(String::new()),
-            Self::MAP(_) => Self::RPM(String::new()),
+            Self::Rpm(_) => Self::Ve(String::new()),
+            Self::Ve(_) => Self::Map(String::new()),
+            Self::Map(_) => Self::Rpm(String::new()),
         }
     }
     fn previous(&self) -> Self {
         match self {
-            Self::RPM(_) => Self::MAP(String::new()),
-            Self::VE(_) => Self::RPM(String::new()),
-            Self::MAP(_) => Self::VE(String::new()),
+            Self::Rpm(_) => Self::Map(String::new()),
+            Self::Ve(_) => Self::Rpm(String::new()),
+            Self::Map(_) => Self::Ve(String::new()),
         }
     }
 }
 
+// A row in the inputs table. Contains one of each variation of InputParam.
 #[derive(Clone)]
 struct Row {
     rpm: InputParam,
@@ -88,13 +106,14 @@ struct Row {
 impl Default for Row {
     fn default() -> Self {
         Self {
-            rpm: InputParam::RPM(String::from("7000")),
-            ve: InputParam::VE(String::from("95")),
-            map: InputParam::MAP(String::from("200")),
+            rpm: InputParam::Rpm(String::from("7000")),
+            ve: InputParam::Ve(String::from("95")),
+            map: InputParam::Map(String::from("200")),
         }
     }
 }
 
+// Holds the state of the application.
 struct App {
     rows: Vec<Row>,
 
@@ -108,7 +127,7 @@ impl Default for App {
         App {
             rows: vec![Row::default()],
             selected_row: 0,
-            selected_column: InputParam::RPM(String::new()),
+            selected_column: InputParam::Rpm(String::new()),
             input_mode: InputMode::Normal,
         }
     }
@@ -142,12 +161,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+// Input handling
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
         terminal.draw(|f| ui(f, &app))?;
 
         if let Event::Key(key) = event::read()? {
             match app.input_mode {
+                // Navigating
                 InputMode::Normal => match key.code {
                     // Enter insert mode
                     KeyCode::Char('i') => {
@@ -206,25 +227,27 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                     KeyCode::Enter => {
                         app.input_mode = InputMode::Normal;
                     }
+                    // Append a caracter to the currently selected parameter.
                     KeyCode::Char(c) => match app.selected_column {
-                        InputParam::RPM(_) => {
+                        InputParam::Rpm(_) => {
                             app.rows[app.selected_row].rpm.push(c);
                         }
-                        InputParam::VE(_) => {
+                        InputParam::Ve(_) => {
                             app.rows[app.selected_row].ve.push(c);
                         }
-                        InputParam::MAP(_) => {
+                        InputParam::Map(_) => {
                             app.rows[app.selected_row].map.push(c);
                         }
                     },
+                    // Remove a character from the currently selected parameter.
                     KeyCode::Backspace => match app.selected_column {
-                        InputParam::RPM(_) => {
+                        InputParam::Rpm(_) => {
                             app.rows[app.selected_row].rpm.pop();
                         }
-                        InputParam::VE(_) => {
+                        InputParam::Ve(_) => {
                             app.rows[app.selected_row].ve.pop();
                         }
-                        InputParam::MAP(_) => {
+                        InputParam::Map(_) => {
                             app.rows[app.selected_row].map.pop();
                         }
                     },
@@ -248,6 +271,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         )
         .split(f.size());
 
+    /* This is used so I can have named fields instead of indexing a vector of
+     * Cells when styling the selected input parameter.
+     */
     struct VirtualRow<'a> {
         rpm: Cell<'a>,
         ve: Cell<'a>,
@@ -266,9 +292,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
 
     // Highlight the selected parameter
     let selected_parameter = match app.selected_column {
-        InputParam::RPM(_) => &mut rows[app.selected_row].rpm,
-        InputParam::VE(_) => &mut rows[app.selected_row].ve,
-        InputParam::MAP(_) => &mut rows[app.selected_row].map,
+        InputParam::Rpm(_) => &mut rows[app.selected_row].rpm,
+        InputParam::Ve(_) => &mut rows[app.selected_row].ve,
+        InputParam::Map(_) => &mut rows[app.selected_row].map,
     };
     *selected_parameter = selected_parameter.clone().style(match app.input_mode {
         InputMode::Normal => Style::default().fg(Color::Yellow),
