@@ -11,6 +11,7 @@ pub enum InputParam {
     Ve(String),  // Volumetric efficiency
     Map(String), // Manifold absolute pressure
 }
+
 impl InputParam {
     /* Acts like the push() method of a Vec.
      * Appends the given char to the end of the string contained by the
@@ -32,6 +33,7 @@ impl InputParam {
             }
         }
     }
+
     /* Acts like the pop() method of a Vec.
      * Removes the last char from the string contained by the InputParam.
      */
@@ -51,6 +53,7 @@ impl InputParam {
             }
         }
     }
+
     // Return a copy of the string contained by the InputParam.
     pub fn string(&self) -> String {
         match self {
@@ -59,6 +62,7 @@ impl InputParam {
             Self::Map(map) => map.to_string(),
         }
     }
+
     /* next() and previous() allow InputParam to act as a circular iterator of
      * sorts. next() will return the next variation as they are defined. When
      * it reaches the end, the first variation will be returned:
@@ -73,6 +77,7 @@ impl InputParam {
             Self::Map(_) => Self::Rpm(String::new()),
         }
     }
+
     pub fn previous(&self) -> Self {
         match self {
             Self::Rpm(_) => Self::Map(String::new()),
@@ -89,6 +94,7 @@ pub struct Row {
     pub ve: InputParam,
     pub map: InputParam,
 }
+
 impl Default for Row {
     fn default() -> Self {
         Self {

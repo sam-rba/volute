@@ -1,8 +1,11 @@
 use crate::input::{InputMode, InputParam, Row};
 
+pub const INPUT_TAB_INDEX: usize = 0;
+pub const CONFIG_TAB_INDEX: usize = 1;
+
 pub struct App {
     pub tab_index: usize,
-    pub tab_titles: Vec<&'static str>,
+    tab_titles: [&'static str; 2],
 
     pub rows: Vec<Row>,
     pub selected_row: usize,
@@ -12,6 +15,10 @@ pub struct App {
 }
 
 impl App {
+    pub fn tab_titles(&self) -> &[&str] {
+        &self.tab_titles
+    }
+
     pub fn next_tab(&mut self) {
         self.tab_index = (self.tab_index + 1) % self.tab_titles.len();
     }
@@ -66,8 +73,8 @@ impl App {
 impl Default for App {
     fn default() -> App {
         App {
-            tab_index: 0,
-            tab_titles: vec!["Input", "Config"],
+            tab_index: INPUT_TAB_INDEX,
+            tab_titles: ["Input", "Config"],
             rows: vec![Row::default()],
             selected_row: 0,
             selected_column: InputParam::Rpm(String::new()),

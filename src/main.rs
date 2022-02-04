@@ -13,7 +13,7 @@ use tui::{
     Frame, Terminal,
 };
 use volute::{
-    app::App,
+    app::{App, CONFIG_TAB_INDEX, INPUT_TAB_INDEX},
     input::{InputMode, InputParam},
 };
 
@@ -52,8 +52,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 
         if let Event::Key(key) = event::read()? {
             match app.tab_index {
-                // Input tab
-                0 => match app.input_mode {
+                INPUT_TAB_INDEX => match app.input_mode {
                     InputMode::Normal => match key.code {
                         KeyCode::Char('q') => {
                             return Ok(());
@@ -88,8 +87,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                         _ => {}
                     },
                 },
-                // Config tab
-                1 => match key.code {
+                CONFIG_TAB_INDEX => match key.code {
                     KeyCode::Char('q') => {
                         return Ok(());
                     }
@@ -104,32 +102,35 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
-    let titles = app.tab_titles.iter().map(|t| Spans::from(*t)).collect();
+    let titles = app.tab_titles().iter().map(|t| Spans::from(*t)).collect();
     let tabs = Tabs::new(titles)
         .block(Block::default().borders(Borders::ALL).title("Tabs"))
         .select(app.tab_index)
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD));
+        .highlight_style(
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        );
 
     match app.tab_index {
-        // Input tab
-        0 => {
+        INPUT_TAB_INDEX => {
             let layout = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints(
                     [
-                        Constraint::Length(3),
-                        Constraint::Min(app.rows.len() as u16 + 2),
-                        Constraint::Length(1),
+                        Constraint::Length(3),                         // Tabs
+                        Constraint::Length(app.rows.len() as u16 + 3), // Input table
+                        Constraint::Max(100),                          // Spacer
+                        Constraint::Length(1),                         // Footer
                     ]
                     .as_ref(),
                 )
                 .split(f.size());
             f.render_widget(tabs, layout[0]);
             f.render_widget(input_table(app), layout[1]);
-            f.render_widget(footer(app), layout[2]);
+            f.render_widget(footer(app), layout[3]);
         }
-        // Config tab
-        1 => {
+        CONFIG_TAB_INDEX => {
             let layout = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([Constraint::Length(3), Constraint::Min(3)].as_ref())
@@ -181,9 +182,9 @@ fn input_table(app: &App) -> impl Widget {
     .header(widgets::Row::new(vec!["rpm", "ve", "map"]))
     .block(Block::default().borders(Borders::ALL).title("inputs"))
     .widths(&[
-        Constraint::Length(5),
-        Constraint::Length(3),
-        Constraint::Length(3),
+        Constraint::Length(5), // rpm
+        Constraint::Length(3), // ve
+        Constraint::Length(3), // map
     ])
 }
 
