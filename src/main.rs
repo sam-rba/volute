@@ -8,7 +8,8 @@ use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    widgets::{self, Block, Borders, Cell, Paragraph, Table},
+    text::Spans,
+    widgets::{self, Block, Borders, Cell, Paragraph, Table, Tabs, Widget},
     Frame, Terminal,
 };
 
@@ -115,16 +116,71 @@ impl Default for Row {
 
 // Holds the state of the application.
 struct App {
-    rows: Vec<Row>,
+    tab_index: usize,
+    tab_titles: Vec<&'static str>,
 
+    rows: Vec<Row>,
     selected_row: usize,
     selected_column: InputParam,
 
     input_mode: InputMode,
 }
+impl App {
+    fn next_tab(&mut self) {
+        self.tab_index = (self.tab_index + 1) % self.tab_titles.len();
+    }
+
+    fn previous_tab(&mut self) {
+        if self.tab_index > 0 {
+            self.tab_index -= 1;
+        } else {
+            self.tab_index = self.tab_titles.len() - 1;
+        }
+    }
+
+    fn next_row(&mut self) {
+        if self.selected_row < self.rows.len() - 1 {
+            self.selected_row += 1;
+        } else {
+            self.selected_row = 0;
+        }
+    }
+
+    fn previous_row(&mut self) {
+        if self.selected_row > 0 {
+            self.selected_row -= 1;
+        } else {
+            self.selected_row = self.rows.len() - 1;
+        }
+    }
+
+    fn next_column(&mut self) {
+        self.selected_column = self.selected_column.next();
+    }
+
+    fn previous_column(&mut self) {
+        self.selected_column = self.selected_column.previous();
+    }
+
+    fn insert_row(&mut self) {
+        let index = self.selected_row;
+        self.rows.insert(index, self.rows[index].clone());
+    }
+
+    fn remove_row(&mut self) {
+        if self.rows.len() > 1 {
+            self.rows.remove(self.selected_row);
+            if self.selected_row > 0 {
+                self.selected_row -= 1;
+            }
+        }
+    }
+}
 impl Default for App {
     fn default() -> App {
         App {
+            tab_index: 0,
+            tab_titles: vec!["Input", "Config"],
             rows: vec![Row::default()],
             selected_row: 0,
             selected_column: InputParam::Rpm(String::new()),
@@ -167,113 +223,97 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
         terminal.draw(|f| ui(f, &app))?;
 
         if let Event::Key(key) = event::read()? {
-            match app.input_mode {
-                // Navigating
-                InputMode::Normal => match key.code {
-                    // Enter insert mode
-                    KeyCode::Char('i') => {
-                        app.input_mode = InputMode::Insert;
-                    }
-                    // Quit
+            match app.tab_index {
+                // Input tab
+                0 => match app.input_mode {
+                    InputMode::Normal => match key.code {
+                        KeyCode::Char('q') => {
+                            return Ok(());
+                        }
+                        KeyCode::Char('L') => app.next_tab(),
+                        KeyCode::Char('H') => app.previous_tab(),
+                        KeyCode::Char('j') => app.next_row(),
+                        KeyCode::Char('k') => app.previous_row(),
+                        KeyCode::Char('l') => app.next_column(),
+                        KeyCode::Char('h') => app.previous_column(),
+                        KeyCode::Char('i') => {
+                            app.input_mode = InputMode::Insert;
+                        }
+                        KeyCode::Char('p') => app.insert_row(),
+                        KeyCode::Char('d') => app.remove_row(),
+                        _ => {}
+                    },
+                    InputMode::Insert => match key.code {
+                        KeyCode::Esc | KeyCode::Enter => {
+                            app.input_mode = InputMode::Normal;
+                        }
+                        KeyCode::Char(c) => match app.selected_column {
+                            InputParam::Rpm(_) => app.rows[app.selected_row].rpm.push(c),
+                            InputParam::Ve(_) => app.rows[app.selected_row].ve.push(c),
+                            InputParam::Map(_) => app.rows[app.selected_row].map.push(c),
+                        },
+                        KeyCode::Backspace => match app.selected_column {
+                            InputParam::Rpm(_) => app.rows[app.selected_row].rpm.pop(),
+                            InputParam::Ve(_) => app.rows[app.selected_row].ve.pop(),
+                            InputParam::Map(_) => app.rows[app.selected_row].map.pop(),
+                        },
+                        _ => {}
+                    },
+                },
+                // Config tab
+                1 => match key.code {
                     KeyCode::Char('q') => {
                         return Ok(());
                     }
-                    // Navigate up
-                    KeyCode::Char('k') => {
-                        if app.selected_row > 0 {
-                            app.selected_row -= 1;
-                        } else {
-                            app.selected_row = app.rows.len() - 1;
-                        }
-                    }
-                    // Navigate down
-                    KeyCode::Char('j') => {
-                        if app.selected_row < app.rows.len() - 1 {
-                            app.selected_row += 1;
-                        } else {
-                            app.selected_row = 0;
-                        }
-                    }
-                    // Navigate right
-                    KeyCode::Char('l') => {
-                        app.selected_column = app.selected_column.next();
-                    }
-                    // Navigate left
-                    KeyCode::Char('h') => {
-                        app.selected_column = app.selected_column.previous();
-                    }
-                    // Add row
-                    KeyCode::Char('p') => {
-                        app.rows
-                            .insert(app.selected_row, app.rows[app.selected_row].clone());
-                    }
-                    // Remove row
-                    KeyCode::Char('d') => {
-                        if app.rows.len() > 1 {
-                            app.rows.remove(app.selected_row);
-                            if app.selected_row > 0 {
-                                app.selected_row -= 1;
-                            }
-                        }
-                    }
+                    KeyCode::Char('L') => app.next_tab(),
+                    KeyCode::Char('H') => app.previous_tab(),
                     _ => {}
                 },
-                InputMode::Insert => match key.code {
-                    // Exit insert mode
-                    KeyCode::Esc => {
-                        app.input_mode = InputMode::Normal;
-                    }
-                    // Exit insert mode
-                    KeyCode::Enter => {
-                        app.input_mode = InputMode::Normal;
-                    }
-                    // Append a caracter to the currently selected parameter.
-                    KeyCode::Char(c) => match app.selected_column {
-                        InputParam::Rpm(_) => {
-                            app.rows[app.selected_row].rpm.push(c);
-                        }
-                        InputParam::Ve(_) => {
-                            app.rows[app.selected_row].ve.push(c);
-                        }
-                        InputParam::Map(_) => {
-                            app.rows[app.selected_row].map.push(c);
-                        }
-                    },
-                    // Remove a character from the currently selected parameter.
-                    KeyCode::Backspace => match app.selected_column {
-                        InputParam::Rpm(_) => {
-                            app.rows[app.selected_row].rpm.pop();
-                        }
-                        InputParam::Ve(_) => {
-                            app.rows[app.selected_row].ve.pop();
-                        }
-                        InputParam::Map(_) => {
-                            app.rows[app.selected_row].map.pop();
-                        }
-                    },
-
-                    _ => {}
-                },
+                _ => unreachable!(),
             }
         }
     }
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Min(app.rows.len() as u16 + 2),
-                Constraint::Length(1),
-            ]
-            .as_ref(),
-        )
-        .split(f.size());
+    let titles = app.tab_titles.iter().map(|t| Spans::from(*t)).collect();
+    let tabs = Tabs::new(titles)
+        .block(Block::default().borders(Borders::ALL).title("Tabs"))
+        .select(app.tab_index)
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD));
 
-    /* This is used so I can have named fields instead of indexing a vector of
-     * Cells when styling the selected input parameter.
-     */
+    match app.tab_index {
+        0 => {
+            let layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(
+                    [
+                        Constraint::Length(3),
+                        Constraint::Min(app.rows.len() as u16 + 2),
+                        Constraint::Length(1),
+                    ]
+                    .as_ref(),
+                )
+                .split(f.size());
+            f.render_widget(tabs, layout[0]);
+            f.render_widget(input_table(app), layout[1]);
+            f.render_widget(footer(app), layout[2]);
+        }
+        1 => {
+            let layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(3), Constraint::Min(3)].as_ref())
+                .split(f.size());
+            f.render_widget(tabs, layout[0]);
+            f.render_widget(Paragraph::new("Config tab"), layout[1]);
+        }
+        _ => unreachable!(),
+    }
+}
+
+fn input_table(app: &App) -> impl Widget {
+    // This is used so I can have named fields instead of indexing a vector of
+    // Cells when styling the selected input parameter.
     struct VirtualRow<'a> {
         rpm: Cell<'a>,
         ve: Cell<'a>,
@@ -303,27 +343,27 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             .add_modifier(Modifier::ITALIC),
     });
 
-    let table = Table::new(
+    Table::new(
         rows.iter()
             .map(|row| widgets::Row::new(vec![row.rpm.clone(), row.ve.clone(), row.map.clone()]))
             .collect::<Vec<widgets::Row>>(),
     )
     .header(widgets::Row::new(vec!["rpm", "ve", "map"]))
-    .block(Block::default().borders(Borders::ALL).title("Table"))
+    .block(Block::default().borders(Borders::ALL).title("inputs"))
     .widths(&[
         Constraint::Length(5),
         Constraint::Length(3),
         Constraint::Length(3),
-    ]);
-    f.render_widget(table, layout[0]);
+    ])
+}
 
-    let footer = match app.input_mode {
+fn footer(app: &App) -> impl Widget {
+    match app.input_mode {
         InputMode::Normal => {
             Paragraph::new("Normal").style(Style::default().fg(Color::Black).bg(Color::Yellow))
         }
         InputMode::Insert => {
             Paragraph::new("Insert").style(Style::default().fg(Color::Black).bg(Color::Blue))
         }
-    };
-    f.render_widget(footer, layout[1]);
+    }
 }
