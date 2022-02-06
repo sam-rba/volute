@@ -3,7 +3,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use std::{error::Error, io};
+use std::{error::Error, io, ptr};
 use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Constraint, Direction, Layout},
@@ -14,7 +14,7 @@ use tui::{
 };
 use volute::{
     app::{App, CONFIG_TAB_INDEX, INPUT_TAB_INDEX},
-    input::{InputMode, InputParam},
+    input::InputMode,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -74,16 +74,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                         KeyCode::Esc | KeyCode::Enter => {
                             app.input_mode = InputMode::Normal;
                         }
-                        KeyCode::Char(c) => match app.selected_column {
-                            InputParam::Rpm(_) => app.rows[app.selected_row].rpm.push(c),
-                            InputParam::Ve(_) => app.rows[app.selected_row].ve.push(c),
-                            InputParam::Map(_) => app.rows[app.selected_row].map.push(c),
-                        },
-                        KeyCode::Backspace => match app.selected_column {
-                            InputParam::Rpm(_) => app.rows[app.selected_row].rpm.pop(),
-                            InputParam::Ve(_) => app.rows[app.selected_row].ve.pop(),
-                            InputParam::Map(_) => app.rows[app.selected_row].map.pop(),
-                        },
+                        KeyCode::Char(c) => app.selected_input_param_mut().push(c),
+                        KeyCode::Backspace => app.selected_input_param_mut().pop(),
                         _ => {}
                     },
                 },
@@ -118,10 +110,10 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                 .direction(Direction::Vertical)
                 .constraints(
                     [
-                        Constraint::Length(3),                         // Tabs
-                        Constraint::Length(app.rows.len() as u16 + 3), // Input table
-                        Constraint::Max(100),                          // Spacer
-                        Constraint::Length(1),                         // Footer
+                        Constraint::Length(3),                           // Tabs
+                        Constraint::Length(app.rows().len() as u16 + 3), // Input table
+                        Constraint::Max(100),                            // Spacer
+                        Constraint::Length(1),                           // Footer
                     ]
                     .as_ref(),
                 )
@@ -143,49 +135,30 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
 }
 
 fn input_table(app: &App) -> impl Widget {
-    // This is used so I can have named fields instead of indexing a vector of
-    // Cells when styling the selected input parameter.
-    struct VirtualRow<'a> {
-        rpm: Cell<'a>,
-        ve: Cell<'a>,
-        map: Cell<'a>,
-    }
-
-    let mut rows: Vec<VirtualRow> = app
-        .rows
-        .iter()
-        .map(|row| VirtualRow {
-            rpm: Cell::from(row.rpm.string()),
-            ve: Cell::from(row.ve.string()),
-            map: Cell::from(row.map.string()),
-        })
-        .collect();
-
-    // Highlight the selected parameter
-    let selected_parameter = match app.selected_column {
-        InputParam::Rpm(_) => &mut rows[app.selected_row].rpm,
-        InputParam::Ve(_) => &mut rows[app.selected_row].ve,
-        InputParam::Map(_) => &mut rows[app.selected_row].map,
-    };
-    *selected_parameter = selected_parameter.clone().style(match app.input_mode {
-        InputMode::Normal => Style::default().fg(Color::Yellow),
-        InputMode::Insert => Style::default()
-            .fg(Color::Yellow)
-            .add_modifier(Modifier::ITALIC),
+    let rows = app.rows().iter().map(|row| {
+        let cells = row.iter().map(|item| {
+            if ptr::eq(item, app.selected_input_param()) {
+                Cell::from(item.string()).style(match app.input_mode {
+                    InputMode::Normal => Style::default().fg(Color::Yellow),
+                    InputMode::Insert => Style::default()
+                        .fg(Color::Blue)
+                        .add_modifier(Modifier::ITALIC),
+                })
+            } else {
+                Cell::from(item.string())
+            }
+        });
+        widgets::Row::new(cells)
     });
 
-    Table::new(
-        rows.iter()
-            .map(|row| widgets::Row::new(vec![row.rpm.clone(), row.ve.clone(), row.map.clone()]))
-            .collect::<Vec<widgets::Row>>(),
-    )
-    .header(widgets::Row::new(vec!["rpm", "ve", "map"]))
-    .block(Block::default().borders(Borders::ALL).title("inputs"))
-    .widths(&[
-        Constraint::Length(5), // rpm
-        Constraint::Length(3), // ve
-        Constraint::Length(3), // map
-    ])
+    Table::new(rows)
+        .header(widgets::Row::new(vec!["rpm", "ve", "map"]))
+        .block(Block::default().borders(Borders::ALL).title("inputs"))
+        .widths(&[
+            Constraint::Length(5), // rpm
+            Constraint::Length(3), // ve
+            Constraint::Length(3), // map
+        ])
 }
 
 fn footer(app: &App) -> impl Widget {

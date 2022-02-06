@@ -95,12 +95,54 @@ pub struct Row {
     pub map: InputParam,
 }
 
+impl Row {
+    pub fn iter(&self) -> RowIter {
+        RowIter::from_row(&self)
+    }
+}
+
 impl Default for Row {
     fn default() -> Self {
         Self {
             rpm: InputParam::Rpm(String::from("7000")),
             ve: InputParam::Ve(String::from("95")),
             map: InputParam::Map(String::from("200")),
+        }
+    }
+}
+
+pub struct RowIter<'a> {
+    row: &'a Row,
+    iter_state: Option<InputParam>,
+}
+
+impl<'a> RowIter<'a> {
+    fn from_row(row: &'a Row) -> Self {
+        Self {
+            row: row,
+            iter_state: Some(InputParam::Rpm(String::new())),
+        }
+    }
+}
+
+impl<'a> Iterator for RowIter<'a> {
+    type Item = &'a InputParam;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.iter_state {
+            Some(InputParam::Rpm(_)) => {
+                self.iter_state = Some(InputParam::Ve(String::new()));
+                Some(&self.row.rpm)
+            }
+            Some(InputParam::Ve(_)) => {
+                self.iter_state = Some(InputParam::Map(String::new()));
+                Some(&self.row.ve)
+            }
+            Some(InputParam::Map(_)) => {
+                self.iter_state = None;
+                Some(&self.row.map)
+            }
+            None => None,
         }
     }
 }

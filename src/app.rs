@@ -7,14 +7,18 @@ pub struct App {
     pub tab_index: usize,
     tab_titles: [&'static str; 2],
 
-    pub rows: Vec<Row>,
-    pub selected_row: usize,
-    pub selected_column: InputParam,
+    rows: Vec<Row>,
+    selected_row: usize,
+    selected_column: InputParam,
 
     pub input_mode: InputMode,
 }
 
 impl App {
+    pub fn rows(&self) -> &Vec<Row> {
+        &self.rows
+    }
+
     pub fn tab_titles(&self) -> &[&str] {
         &self.tab_titles
     }
@@ -66,6 +70,22 @@ impl App {
             if self.selected_row > 0 {
                 self.selected_row -= 1;
             }
+        }
+    }
+
+    pub fn selected_input_param(&self) -> &InputParam {
+        match self.selected_column {
+            InputParam::Rpm(_) => &self.rows[self.selected_row].rpm,
+            InputParam::Ve(_) => &self.rows[self.selected_row].ve,
+            InputParam::Map(_) => &self.rows[self.selected_row].map,
+        }
+    }
+
+    pub fn selected_input_param_mut(&mut self) -> &mut InputParam {
+        match self.selected_column {
+            InputParam::Rpm(_) => &mut self.rows[self.selected_row].rpm,
+            InputParam::Ve(_) => &mut self.rows[self.selected_row].ve,
+            InputParam::Map(_) => &mut self.rows[self.selected_row].map,
         }
     }
 }
