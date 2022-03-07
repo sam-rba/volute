@@ -1,9 +1,3 @@
-// Intended to emulate vim modes.
-pub enum InputMode {
-    Normal, // Navigating the ui.
-    Insert, // Editing a parameter.
-}
-
 // A row in the inputs table has one of each variation.
 #[derive(Clone)]
 pub enum InputParam {

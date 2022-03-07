@@ -1,22 +1,33 @@
+pub trait UnitOfMeasurement {
+    type Unit;
+
+    fn from_unit(unit: Self::Unit, n: i32) -> Self;
+    fn as_unit(&self, unit: Self::Unit) -> i32;
+}
+
 pub mod pressure {
-    pub enum PressureUnit {
-        Pascal = 1, // base unit. Every other variant will be a multiple of this.
-        KiloPascal = 1000,
-    }
+    use super::UnitOfMeasurement;
 
     #[derive(Default)]
     pub struct Pressure {
-        val: i32, // Base unit is pascals.
+        val: i32,
     }
 
-    impl Pressure {
-        pub fn from_unit(unit: PressureUnit, n: i32) -> Self {
+    pub enum Unit {
+        Pascal = 1,
+        KiloPascal = 1000,
+    }
+
+    impl UnitOfMeasurement for Pressure {
+        type Unit = Unit;
+
+        fn from_unit(unit: Self::Unit, n: i32) -> Self {
             Self {
                 val: n * unit as i32,
             }
         }
 
-        pub fn as_unit(&self, unit: PressureUnit) -> i32 {
+        fn as_unit(&self, unit: Self::Unit) -> i32 {
             self.val / unit as i32
         }
     }
