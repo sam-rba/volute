@@ -1,9 +1,14 @@
-use crate::input::{InputParam, Row};
+use crate::{
+    input::{InputParam, Row},
+    unit_of_measurement::pressure,
+};
 
 pub struct App {
     rows: Vec<Row>,
     selected_row: usize,
     selected_column: InputParam,
+
+    pub pressure_unit: pressure::Unit,
 }
 
 impl App {
@@ -72,7 +77,8 @@ impl Default for App {
         App {
             rows: vec![Row::default()],
             selected_row: 0,
-            selected_column: InputParam::Rpm(String::new()),
+            selected_column: InputParam::Rpm(0),
+            pressure_unit: pressure::Unit::KiloPascal,
         }
     }
 }

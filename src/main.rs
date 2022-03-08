@@ -9,7 +9,12 @@ use tui::{
     layout::{Constraint, Direction, Layout},
     Frame, Terminal,
 };
-use volute::{app::App, ui};
+use volute::{
+    app::App,
+    input::InputParam,
+    ui,
+    unit_of_measurement::{pressure::Pressure, UnitOfMeasurement},
+};
 
 fn main() -> Result<(), Box<dyn Error>> {
     // setup terminal
@@ -53,14 +58,45 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                 KeyCode::Char('k') => app.previous_row(),
                 KeyCode::Char('l') => app.next_column(),
                 KeyCode::Char('h') => app.previous_column(),
-                KeyCode::Char('p') => app.insert_row(),
+                KeyCode::Char('y') => app.insert_row(),
                 KeyCode::Char('d') => app.remove_row(),
+                KeyCode::Char('p') => app.pressure_unit.next(),
                 KeyCode::Char(c) => {
-                    if ('0'..'a').contains(&c) {
-                        app.selected_input_param_mut().push(c);
+                    if ('0'..':').contains(&c) {
+                        // 0 to 9 inclusive
+                        let digit = c.to_digit(10).unwrap();
+                        match app.selected_input_param() {
+                            InputParam::Rpm(rpm) => {
+                                *app.selected_input_param_mut() =
+                                    InputParam::Rpm(*rpm * 10 + digit);
+                            }
+                            InputParam::Ve(ve) => {
+                                *app.selected_input_param_mut() = InputParam::Ve(*ve * 10 + digit);
+                            }
+                            InputParam::Map(p) => {
+                                *app.selected_input_param_mut() =
+                                    InputParam::Map(Pressure::from_unit(
+                                        app.pressure_unit,
+                                        p.as_unit(app.pressure_unit) * 10 + digit as i32,
+                                    ))
+                            }
+                        }
                     }
                 }
-                KeyCode::Backspace => app.selected_input_param_mut().pop(),
+                KeyCode::Backspace => match app.selected_input_param() {
+                    InputParam::Rpm(rpm) => {
+                        *app.selected_input_param_mut() = InputParam::Rpm(*rpm / 10);
+                    }
+                    InputParam::Ve(ve) => {
+                        *app.selected_input_param_mut() = InputParam::Ve(*ve / 10);
+                    }
+                    InputParam::Map(p) => {
+                        *app.selected_input_param_mut() = InputParam::Map(Pressure::from_unit(
+                            app.pressure_unit,
+                            p.as_unit(app.pressure_unit) / 10,
+                        ))
+                    }
+                },
                 _ => {}
             }
         }
