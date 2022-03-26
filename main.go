@@ -16,18 +16,17 @@ func check(err error) {
 	}
 }
 
+var (
+	displacement = volume{2000, cubicCentimetre}
+	// selectedVolumeUnit is used to index volumeUnitStrings.
+	selectedVolumeUnit = defaultVolumeUnitIndex
+)
+
 var engineSpeed = [numPoints]int32{2000, 3000, 4000, 5000, 6000, 7000}
 
 var volumetricEfficiency = [numPoints]int32{100, 100, 100, 100, 100, 100}
 
 var (
-	manifoldPressure [numPoints]pressure
-
-	// selectedPressureUnit is used to index pressureUnits
-	selectedPressureUnit int32
-)
-
-func init() {
 	manifoldPressure = [numPoints]pressure{
 		newPressure(),
 		newPressure(),
@@ -37,12 +36,13 @@ func init() {
 		newPressure(),
 	}
 
-	// selectedPressureUnit is used to index pressureUnitStrings
+	// selectedPressureUnit is used to index pressureUnitStrings.
 	selectedPressureUnit = defaultPressureUnitIndex
-}
+)
 
 func loop() {
 	g.SingleWindow().Layout(
+		engineDisplacementRow(),
 		g.Table().
 			Rows(
 				engineSpeedRow(),

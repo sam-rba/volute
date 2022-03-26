@@ -2,6 +2,28 @@ package main
 
 import g "github.com/AllenDang/giu"
 
+func engineDisplacementRow() *g.RowWidget {
+	return g.Row(
+		g.Label("Engine Displacement"),
+		g.InputFloat(&displacement.val).Format("%.2f"),
+		g.Combo(
+			"",
+			volumeUnitStrings()[selectedVolumeUnit],
+			volumeUnitStrings(),
+			&selectedVolumeUnit,
+		).
+			OnChange(func() {
+				s := volumeUnitStrings()[selectedVolumeUnit]
+				u, err := volumeUnitFromString(s)
+				check(err)
+				displacement = volume{
+					displacement.asUnit(u),
+					u,
+				}
+			}),
+	)
+}
+
 func engineSpeedRow() *g.TableRowWidget {
 	return g.TableRow(
 		g.Label("Engine Speed"),
