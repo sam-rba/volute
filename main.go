@@ -4,10 +4,16 @@ import (
 	"fmt"
 	g "github.com/AllenDang/giu"
 	"os"
+	"time"
 )
 
-// numPoints is the number of datapoints on the compressor map.
-const numPoints = 6
+const (
+	// numPoints is the number of datapoints on the compressor map.
+	numPoints = 6
+
+	gasConstant  = 8.314472
+	airMolarMass = 0.0289647 // kg/mol
+)
 
 func check(err error) {
 	if err != nil {
@@ -69,6 +75,42 @@ func init() {
 	}
 }
 
+var (
+	engineMassFlowRate [numPoints]massFlowRate
+
+	// selectedMassFlowRateUnit is used to index massFlowRateUnitStrings.
+	selectedMassFlowRateUnit = defaultMassFlowRateUnitIndex
+)
+
+func massFlowRateAt(point int) massFlowRate {
+	rpm := float32(engineSpeed[point])
+	disp := displacement.asUnit(cubicMetre)
+	ve := float32(volumetricEfficiency[point]) / 100.0
+	cubicMetresPerMin := (rpm / 2.0) * disp * ve
+
+	iat, err := intakeAirTemperature[point].asUnit(kelvin)
+	check(err)
+	pres := manifoldPressure[point].asUnit(pascal)
+	molsPerMin := (pres * cubicMetresPerMin) / (gasConstant * iat)
+
+	kgPerMin := molsPerMin * airMolarMass
+
+	massPerMin := mass{kgPerMin, kilogram}
+
+	u, err := massFlowRateUnitFromString(massFlowRateUnitStrings()[selectedMassFlowRateUnit])
+	check(err)
+
+	mfr, err := newMassFlowRate(massPerMin, time.Minute, u)
+	check(err)
+	return mfr
+}
+
+func init() {
+	for i := 0; i < numPoints; i++ {
+		engineMassFlowRate[i] = massFlowRateAt(i)
+	}
+}
+
 func loop() {
 	g.SingleWindow().Layout(
 		engineDisplacementRow(),
@@ -79,6 +121,7 @@ func loop() {
 				intakeAirTemperatureRow(),
 				manifoldPressureRow(),
 				pressureRatioRow(),
+				massFlowRateRow(),
 			).
 			Columns(
 				g.TableColumn("Parameter"),
