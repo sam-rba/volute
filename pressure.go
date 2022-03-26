@@ -48,10 +48,6 @@ type pressure struct {
 	unit pressureUnit
 }
 
-func newPressure() pressure {
-	return pressure{100, defaultPressureUnit}
-}
-
 func (p pressure) asUnit(u pressureUnit) float32 {
 	pa := p.val * float32(p.unit) // Convert to pascals.
 	return pa / float32(u)        // Convert to desired unit.

@@ -50,6 +50,35 @@ func volumetricEfficiencyRow() *g.TableRowWidget {
 	)
 }
 
+func intakeAirTemperatureRow() *g.TableRowWidget {
+	return g.TableRow(
+		g.Label("Intake Air Temperature"),
+		g.Combo(
+			"",
+			temperatureUnitStrings()[selectedTemperatureUnit],
+			temperatureUnitStrings(),
+			&selectedTemperatureUnit,
+		).
+			OnChange(func() {
+				s := temperatureUnitStrings()[selectedTemperatureUnit]
+				u, err := temperatureUnitFromString(s)
+				check(err)
+
+				for i := range intakeAirTemperature {
+					t, err := intakeAirTemperature[i].asUnit(u)
+					check(err)
+					intakeAirTemperature[i] = temperature{t, u}
+				}
+			}),
+		g.InputFloat(&intakeAirTemperature[0].val).Format("%.2f"),
+		g.InputFloat(&intakeAirTemperature[1].val).Format("%.2f"),
+		g.InputFloat(&intakeAirTemperature[2].val).Format("%.2f"),
+		g.InputFloat(&intakeAirTemperature[3].val).Format("%.2f"),
+		g.InputFloat(&intakeAirTemperature[4].val).Format("%.2f"),
+		g.InputFloat(&intakeAirTemperature[5].val).Format("%.2f"),
+	)
+}
+
 func manifoldPressureRow() *g.TableRowWidget {
 	return g.TableRow(
 		g.Label("Manifold Absolute Pressure"),

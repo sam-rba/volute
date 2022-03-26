@@ -27,13 +27,27 @@ var engineSpeed = [numPoints]int32{2000, 3000, 4000, 5000, 6000, 7000}
 var volumetricEfficiency = [numPoints]int32{100, 100, 100, 100, 100, 100}
 
 var (
+	intakeAirTemperature = [numPoints]temperature{
+		{35, celcius},
+		{35, celcius},
+		{35, celcius},
+		{35, celcius},
+		{35, celcius},
+		{35, celcius},
+	}
+
+	// selectedTemperatureUnit is used to index temperatureUnitStrings.
+	selectedTemperatureUnit = defaultTemperatureUnitIndex
+)
+
+var (
 	manifoldPressure = [numPoints]pressure{
-		newPressure(),
-		newPressure(),
-		newPressure(),
-		newPressure(),
-		newPressure(),
-		newPressure(),
+		{100, defaultPressureUnit},
+		{100, defaultPressureUnit},
+		{100, defaultPressureUnit},
+		{100, defaultPressureUnit},
+		{100, defaultPressureUnit},
+		{100, defaultPressureUnit},
 	}
 
 	// selectedPressureUnit is used to index pressureUnitStrings.
@@ -47,6 +61,7 @@ func loop() {
 			Rows(
 				engineSpeedRow(),
 				volumetricEfficiencyRow(),
+				intakeAirTemperatureRow(),
 				manifoldPressureRow(),
 			).
 			Columns(
