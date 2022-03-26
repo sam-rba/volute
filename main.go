@@ -54,6 +54,21 @@ var (
 	selectedPressureUnit = defaultPressureUnitIndex
 )
 
+var pressureRatio [numPoints]float32
+
+func pressureRatioAt(point int) float32 {
+	u := pascal
+	m := manifoldPressure[point].asUnit(u)
+	a := atmosphericPressure().asUnit(u)
+	return m / a
+}
+
+func init() {
+	for i := 0; i < numPoints; i++ {
+		pressureRatio[i] = pressureRatioAt(i)
+	}
+}
+
 func loop() {
 	g.SingleWindow().Layout(
 		engineDisplacementRow(),
@@ -63,6 +78,7 @@ func loop() {
 				volumetricEfficiencyRow(),
 				intakeAirTemperatureRow(),
 				manifoldPressureRow(),
+				pressureRatioRow(),
 			).
 			Columns(
 				g.TableColumn("Parameter"),

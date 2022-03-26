@@ -1,6 +1,9 @@
 package main
 
-import g "github.com/AllenDang/giu"
+import (
+	g "github.com/AllenDang/giu"
+	"strconv"
+)
 
 func engineDisplacementRow() *g.RowWidget {
 	return g.Row(
@@ -93,18 +96,49 @@ func manifoldPressureRow() *g.TableRowWidget {
 				u, err := pressureUnitFromString(s)
 				check(err)
 
-				for i := range manifoldPressure {
+				for i := 0; i < numPoints; i++ {
 					manifoldPressure[i] = pressure{
 						manifoldPressure[i].asUnit(u),
 						u,
 					}
 				}
 			}),
-		g.InputFloat(&manifoldPressure[0].val).Format("%.2f"),
-		g.InputFloat(&manifoldPressure[1].val).Format("%.2f"),
-		g.InputFloat(&manifoldPressure[2].val).Format("%.2f"),
-		g.InputFloat(&manifoldPressure[3].val).Format("%.2f"),
-		g.InputFloat(&manifoldPressure[4].val).Format("%.2f"),
-		g.InputFloat(&manifoldPressure[5].val).Format("%.2f"),
+		g.InputFloat(&manifoldPressure[0].val).Format("%.2f").
+			OnChange(func() {
+				pressureRatio[0] = pressureRatioAt(0)
+			}),
+		g.InputFloat(&manifoldPressure[1].val).Format("%.2f").
+			OnChange(func() {
+				pressureRatio[1] = pressureRatioAt(1)
+			}),
+		g.InputFloat(&manifoldPressure[2].val).Format("%.2f").
+			OnChange(func() {
+				pressureRatio[2] = pressureRatioAt(2)
+			}),
+		g.InputFloat(&manifoldPressure[3].val).Format("%.2f").
+			OnChange(func() {
+				pressureRatio[3] = pressureRatioAt(3)
+			}),
+		g.InputFloat(&manifoldPressure[4].val).Format("%.2f").
+			OnChange(func() {
+				pressureRatio[4] = pressureRatioAt(4)
+			}),
+		g.InputFloat(&manifoldPressure[5].val).Format("%.2f").
+			OnChange(func() {
+				pressureRatio[5] = pressureRatioAt(5)
+			}),
+	)
+}
+
+func pressureRatioRow() *g.TableRowWidget {
+	return g.TableRow(
+		g.Label("Pressure Ratio"),
+		g.Label(""),
+		g.Label(strconv.FormatFloat(float64(pressureRatio[0]), 'f', 1, 32)),
+		g.Label(strconv.FormatFloat(float64(pressureRatio[1]), 'f', 1, 32)),
+		g.Label(strconv.FormatFloat(float64(pressureRatio[2]), 'f', 1, 32)),
+		g.Label(strconv.FormatFloat(float64(pressureRatio[3]), 'f', 1, 32)),
+		g.Label(strconv.FormatFloat(float64(pressureRatio[4]), 'f', 1, 32)),
+		g.Label(strconv.FormatFloat(float64(pressureRatio[5]), 'f', 1, 32)),
 	)
 }

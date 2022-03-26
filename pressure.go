@@ -52,3 +52,7 @@ func (p pressure) asUnit(u pressureUnit) float32 {
 	pa := p.val * float32(p.unit) // Convert to pascals.
 	return pa / float32(u)        // Convert to desired unit.
 }
+
+func atmosphericPressure() pressure {
+	return pressure{1, bar}
+}

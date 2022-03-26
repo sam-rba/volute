@@ -64,7 +64,7 @@ func (t temperature) asUnit(u temperatureUnit) (float32, error) {
 	case kelvin:
 		return c + 272.15, nil
 	case fahrenheit:
-		return c * (9.0 / 5.0) + 32.0, nil
+		return c*(9.0/5.0) + 32.0, nil
 	default:
 		return 0, errors.New(fmt.Sprintf("invalid temperatureUnit: '%v'", u))
 	}
