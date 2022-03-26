@@ -6,6 +6,9 @@ import (
 	"os"
 )
 
+// numPoints is the number of datapoints on the compressor map.
+const numPoints = 6
+
 func check(err error) {
 	if err != nil {
 		fmt.Println(err)
@@ -13,15 +16,26 @@ func check(err error) {
 	}
 }
 
+var engineSpeed = [numPoints]int32{2000, 3000, 4000, 5000, 6000, 7000}
+
+var volumetricEfficiency = [numPoints]int32{100, 100, 100, 100, 100, 100}
+
 var (
-	manifoldPressure pressure
+	manifoldPressure [numPoints]pressure
 
 	// selectedPressureUnit is used to index pressureUnits
 	selectedPressureUnit int32
 )
 
 func init() {
-	manifoldPressure = pressure{100, defaultPressureUnit}
+	manifoldPressure = [numPoints]pressure{
+		newPressure(),
+		newPressure(),
+		newPressure(),
+		newPressure(),
+		newPressure(),
+		newPressure(),
+	}
 
 	// selectedPressureUnit is used to index pressureUnitStrings
 	selectedPressureUnit = defaultPressureUnitIndex
@@ -31,31 +45,19 @@ func loop() {
 	g.SingleWindow().Layout(
 		g.Table().
 			Rows(
-				g.TableRow(
-					g.Label("Manifold Absolute Pressure"),
-					g.Combo(
-						"",
-						pressureUnitStrings()[selectedPressureUnit],
-						pressureUnitStrings(),
-						&selectedPressureUnit,
-					).
-						OnChange(func() {
-							s := pressureUnitStrings()[selectedPressureUnit]
-							u, err := pressureUnitFromString(s)
-							check(err)
-
-							manifoldPressure = pressure{
-								manifoldPressure.asUnit(u),
-								u,
-							}
-						}),
-					g.InputFloat(&manifoldPressure.val).Format("%.2f"),
-				),
+				engineSpeedRow(),
+				volumetricEfficiencyRow(),
+				manifoldPressureRow(),
 			).
 			Columns(
 				g.TableColumn("Parameter"),
 				g.TableColumn("Unit"),
 				g.TableColumn("Point 1"),
+				g.TableColumn("Point 2"),
+				g.TableColumn("Point 3"),
+				g.TableColumn("Point 4"),
+				g.TableColumn("Point 5"),
+				g.TableColumn("Point 6"),
 			),
 	)
 }
