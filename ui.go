@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	g "github.com/AllenDang/giu"
 	"strconv"
 )
@@ -182,4 +183,73 @@ func massFlowRateRow() *g.TableRowWidget {
 		)
 	}
 	return g.TableRow(widgets...)
+}
+
+func duplicateDeleteRow() *g.TableRowWidget {
+	widgets := []g.Widget{g.Label(""), g.Label("")}
+	for i := 0; i < numPoints; i++ {
+		i := i
+		widgets = append(widgets, g.Row(
+			g.Button("Duplicate").OnClick(func() {
+				numPoints++
+				engineSpeed = insert(
+					engineSpeed,
+					engineSpeed[i],
+					i,
+				)
+				volumetricEfficiency = insert(
+					volumetricEfficiency,
+					volumetricEfficiency[i],
+					i,
+				)
+				intakeAirTemperature = insert(
+					intakeAirTemperature,
+					intakeAirTemperature[i],
+					i,
+				)
+				manifoldPressure = insert(
+					manifoldPressure,
+					manifoldPressure[i],
+					i,
+				)
+				pressureRatio = insert(
+					pressureRatio,
+					pressureRatio[i],
+					i,
+				)
+				engineMassFlowRate = insert(
+					engineMassFlowRate,
+					engineMassFlowRate[i],
+					i,
+				)
+			}),
+			g.Button("Delete").OnClick(func() {
+				if numPoints < 2 {
+					return
+				}
+				numPoints--
+				engineSpeed = remove(engineSpeed, i)
+				volumetricEfficiency = remove(volumetricEfficiency, i)
+				intakeAirTemperature = remove(intakeAirTemperature, i)
+				manifoldPressure = remove(manifoldPressure, i)
+				pressureRatio = remove(pressureRatio, i)
+				engineMassFlowRate = remove(engineMassFlowRate, i)
+			}),
+		))
+	}
+	return g.TableRow(widgets...)
+}
+
+func columns() []*g.TableColumnWidget {
+	widgets := []*g.TableColumnWidget{
+		g.TableColumn("Parameter"),
+		g.TableColumn("Unit"),
+	}
+	for i := 0; i < numPoints; i++ {
+		widgets = append(
+			widgets,
+			g.TableColumn(fmt.Sprintf("Point %d", i+1)),
+		)
+	}
+	return widgets
 }

@@ -1,66 +1,37 @@
 package main
 
 import (
-	"fmt"
 	g "github.com/AllenDang/giu"
-	"os"
 	"time"
 )
 
 const (
-	// numPoints is the number of datapoints on the compressor map.
-	numPoints = 6
-
 	gasConstant  = 8.314472
 	airMolarMass = 0.0289647 // kg/mol
 )
 
-func check(err error) {
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
+// numPoints is the number of datapoints on the compressor map.
+var numPoints = 1
 
 var (
 	displacement = volume{2000, cubicCentimetre}
 	// selectedVolumeUnit is used to index volumeUnitStrings.
 	selectedVolumeUnit = defaultVolumeUnitIndex
-)
 
-var engineSpeed = [numPoints]int32{2000, 3000, 4000, 5000, 6000, 7000}
+	engineSpeed = []int32{2000}
 
-var volumetricEfficiency = [numPoints]int32{100, 100, 100, 100, 100, 100}
+	volumetricEfficiency = []int32{80}
 
-var (
-	intakeAirTemperature = [numPoints]temperature{
-		{35, celcius},
-		{35, celcius},
-		{35, celcius},
-		{35, celcius},
-		{35, celcius},
-		{35, celcius},
-	}
-
+	intakeAirTemperature = []temperature{{25, celcius}}
 	// selectedTemperatureUnit is used to index temperatureUnitStrings.
 	selectedTemperatureUnit = defaultTemperatureUnitIndex
-)
 
-var (
-	manifoldPressure = [numPoints]pressure{
-		{100, defaultPressureUnit},
-		{100, defaultPressureUnit},
-		{100, defaultPressureUnit},
-		{100, defaultPressureUnit},
-		{100, defaultPressureUnit},
-		{100, defaultPressureUnit},
-	}
-
+	manifoldPressure = []pressure{{100, defaultPressureUnit}}
 	// selectedPressureUnit is used to index pressureUnitStrings.
 	selectedPressureUnit = defaultPressureUnitIndex
 )
 
-var pressureRatio [numPoints]float32
+var pressureRatio []float32
 
 func pressureRatioAt(point int) float32 {
 	u := pascal
@@ -68,16 +39,12 @@ func pressureRatioAt(point int) float32 {
 	a := atmosphericPressure().asUnit(u)
 	return m / a
 }
-
 func init() {
-	for i := 0; i < numPoints; i++ {
-		pressureRatio[i] = pressureRatioAt(i)
-	}
+	pressureRatio = append(pressureRatio, pressureRatioAt(0))
 }
 
 var (
-	engineMassFlowRate [numPoints]massFlowRate
-
+	engineMassFlowRate []massFlowRate
 	// selectedMassFlowRateUnit is used to index massFlowRateUnitStrings.
 	selectedMassFlowRateUnit = defaultMassFlowRateUnitIndex
 )
@@ -104,11 +71,8 @@ func massFlowRateAt(point int) massFlowRate {
 	check(err)
 	return mfr
 }
-
 func init() {
-	for i := 0; i < numPoints; i++ {
-		engineMassFlowRate[i] = massFlowRateAt(i)
-	}
+	engineMassFlowRate = append(engineMassFlowRate, massFlowRateAt(0))
 }
 
 func loop() {
@@ -122,16 +86,10 @@ func loop() {
 				manifoldPressureRow(),
 				pressureRatioRow(),
 				massFlowRateRow(),
+				duplicateDeleteRow(),
 			).
 			Columns(
-				g.TableColumn("Parameter"),
-				g.TableColumn("Unit"),
-				g.TableColumn("Point 1"),
-				g.TableColumn("Point 2"),
-				g.TableColumn("Point 3"),
-				g.TableColumn("Point 4"),
-				g.TableColumn("Point 5"),
-				g.TableColumn("Point 6"),
+				columns()...,
 			),
 	)
 }
