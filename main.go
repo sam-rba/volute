@@ -2,7 +2,18 @@ package main
 
 import (
 	g "github.com/AllenDang/giu"
+	"image"
+	"image/draw"
+	_ "image/jpeg"
+	"os"
 	"time"
+
+	"github.com/sam-anthony/volute/compressor"
+	"github.com/sam-anthony/volute/mass"
+	"github.com/sam-anthony/volute/pressure"
+	"github.com/sam-anthony/volute/temperature"
+	"github.com/sam-anthony/volute/util"
+	"github.com/sam-anthony/volute/volume"
 )
 
 const (
@@ -14,29 +25,29 @@ const (
 var numPoints = 1
 
 var (
-	displacement = volume{2000, cubicCentimetre}
-	// selectedVolumeUnit is used to index volumeUnitStrings.
-	selectedVolumeUnit = defaultVolumeUnitIndex
+	displacement = volume.Volume{2000, volume.CubicCentimetre}
+	// selectedVolumeUnit is used to index volume.UnitStrings().
+	selectedVolumeUnit = volume.DefaultUnitIndex
 
 	engineSpeed = []int32{2000}
 
 	volumetricEfficiency = []int32{80}
 
-	intakeAirTemperature = []temperature{{25, celcius}}
-	// selectedTemperatureUnit is used to index temperatureUnitStrings.
-	selectedTemperatureUnit = defaultTemperatureUnitIndex
+	intakeAirTemperature = []temperature.Temperature{{25, temperature.Celcius}}
+	// selectedTemperatureUnit is used to index temperature.UnitStrings().
+	selectedTemperatureUnit = temperature.DefaultUnitIndex
 
-	manifoldPressure = []pressure{{100, defaultPressureUnit}}
-	// selectedPressureUnit is used to index pressureUnitStrings.
-	selectedPressureUnit = defaultPressureUnitIndex
+	manifoldPressure = []pressure.Pressure{{100, pressure.DefaultUnit}}
+	// selectedPressureUnit is used to index pressure.UnitStrings().
+	selectedPressureUnit = pressure.DefaultUnitIndex
 )
 
 var pressureRatio []float32
 
 func pressureRatioAt(point int) float32 {
-	u := pascal
-	m := manifoldPressure[point].asUnit(u)
-	a := atmosphericPressure().asUnit(u)
+	u := pressure.Pascal
+	m := manifoldPressure[point].AsUnit(u)
+	a := pressure.Atmospheric().AsUnit(u)
 	return m / a
 }
 func init() {
@@ -44,31 +55,31 @@ func init() {
 }
 
 var (
-	engineMassFlowRate []massFlowRate
-	// selectedMassFlowRateUnit is used to index massFlowRateUnitStrings.
-	selectedMassFlowRateUnit = defaultMassFlowRateUnitIndex
+	engineMassFlowRate []mass.FlowRate
+	// selectedMassFlowRateUnit is used to index mass.FlowRateUnitStrings().
+	selectedMassFlowRateUnit = mass.DefaultFlowRateUnitIndex
 )
 
-func massFlowRateAt(point int) massFlowRate {
+func massFlowRateAt(point int) mass.FlowRate {
 	rpm := float32(engineSpeed[point])
-	disp := displacement.asUnit(cubicMetre)
+	disp := displacement.AsUnit(volume.CubicMetre)
 	ve := float32(volumetricEfficiency[point]) / 100.0
 	cubicMetresPerMin := (rpm / 2.0) * disp * ve
 
-	iat, err := intakeAirTemperature[point].asUnit(kelvin)
-	check(err)
-	pres := manifoldPressure[point].asUnit(pascal)
+	iat, err := intakeAirTemperature[point].AsUnit(temperature.Kelvin)
+	util.Check(err)
+	pres := manifoldPressure[point].AsUnit(pressure.Pascal)
 	molsPerMin := (pres * cubicMetresPerMin) / (gasConstant * iat)
 
 	kgPerMin := molsPerMin * airMolarMass
 
-	massPerMin := mass{kgPerMin, kilogram}
+	massPerMin := mass.Mass{kgPerMin, mass.Kilogram}
 
-	u, err := massFlowRateUnitFromString(massFlowRateUnitStrings()[selectedMassFlowRateUnit])
-	check(err)
+	u, err := mass.FlowRateUnitFromString(mass.FlowRateUnitStrings()[selectedMassFlowRateUnit])
+	util.Check(err)
 
-	mfr, err := newMassFlowRate(massPerMin, time.Minute, u)
-	check(err)
+	mfr, err := mass.NewFlowRate(massPerMin, time.Minute, u)
+	util.Check(err)
 	return mfr
 }
 func init() {
@@ -79,6 +90,7 @@ func loop() {
 	g.SingleWindow().Layout(
 		engineDisplacementRow(),
 		g.Table().
+			Size(g.Auto, 190).
 			Rows(
 				engineSpeedRow(),
 				volumetricEfficiencyRow(),
@@ -91,10 +103,39 @@ func loop() {
 			Columns(
 				columns()...,
 			),
+		g.Custom(compressorWidget),
 	)
+}
+
+var (
+	compressorImage    *image.RGBA
+	compressorTexture  *g.Texture
+	selectedCompressor compressor.Compressor
+)
+
+func init() {
+	selectedCompressor = compressor.GarrettG25660()
+
+	f, err := os.Open(selectedCompressor.FileName)
+	util.Check(err)
+	defer f.Close()
+
+	j, _, err := image.Decode(f)
+	util.Check(err)
+
+	b := j.Bounds()
+	m := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(m, m.Bounds(), j, b.Min, draw.Src)
+
+	compressorImage = m
 }
 
 func main() {
 	wnd := g.NewMasterWindow("volute", 400, 200, 0)
+
+	g.EnqueueNewTextureFromRgba(compressorImage, func(tex *g.Texture) {
+		compressorTexture = tex
+	})
+
 	wnd.Run(loop)
 }
