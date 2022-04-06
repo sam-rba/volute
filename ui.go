@@ -4,6 +4,8 @@ import (
 	"fmt"
 	g "github.com/AllenDang/giu"
 	"image"
+	"image/color"
+	"image/draw"
 	"strconv"
 
 	"github.com/sam-anthony/volute/mass"
@@ -13,12 +15,17 @@ import (
 	"github.com/sam-anthony/volute/volume"
 )
 
+func red() color.RGBA {
+	return color.RGBA{255, 0, 0, 255}
+}
+
 func engineDisplacementRow() *g.RowWidget {
 	return g.Row(
 		g.Label("Engine Displacement"),
 		g.InputFloat(&displacement.Val).Format("%.2f").OnChange(func() {
 			for i := 0; i < numPoints; i++ {
 				engineMassFlowRate[i] = massFlowRateAt(i)
+				go updateCompImg()
 			}
 		}),
 		g.Combo(
@@ -49,6 +56,7 @@ func engineSpeedRow() *g.TableRowWidget {
 			widgets,
 			g.InputInt(&engineSpeed[i]).OnChange(func() {
 				engineMassFlowRate[i] = massFlowRateAt(i)
+				go updateCompImg()
 			}),
 		)
 	}
@@ -66,6 +74,7 @@ func volumetricEfficiencyRow() *g.TableRowWidget {
 			widgets,
 			g.InputInt(&volumetricEfficiency[i]).OnChange(func() {
 				engineMassFlowRate[i] = massFlowRateAt(i)
+				go updateCompImg()
 			}),
 		)
 	}
@@ -100,6 +109,7 @@ func intakeAirTemperatureRow() *g.TableRowWidget {
 				Format("%.2f").
 				OnChange(func() {
 					engineMassFlowRate[i] = massFlowRateAt(i)
+					go updateCompImg()
 				}),
 		)
 	}
@@ -135,6 +145,7 @@ func manifoldPressureRow() *g.TableRowWidget {
 				OnChange(func() {
 					pressureRatio[i] = pressureRatioAt(i)
 					engineMassFlowRate[i] = massFlowRateAt(i)
+					go updateCompImg()
 				}),
 		)
 	}
@@ -261,13 +272,49 @@ func columns() []*g.TableColumnWidget {
 	return widgets
 }
 
-func compressorWidget() {
-	m := compressorImage
-	// TODO: Apply points to compressor map.
+var updatedCompImg = make(chan image.Image)
 
-	g.EnqueueNewTextureFromRgba(m, func(tex *g.Texture) {
-		compressorTexture = tex
-	})
+func updateCompImg() {
+	// Copy compressorImage
+	b := compressorImage.Bounds()
+	m := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(m, m.Bounds(), compressorImage, b.Min, draw.Src)
+
+	for i := 0; i < numPoints; i++ {
+		min := selectedCompressor.MinX
+		max := selectedCompressor.MaxX
+		unit := selectedCompressor.MaxFlow.Unit
+		mfr := engineMassFlowRate[i].AsUnit(unit)
+		maxMfr := selectedCompressor.MaxFlow.AsUnit(unit)
+		x := min + int(float32(max-min)*(mfr/maxMfr))
+
+		min = selectedCompressor.MinY
+		max = selectedCompressor.MaxY
+		pr := pressureRatio[i]
+		maxPr := selectedCompressor.MaxPressureRatio
+		y := min - int(float32((min-max))*((pr-1.0)/(maxPr-1.0)))
+
+		ps := m.Bounds().Dx() / 100 // Point size
+
+		draw.Draw(m,
+			image.Rect(x-ps/2, y-ps/2, x+ps/2, y+ps/2),
+			&image.Uniform{red()},
+			image.ZP,
+			draw.Src,
+		)
+	}
+
+	updatedCompImg <- m
+}
+
+func compressorWidget() {
+	select {
+	case m := <-updatedCompImg:
+		g.EnqueueNewTextureFromRgba(m, func(tex *g.Texture) {
+			compressorTexture = tex
+		})
+	default:
+	}
 
 	canvas := g.GetCanvas()
 	if compressorTexture != nil {

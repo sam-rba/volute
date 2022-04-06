@@ -133,7 +133,9 @@ func init() {
 func main() {
 	wnd := g.NewMasterWindow("volute", 400, 200, 0)
 
-	g.EnqueueNewTextureFromRgba(compressorImage, func(tex *g.Texture) {
+	go updateCompImg()
+	m := <-updatedCompImg
+	g.EnqueueNewTextureFromRgba(m, func(tex *g.Texture) {
 		compressorTexture = tex
 	})
 
