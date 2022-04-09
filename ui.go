@@ -8,6 +8,7 @@ import (
 	"image/draw"
 	"strconv"
 
+	"github.com/sam-anthony/volute/compressor"
 	"github.com/sam-anthony/volute/mass"
 	"github.com/sam-anthony/volute/pressure"
 	"github.com/sam-anthony/volute/temperature"
@@ -272,6 +273,32 @@ func columns() []*g.TableColumnWidget {
 	return widgets
 }
 
+var compressorTree []g.Widget
+
+func init() {
+	compressors := compressor.Compressors()
+	for manufacturer := range compressors {
+		manufacturerNode := g.TreeNode(manufacturer)
+		for series := range compressors[manufacturer] {
+			seriesNode := g.TreeNode(series)
+			for model, c := range compressors[manufacturer][series] {
+				seriesNode = seriesNode.Layout(
+					g.Selectable(model).OnClick(func() {
+						go setCompressor(c)
+					}),
+				)
+			}
+			manufacturerNode = manufacturerNode.Layout(seriesNode)
+		}
+		compressorTree = append(compressorTree, manufacturerNode)
+	}
+}
+
+func selectCompressor() g.Widget {
+	return g.ComboCustom("Compressor", selectedCompressor.Name).
+		Layout(compressorTree...)
+}
+
 var updatedCompImg = make(chan image.Image)
 
 func updateCompImg() {
@@ -321,7 +348,7 @@ func compressorWidget() {
 		winWidth, winHeight := g.GetAvailableRegion()
 		canvas.AddImage(
 			compressorTexture,
-			image.Pt(0, 225),
+			image.Pt(0, 250),
 			image.Pt(int(winWidth), int(winHeight)),
 		)
 	}

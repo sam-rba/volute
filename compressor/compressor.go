@@ -8,6 +8,7 @@ import (
 )
 
 type Compressor struct {
+	Name     string
 	FileName string
 	// MinX is the distance of the y-axis from left of image in pixels.
 	MinX int
@@ -26,7 +27,23 @@ type Compressor struct {
 	MaxPressureRatio float32
 }
 
-func GarrettG25660() Compressor {
+var compressors = make(map[string]map[string]map[string]Compressor)
+
+func init() {
+	compressors["Garrett"] = make(map[string]map[string]Compressor)
+	compressors["Garrett"]["G"] = make(map[string]Compressor)
+	compressors["Garrett"]["G"]["25-660"] = garrettG25660()
+
+	compressors["BorgWarner"] = make(map[string]map[string]Compressor)
+	compressors["BorgWarner"]["K"] = make(map[string]Compressor)
+	compressors["BorgWarner"]["K"]["03"] = borgwarnerK03()
+}
+
+func Compressors() map[string]map[string]map[string]Compressor {
+	return compressors
+}
+
+func garrettG25660() Compressor {
 	maxFlow, err := mass.NewFlowRate(
 		mass.Mass{70, mass.Pound},
 		time.Minute,
@@ -34,12 +51,32 @@ func GarrettG25660() Compressor {
 	)
 	util.Check(err)
 	return Compressor{
-		"compressor/res/GarrettG25660.jpg",
+		"Garrett G25-660",
+		"compressor/res/garrett/g/25-660.jpg",
 		204,
 		1885,
 		1665,
 		25,
 		maxFlow,
 		4.0,
+	}
+}
+
+func borgwarnerK03() Compressor {
+	maxFlow, err := mass.NewFlowRate(
+		mass.Mass{0.13, mass.Kilogram},
+		time.Second,
+		mass.KilogramsPerSecond,
+	)
+	util.Check(err)
+	return Compressor{
+		"BorgWarner K03",
+		"compressor/res/borgwarner/k/03.jpg",
+		30,
+		714,
+		876,
+		4,
+		maxFlow,
+		2.8,
 	}
 }

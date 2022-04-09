@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	g "github.com/AllenDang/giu"
 	"image"
 	"image/draw"
@@ -103,6 +104,7 @@ func loop() {
 			Columns(
 				columns()...,
 			),
+		selectCompressor(),
 		g.Custom(compressorWidget),
 	)
 }
@@ -113,10 +115,8 @@ var (
 	selectedCompressor compressor.Compressor
 )
 
-func init() {
-	selectedCompressor = compressor.GarrettG25660()
-
-	f, err := os.Open(selectedCompressor.FileName)
+func setCompressor(c compressor.Compressor) {
+	f, err := os.Open(c.FileName)
 	util.Check(err)
 	defer f.Close()
 
@@ -127,7 +127,20 @@ func init() {
 	m := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
 	draw.Draw(m, m.Bounds(), j, b.Min, draw.Src)
 
+	selectedCompressor = c
 	compressorImage = m
+
+	go updateCompImg()
+}
+
+func init() {
+	c, ok := compressor.Compressors()["Garrett"]["G"]["25-660"]
+	if !ok {
+		fmt.Println("Garrett G25-660 not in compressor.Compressors().")
+		os.Exit(1)
+	}
+
+	setCompressor(c)
 }
 
 func main() {
