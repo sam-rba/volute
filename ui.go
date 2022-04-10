@@ -279,20 +279,29 @@ var compressorTree []g.Widget
 
 func init() {
 	compressors := compressor.Compressors()
-	for manufacturer := range compressors {
-		manufacturerNode := g.TreeNode(manufacturer)
-		for series := range compressors[manufacturer] {
-			seriesNode := g.TreeNode(series)
-			for model, c := range compressors[manufacturer][series] {
-				seriesNode = seriesNode.Layout(
-					g.Selectable(model).OnClick(func() {
+	for man := range compressors {
+		man := man // Manufacturer
+		var serNodes []g.Widget
+		for ser := range compressors[man] {
+			ser := ser // Series
+			var modNodes []g.Widget
+			for mod, c := range compressors[man][ser] {
+				mod := mod // Model
+				c := c // Compressor
+				modNodes = append(
+					modNodes,
+					g.Selectable(mod).OnClick(func() {
 						go setCompressor(c)
 					}),
 				)
 			}
-			manufacturerNode = manufacturerNode.Layout(seriesNode)
+			serNodes = append(
+				serNodes,
+				g.TreeNode(ser).Layout(modNodes...),
+			)
 		}
-		compressorTree = append(compressorTree, manufacturerNode)
+		manNode := g.TreeNode(man).Layout(serNodes...)
+		compressorTree = append(compressorTree, manNode)
 	}
 }
 

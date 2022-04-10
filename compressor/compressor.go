@@ -33,10 +33,12 @@ func init() {
 	compressors["Garrett"] = make(map[string]map[string]Compressor)
 	compressors["Garrett"]["G"] = make(map[string]Compressor)
 	compressors["Garrett"]["G"]["25-660"] = garrettG25660()
-
 	compressors["BorgWarner"] = make(map[string]map[string]Compressor)
 	compressors["BorgWarner"]["K"] = make(map[string]Compressor)
 	compressors["BorgWarner"]["K"]["03"] = borgwarnerK03()
+	compressors["BorgWarner"]["K"]["04"] = borgwarnerK04()
+	compressors["BorgWarner"]["EFR"] = make(map[string]Compressor)
+	compressors["BorgWarner"]["EFR"]["6258"] = borgwarnerEFR6258()
 }
 
 func Compressors() map[string]map[string]map[string]Compressor {
@@ -59,6 +61,44 @@ func garrettG25660() Compressor {
 		25,
 		maxFlow,
 		4.0,
+	}
+}
+
+func borgwarnerEFR6258() Compressor {
+	maxFlow, err := mass.NewFlowRate(
+		mass.Mass{0.50, mass.Kilogram},
+		time.Second,
+		mass.KilogramsPerSecond,
+	)
+	util.Check(err)
+	return Compressor{
+		"BorgWarner EFR6258",
+		"compressor/res/borgwarner/efr/6258.jpg",
+		47,
+		455,
+		773,
+		6,
+		maxFlow,
+		3.8,
+	}
+}
+
+func borgwarnerK04() Compressor {
+	maxFlow, err := mass.NewFlowRate(
+		mass.Mass{0.18, mass.Kilogram},
+		time.Second,
+		mass.KilogramsPerSecond,
+	)
+	util.Check(err)
+	return Compressor{
+		"Borgwarner K04",
+		"compressor/res/borgwarner/k/04.jpg",
+		33,
+		712,
+		1090,
+		2,
+		maxFlow,
+		2.8,
 	}
 }
 
