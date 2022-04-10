@@ -241,6 +241,7 @@ func duplicateDeleteRow() *g.TableRowWidget {
 					engineMassFlowRate[i],
 					i,
 				)
+				go updateCompImg()
 			}),
 			g.Button("Delete").OnClick(func() {
 				if numPoints < 2 {
@@ -253,6 +254,7 @@ func duplicateDeleteRow() *g.TableRowWidget {
 				manifoldPressure = util.Remove(manifoldPressure, i)
 				pressureRatio = util.Remove(pressureRatio, i)
 				engineMassFlowRate = util.Remove(engineMassFlowRate, i)
+				go updateCompImg()
 			}),
 		))
 	}
