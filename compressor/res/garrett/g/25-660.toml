@@ -1,0 +1,8 @@
+name = "Garrett G25-660"
+minx = 204
+miny = 1885
+maxx = 1665
+maxy = 25
+maxpr = 4.0
+flowval = 70
+flowunit = "lb/min"

@@ -134,9 +134,14 @@ func setCompressor(c compressor.Compressor) {
 }
 
 func init() {
-	c, ok := compressor.Compressors()["Garrett"]["G"]["25-660"]
+	manufacturer := "garrett"
+	series := "g"
+	model := "25-660"
+	c, ok := compressor.Compressors()[manufacturer][series][model]
 	if !ok {
-		fmt.Println("Garrett G25-660 not in compressor.Compressors().")
+		fmt.Printf("compressor.Compressors()[\"%s\"][\"%s\"][\"%s\"] does not exist.\n",
+			manufacturer, series, model,
+		)
 		os.Exit(1)
 	}
 

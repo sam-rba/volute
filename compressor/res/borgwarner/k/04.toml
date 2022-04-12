@@ -1,0 +1,8 @@
+name = "BorgWarner K04"
+minx = 33
+miny = 712
+maxx = 1090
+maxy = 2
+maxpr = 2.8
+flowval = 0.18
+flowunit = "kg/s"

@@ -287,7 +287,7 @@ func init() {
 			var modNodes []g.Widget
 			for mod, c := range compressors[man][ser] {
 				mod := mod // Model
-				c := c // Compressor
+				c := c     // Compressor
 				modNodes = append(
 					modNodes,
 					g.Selectable(mod).OnClick(func() {

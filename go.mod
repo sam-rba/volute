@@ -2,7 +2,10 @@ module github.com/sam-anthony/volute
 
 go 1.18
 
-require github.com/AllenDang/giu v0.6.2
+require (
+	github.com/AllenDang/giu v0.6.2
+	github.com/BurntSushi/toml v1.1.0
+)
 
 require (
 	github.com/AllenDang/go-findfont v0.0.0-20200702051237-9f180485aeb8 // indirect
