@@ -329,7 +329,7 @@ func updateCompImg() {
 		min = selectedCompressor.MinY
 		max = selectedCompressor.MaxY
 		pr := pressureRatio[i]
-		maxPr := selectedCompressor.MaxPressureRatio
+		maxPr := selectedCompressor.MaxPR
 		y := min - int(float32((min-max))*((pr-1.0)/(maxPr-1.0)))
 
 		ps := m.Bounds().Dx() / 100 // Point size

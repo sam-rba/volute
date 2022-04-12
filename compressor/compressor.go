@@ -4,7 +4,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"io/fs"
 	fp "path/filepath"
-	"time"
 
 	"github.com/sam-anthony/volute/mass"
 	"github.com/sam-anthony/volute/util"
@@ -28,8 +27,8 @@ type Compressor struct {
 	MaxY int
 	// MaxFlow is the mass flow rate at MaxX.
 	MaxFlow mass.FlowRate
-	// MaxPressureRatio is the pressure ratio at MaxY.
-	MaxPressureRatio float32
+	// MaxPR is the pressure ratio at MaxY.
+	MaxPR float32
 }
 
 // [manufacturer][series][model]
@@ -105,42 +104,4 @@ func init() {
 
 func Compressors() map[string]map[string]map[string]Compressor {
 	return compressors
-}
-
-func borgwarnerK04() Compressor {
-	maxFlow, err := mass.NewFlowRate(
-		mass.Mass{0.18, mass.Kilogram},
-		time.Second,
-		mass.KilogramsPerSecond,
-	)
-	util.Check(err)
-	return Compressor{
-		"Borgwarner K04",
-		"compressor/res/borgwarner/k/04.jpg",
-		33,
-		712,
-		1090,
-		2,
-		maxFlow,
-		2.8,
-	}
-}
-
-func borgwarnerK03() Compressor {
-	maxFlow, err := mass.NewFlowRate(
-		mass.Mass{0.13, mass.Kilogram},
-		time.Second,
-		mass.KilogramsPerSecond,
-	)
-	util.Check(err)
-	return Compressor{
-		"BorgWarner K03",
-		"compressor/res/borgwarner/k/03.jpg",
-		30,
-		714,
-		876,
-		4,
-		maxFlow,
-		2.8,
-	}
 }
