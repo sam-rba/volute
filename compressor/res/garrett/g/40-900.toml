@@ -1,0 +1,8 @@
+name = "Garrett G40-900"
+minx = 220
+miny = 1870
+maxx = 1679
+maxy = 18
+maxpr = 5.0
+flowval = 100
+flowunit = "lb/min"
