@@ -357,10 +357,27 @@ func compressorWidget() {
 	canvas := g.GetCanvas()
 	if compressorTexture != nil {
 		winWidth, winHeight := g.GetAvailableRegion()
+
+		bounds := compressorImage.Bounds()
+		imWidth := float32(bounds.Dx())
+		imHeight := float32(bounds.Dy())
+
+		var ratio, xratio, yratio float32
+		xratio = winWidth / imWidth
+		yratio = winHeight / imHeight
+		if xratio < yratio {
+			ratio = xratio
+		} else {
+			ratio = yratio
+		}
+
+		x := int(imWidth * ratio)
+		y := int(imHeight * ratio)
+
 		canvas.AddImage(
 			compressorTexture,
 			image.Pt(0, 250),
-			image.Pt(int(winWidth), int(winHeight)),
+			image.Pt(x, y),
 		)
 	}
 }
