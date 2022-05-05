@@ -44,11 +44,13 @@ func UnitFromString(s string) (unit, error) {
 }
 
 type Volume struct {
-	Val  float32
-	Unit unit
+	val float32
+}
+
+func New(i float32, u unit) Volume {
+	return Volume{i * float32(u)}
 }
 
 func (v Volume) AsUnit(u unit) float32 {
-	cc := v.Val * float32(v.Unit) // Convert to cubic centimetres.
-	return cc / float32(u)        // Convert to desired unit.
+	return v.val / float32(u)
 }

@@ -93,7 +93,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		c.MaxFlow = mass.FlowRate{flow.FlowVal, u}
+		c.MaxFlow = mass.NewFlowRate(flow.FlowVal, u)
 
 		compressors[man][ser][mod] = c
 

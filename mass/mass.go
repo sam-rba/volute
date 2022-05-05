@@ -3,7 +3,6 @@ package mass
 import (
 	"errors"
 	"fmt"
-	"time"
 )
 
 type unit float32
@@ -15,13 +14,15 @@ const (
 )
 
 type Mass struct {
-	Val  float32
-	Unit unit
+	val float32
+}
+
+func New(i float32, u unit) Mass {
+	return Mass{i * float32(u)}
 }
 
 func (m Mass) AsUnit(u unit) float32 {
-	g := m.Val * float32(m.Unit) // Convert to grams.
-	return g / float32(u)        // Convert to desired unit.
+	return m.val / float32(u)
 }
 
 type flowRateUnit float32
@@ -53,34 +54,18 @@ func FlowRateUnitFromString(s string) (flowRateUnit, error) {
 		return PoundsPerMinute, nil
 	default:
 		return *new(flowRateUnit), errors.New(
-			fmt.Sprintf("invalid massFlowRateUnit: '%s'", s))
+			fmt.Sprintf("invalid mass flow rate unit: '%s'", s))
 	}
 }
 
 type FlowRate struct {
-	Val  float32
-	Unit flowRateUnit
+	val float32
 }
 
-func NewFlowRate(m Mass, t time.Duration, u flowRateUnit) (FlowRate, error) {
-	switch u {
-	case KilogramsPerSecond:
-		return FlowRate{
-			m.AsUnit(Kilogram) / float32(t.Seconds()),
-			u,
-		}, nil
-	case PoundsPerMinute:
-		return FlowRate{
-			m.AsUnit(Pound) / float32(t.Minutes()),
-			u,
-		}, nil
-	default:
-		return *new(FlowRate), errors.New(
-			fmt.Sprintf("invalid massFlowRateUnit: '%v'", u))
-	}
+func NewFlowRate(i float32, u flowRateUnit) FlowRate {
+	return FlowRate{i * float32(u)}
 }
 
 func (fr FlowRate) AsUnit(u flowRateUnit) float32 {
-	kgps := fr.Val * float32(fr.Unit) // Convert to kilogramsPerSecond.
-	return kgps / float32(u)          // Convert to desired unit.
+	return fr.val / float32(u)
 }

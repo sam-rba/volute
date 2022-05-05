@@ -44,15 +44,17 @@ func UnitFromString(s string) (unit, error) {
 }
 
 type Pressure struct {
-	Val  float32
-	Unit unit
+	val float32
+}
+
+func New(i float32, u unit) Pressure {
+	return Pressure{i * float32(u)}
 }
 
 func (p Pressure) AsUnit(u unit) float32 {
-	pa := p.Val * float32(p.Unit) // Convert to pascals.
-	return pa / float32(u)        // Convert to desired unit.
+	return p.val / float32(u)
 }
 
 func Atmospheric() Pressure {
-	return Pressure{1, Bar}
+	return Pressure{float32(1 * Bar)}
 }

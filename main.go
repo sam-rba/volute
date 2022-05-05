@@ -7,7 +7,6 @@ import (
 	"image/draw"
 	_ "image/jpeg"
 	"os"
-	"time"
 
 	"github.com/sam-anthony/volute/compressor"
 	"github.com/sam-anthony/volute/mass"
@@ -26,21 +25,21 @@ const (
 var numPoints = 1
 
 var (
-	displacement = volume.Volume{2000, volume.CubicCentimetre}
-	// selectedVolumeUnit is used to index volume.UnitStrings().
-	selectedVolumeUnit = volume.DefaultUnitIndex
+	displacement = volume.New(2000, volume.CubicCentimetre)
+	// volumeUnitIndex is used to index volume.UnitStrings().
+	volumeUnitIndex = volume.DefaultUnitIndex
 
 	engineSpeed = []int32{2000}
 
 	volumetricEfficiency = []int32{80}
 
 	intakeAirTemperature = []temperature.Temperature{{25, temperature.Celcius}}
-	// selectedTemperatureUnit is used to index temperature.UnitStrings().
-	selectedTemperatureUnit = temperature.DefaultUnitIndex
+	// temperatureUnitIndex is used to index temperature.UnitStrings().
+	temperatureUnitIndex = temperature.DefaultUnitIndex
 
-	manifoldPressure = []pressure.Pressure{{100, pressure.DefaultUnit}}
-	// selectedPressureUnit is used to index pressure.UnitStrings().
-	selectedPressureUnit = pressure.DefaultUnitIndex
+	manifoldPressure = []pressure.Pressure{pressure.Atmospheric()}
+	// pressureUnitIndex is used to index pressure.UnitStrings().
+	pressureUnitIndex = pressure.DefaultUnitIndex
 )
 
 var pressureRatio []float32
@@ -74,13 +73,7 @@ func massFlowRateAt(point int) mass.FlowRate {
 
 	kgPerMin := molsPerMin * airMolarMass
 
-	massPerMin := mass.Mass{kgPerMin, mass.Kilogram}
-
-	u, err := mass.FlowRateUnitFromString(mass.FlowRateUnitStrings()[selectedMassFlowRateUnit])
-	util.Check(err)
-
-	mfr, err := mass.NewFlowRate(massPerMin, time.Minute, u)
-	util.Check(err)
+	mfr := mass.NewFlowRate(kgPerMin/60.0, mass.KilogramsPerSecond)
 	return mfr
 }
 func init() {
