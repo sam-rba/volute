@@ -25,7 +25,7 @@ const (
 var numPoints = 1
 
 var (
-	displacement = volume.New(2000, volume.CubicCentimetre)
+	displacement = 2000 * volume.CubicCentimetre
 	// volumeUnitIndex is used to index volume.UnitStrings().
 	volumeUnitIndex = volume.DefaultUnitIndex
 
@@ -46,9 +46,9 @@ var pressureRatio []float32
 
 func pressureRatioAt(point int) float32 {
 	u := pressure.Pascal
-	m := manifoldPressure[point].AsUnit(u)
-	a := pressure.Atmospheric().AsUnit(u)
-	return m / a
+	m := manifoldPressure[point] / u
+	a := pressure.Atmospheric() / u
+	return float32(m / a)
 }
 func init() {
 	pressureRatio = append(pressureRatio, pressureRatioAt(0))
@@ -62,18 +62,18 @@ var (
 
 func massFlowRateAt(point int) mass.FlowRate {
 	rpm := float32(engineSpeed[point])
-	disp := displacement.AsUnit(volume.CubicMetre)
+	disp := float32(displacement / volume.CubicMetre)
 	ve := float32(volumetricEfficiency[point]) / 100.0
 	cubicMetresPerMin := (rpm / 2.0) * disp * ve
 
 	iat, err := intakeAirTemperature[point].AsUnit(temperature.Kelvin)
 	util.Check(err)
-	pres := manifoldPressure[point].AsUnit(pressure.Pascal)
-	molsPerMin := (pres * cubicMetresPerMin) / (gasConstant * iat)
+	pres := manifoldPressure[point] / pressure.Pascal
+	molsPerMin := (float32(pres) * cubicMetresPerMin) / (gasConstant * iat)
 
 	kgPerMin := molsPerMin * airMolarMass
 
-	mfr := mass.NewFlowRate(kgPerMin/60.0, mass.KilogramsPerSecond)
+	mfr := mass.FlowRate(kgPerMin/60.0) * mass.KilogramsPerSecond
 	return mfr
 }
 func init() {

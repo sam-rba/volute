@@ -24,11 +24,11 @@ func engineDisplacementRow() *g.RowWidget {
 	s := volume.UnitStrings()[volumeUnitIndex]
 	unit, err := volume.UnitFromString(s)
 	util.Check(err)
-	engDisp := displacement.AsUnit(unit)
+	engDisp := float32(displacement / unit)
 	return g.Row(
 		g.Label("Engine Displacement"),
 		g.InputFloat(&engDisp).Format("%.2f").OnChange(func() {
-			displacement = volume.New(engDisp, unit)
+			displacement = volume.Volume(engDisp) * unit
 			for i := 0; i < numPoints; i++ {
 				engineMassFlowRate[i] = massFlowRateAt(i)
 				go updateCompImg()
@@ -39,12 +39,7 @@ func engineDisplacementRow() *g.RowWidget {
 			volume.UnitStrings()[volumeUnitIndex],
 			volume.UnitStrings(),
 			&volumeUnitIndex,
-		).OnChange(func() {
-			displacement = volume.New(
-				displacement.AsUnit(unit),
-				unit,
-			)
-		}),
+		),
 	)
 }
 
@@ -131,23 +126,16 @@ func manifoldPressureRow() *g.TableRowWidget {
 			pressure.UnitStrings()[pressureUnitIndex],
 			pressure.UnitStrings(),
 			&pressureUnitIndex,
-		).OnChange(func() {
-			for i := 0; i < numPoints; i++ {
-				manifoldPressure[i] = pressure.New(
-					manifoldPressure[i].AsUnit(unit),
-					unit,
-				)
-			}
-		}),
+		),
 	}
 	for i := 0; i < numPoints; i++ {
 		i := i
-		manPres := manifoldPressure[i].AsUnit(unit)
+		manPres := float32(manifoldPressure[i] / unit)
 		widgets = append(
 			widgets,
 			g.InputFloat(&manPres).Format("%.2f").
 				OnChange(func() {
-					manifoldPressure[i] = pressure.New(manPres, unit)
+					manifoldPressure[i] = pressure.Pressure(manPres * float32(unit))
 					pressureRatio[i] = pressureRatioAt(i)
 					engineMassFlowRate[i] = massFlowRateAt(i)
 					go updateCompImg()
@@ -184,18 +172,11 @@ func massFlowRateRow() *g.TableRowWidget {
 			mass.FlowRateUnitStrings()[selectedMassFlowRateUnit],
 			mass.FlowRateUnitStrings(),
 			&selectedMassFlowRateUnit,
-		).OnChange(func() {
-			for i := 0; i < numPoints; i++ {
-				engineMassFlowRate[i] = mass.NewFlowRate(
-					engineMassFlowRate[i].AsUnit(mfrUnit),
-					mfrUnit,
-				)
-			}
-		}),
+		),
 	}
 	for i := 0; i < numPoints; i++ {
 		mfr := strconv.FormatFloat(
-			float64(engineMassFlowRate[i].AsUnit(mfrUnit)),
+			float64(engineMassFlowRate[i]/mfrUnit),
 			'f',
 			3,
 			32,
@@ -327,10 +308,10 @@ func updateCompImg() {
 		max := selectedCompressor.MaxX
 
 		unit := mass.KilogramsPerSecond
-		mfr := engineMassFlowRate[i].AsUnit(unit)
-		maxMfr := selectedCompressor.MaxFlow.AsUnit(unit)
+		mfr := engineMassFlowRate[i] / unit
+		maxMfr := selectedCompressor.MaxFlow / unit
 
-		x := min + int(float32(max-min)*(mfr/maxMfr))
+		x := min + int(float32(max-min)*float32(mfr/maxMfr))
 
 		min = selectedCompressor.MinY
 		max = selectedCompressor.MaxY

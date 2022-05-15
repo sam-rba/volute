@@ -5,13 +5,13 @@ import (
 	"fmt"
 )
 
-type unit float32
+type Volume float32
 
 const (
-	CubicCentimetre unit = 1
-	Litre           unit = 1_000
-	CubicMetre      unit = 1_000_000
-	CubicInch       unit = 16.38706
+	CubicCentimetre Volume = 1
+	Litre           Volume = 1_000
+	CubicMetre      Volume = 1_000_000
+	CubicInch       Volume = 16.38706
 )
 
 // UnitStrings returns a slice of strings, each representing a
@@ -22,12 +22,12 @@ func UnitStrings() []string {
 }
 
 const (
-	DefaultUnit unit = CubicCentimetre
+	DefaultUnit Volume = CubicCentimetre
 	// DefaulUnitIndex is used to index UnitStrings().
 	DefaultUnitIndex int32 = 0 // cc
 )
 
-func UnitFromString(s string) (unit, error) {
+func UnitFromString(s string) (Volume, error) {
 	// Each case corresponds to a value in UnitStrings().
 	switch s {
 	case "cc":
@@ -39,18 +39,6 @@ func UnitFromString(s string) (unit, error) {
 	case "in³":
 		return CubicInch, nil
 	default:
-		return *new(unit), errors.New(fmt.Sprintf("invalid volume unit: '%s'", s))
+		return *new(Volume), errors.New(fmt.Sprintf("invalid volume unit: '%s'", s))
 	}
-}
-
-type Volume struct {
-	val float32
-}
-
-func New(i float32, u unit) Volume {
-	return Volume{i * float32(u)}
-}
-
-func (v Volume) AsUnit(u unit) float32 {
-	return v.val / float32(u)
 }

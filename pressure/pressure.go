@@ -5,13 +5,13 @@ import (
 	"fmt"
 )
 
-type unit float32
+type Pressure float32
 
 const (
-	Pascal              unit = 1
-	Kilopascal          unit = 1_000
-	Bar                 unit = 100_000
-	PoundsPerSquareInch unit = 6_894.757
+	Pascal              Pressure = 1
+	Kilopascal          Pressure = 1_000
+	Bar                 Pressure = 100_000
+	PoundsPerSquareInch Pressure = 6_894.757
 )
 
 // UnitStrings returns a slice of strings, each representing a
@@ -22,12 +22,12 @@ func UnitStrings() []string {
 }
 
 const (
-	DefaultUnit unit = Kilopascal
+	DefaultUnit Pressure = Kilopascal
 	// DefaultUnitIndex is used to index UnitStrings().
 	DefaultUnitIndex int32 = 1 // kPa
 )
 
-func UnitFromString(s string) (unit, error) {
+func UnitFromString(s string) (Pressure, error) {
 	// Each case corresponds to a value in UnitStrings().
 	switch s {
 	case "Pa":
@@ -39,22 +39,10 @@ func UnitFromString(s string) (unit, error) {
 	case "psi":
 		return PoundsPerSquareInch, nil
 	default:
-		return *new(unit), errors.New(fmt.Sprintf("invalid unit: '%s'", s))
+		return *new(Pressure), errors.New(fmt.Sprintf("invalid unit: '%s'", s))
 	}
 }
 
-type Pressure struct {
-	val float32
-}
-
-func New(i float32, u unit) Pressure {
-	return Pressure{i * float32(u)}
-}
-
-func (p Pressure) AsUnit(u unit) float32 {
-	return p.val / float32(u)
-}
-
 func Atmospheric() Pressure {
-	return Pressure{float32(1 * Bar)}
+	return 1 * Bar
 }
