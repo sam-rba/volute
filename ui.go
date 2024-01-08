@@ -298,40 +298,18 @@ func selectCompressor() g.Widget {
 var updatedCompImg = make(chan image.Image)
 
 func updateCompImg() {
-	// Copy compressorImage
-	b := compressorImage.Bounds()
-	m := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
-	draw.Draw(m, m.Bounds(), compressorImage, b.Min, draw.Src)
-
+	img := copyImage(compressorImage)
 	for i := 0; i < numPoints; i++ {
-		min := selectedCompressor.MinX
-		max := selectedCompressor.MaxX
-
-		unit := mass.KilogramsPerSecond
-		mfr := engineMassFlowRate[i] / unit
-		maxMfr := selectedCompressor.MaxFlow / unit
-
-		x := min + int(float32(max-min)*float32(mfr/maxMfr))
-
-		min = selectedCompressor.MinY
-		max = selectedCompressor.MaxY
-
-		pr := pressureRatio[i]
-		maxPr := selectedCompressor.MaxPR
-
-		y := min - int(float32((min-max))*((pr-1.0)/(maxPr-1.0)))
-
-		ps := m.Bounds().Dx() / 100 // Point size
-
-		draw.Draw(m,
-			image.Rect(x-ps/2, y-ps/2, x+ps/2, y+ps/2),
+		pos := pointPos(i)
+		ps := img.Bounds().Dx() / 100 // Point size
+		draw.Draw(img,
+			image.Rect(pos.X-ps/2, pos.Y-ps/2, pos.X+ps/2, pos.Y+ps/2),
 			&image.Uniform{red()},
 			image.ZP,
 			draw.Src,
 		)
 	}
-
-	updatedCompImg <- m
+	updatedCompImg <- img
 }
 
 func compressorWidget() {
@@ -369,4 +347,28 @@ func compressorWidget() {
 			image.Pt(x, y),
 		)
 	}
+}
+
+func copyImage(old *image.RGBA) *image.RGBA {
+	b := old.Bounds()
+	img := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(img, img.Bounds(), old, b.Min, draw.Src)
+	return img
+}
+
+// The position on the compressor map of an operating point.
+func pointPos(i int) (pos image.Point) {
+	const unit = mass.KilogramsPerSecond
+	mfr := engineMassFlowRate[i] / unit
+	maxMfr := selectedCompressor.MaxFlow / unit
+	min := selectedCompressor.MinX
+	max := selectedCompressor.MaxX
+	pos.X = min + int(float32(max-min)*float32(mfr/maxMfr))
+
+	min = selectedCompressor.MinY
+	max = selectedCompressor.MaxY
+	pr := pressureRatio[i]
+	maxPr := selectedCompressor.MaxPR
+	pos.Y = min - int(float32((min-max))*((pr-1.0)/(maxPr-1.0)))
+	return pos
 }
