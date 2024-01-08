@@ -4,6 +4,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"io/fs"
 	fp "path/filepath"
+	"strings"
 
 	"github.com/sam-anthony/volute/mass"
 	"github.com/sam-anthony/volute/util"
@@ -56,47 +57,24 @@ func init() {
 		man, ser := fp.Split(manSer)
 		man = fp.Clean(man) // Clean trailing slash
 
-		var exists bool
-		_, exists = compressors[man]
-		if !exists {
+		if _, ok := compressors[man]; !ok { // Manufacturer does NOT exist
 			compressors[man] = make(map[string]map[string]Compressor)
 		}
-		_, exists = compressors[man][ser]
-		if !exists {
+		if _, ok := compressors[man][ser]; !ok { // Series does NOT exist
 			compressors[man][ser] = make(map[string]Compressor)
 		}
 
 		tomlFile := fp.Join(root, path)
-
 		var c Compressor
-		_, err = toml.DecodeFile(tomlFile, &c)
+		if _, err = toml.DecodeFile(tomlFile, &c); err != nil {
+			return err
+		}
+		c.FileName = strings.TrimSuffix(tomlFile, ".toml") + ".jpg"
+		c.MaxFlow, err = readMaxFlow(tomlFile)
 		if err != nil {
 			return err
 		}
-
-		// Replace .toml with .jpg
-		imageFile := tomlFile[:len(tomlFile)-len(".toml")] + ".jpg"
-		c.FileName = imageFile
-
-		// Must parse MaxFlow seperately because the MassFlowRateUnit
-		// is stored as a string and must be converted with
-		// FlowRateUnitFromString().
-		flow := struct {
-			FlowVal  float32
-			FlowUnit string
-		}{}
-		_, err = toml.DecodeFile(tomlFile, &flow)
-		if err != nil {
-			return err
-		}
-		u, err := mass.FlowRateUnitFromString(flow.FlowUnit)
-		if err != nil {
-			return err
-		}
-		c.MaxFlow = mass.FlowRate(flow.FlowVal) * u
-
 		compressors[man][ser][mod] = c
-
 		return nil
 	})
 	util.Check(err)
@@ -104,4 +82,19 @@ func init() {
 
 func Compressors() map[string]map[string]map[string]Compressor {
 	return compressors
+}
+
+func readMaxFlow(tomlFile string) (mass.FlowRate, error) {
+	flow := struct {
+		FlowVal  float32
+		FlowUnit string
+	}{}
+	if _, err := toml.DecodeFile(tomlFile, &flow); err != nil {
+		return -1, err
+	}
+	unit, err := mass.FlowRateUnitFromString(flow.FlowUnit)
+	if err != nil {
+		return -1, err
+	}
+	return mass.FlowRate(flow.FlowVal) * unit, nil
 }
