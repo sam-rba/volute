@@ -25,21 +25,26 @@ func engineDisplacementRow() *g.RowWidget {
 	unit, err := volume.UnitFromString(s)
 	util.Check(err)
 	engDisp := float32(displacement / unit)
+	valWid, _ := g.CalcTextSize("12345.67")
+	unitWid, _ := g.CalcTextSize(volume.UnitStrings()[volumeUnitIndex])
 	return g.Row(
 		g.Label("Engine Displacement"),
-		g.InputFloat(&engDisp).Format("%.2f").OnChange(func() {
-			displacement = volume.Volume(engDisp) * unit
-			for i := 0; i < numPoints; i++ {
-				engineMassFlowRate[i] = massFlowRateAt(i)
-				go updateCompImg()
-			}
-		}),
+		g.InputFloat(&engDisp).
+			Format("%.2f").
+			OnChange(func() {
+				displacement = volume.Volume(engDisp) * unit
+				for i := 0; i < numPoints; i++ {
+					engineMassFlowRate[i] = massFlowRateAt(i)
+					go updateCompImg()
+				}
+			}).
+			Size(valWid),
 		g.Combo(
 			"",
 			volume.UnitStrings()[volumeUnitIndex],
 			volume.UnitStrings(),
 			&volumeUnitIndex,
-		),
+		).Size(unitWid*2),
 	)
 }
 
@@ -80,6 +85,7 @@ func volumetricEfficiencyRow() *g.TableRowWidget {
 }
 
 func intakeAirTemperatureRow() *g.TableRowWidget {
+	wid, _ := g.CalcTextSize(temperature.UnitStrings()[temperatureUnitIndex])
 	widgets := []g.Widget{
 		g.Label("Intake Air Temperature"),
 		g.Combo(
@@ -97,7 +103,7 @@ func intakeAirTemperatureRow() *g.TableRowWidget {
 				util.Check(err)
 				intakeAirTemperature[i] = temperature.Temperature{t, u}
 			}
-		}),
+		}).Size(wid * 2),
 	}
 	for i := 0; i < numPoints; i++ {
 		i := i
@@ -118,7 +124,7 @@ func manifoldPressureRow() *g.TableRowWidget {
 	s := pressure.UnitStrings()[pressureUnitIndex]
 	unit, err := pressure.UnitFromString(s)
 	util.Check(err)
-
+	wid, _ := g.CalcTextSize(pressure.UnitStrings()[pressureUnitIndex])
 	widgets := []g.Widget{
 		g.Label("Manifold Absolute Pressure"),
 		g.Combo(
@@ -126,7 +132,7 @@ func manifoldPressureRow() *g.TableRowWidget {
 			pressure.UnitStrings()[pressureUnitIndex],
 			pressure.UnitStrings(),
 			&pressureUnitIndex,
-		),
+		).Size(wid * 2),
 	}
 	for i := 0; i < numPoints; i++ {
 		i := i
@@ -165,6 +171,7 @@ func massFlowRateRow() *g.TableRowWidget {
 	mfrUnit, err := mass.FlowRateUnitFromString(s)
 	util.Check(err)
 
+	wid, _ := g.CalcTextSize(mass.FlowRateUnitStrings()[selectedMassFlowRateUnit])
 	widgets := []g.Widget{
 		g.Label("Mass Flow Rate"),
 		g.Combo(
@@ -172,7 +179,7 @@ func massFlowRateRow() *g.TableRowWidget {
 			mass.FlowRateUnitStrings()[selectedMassFlowRateUnit],
 			mass.FlowRateUnitStrings(),
 			&selectedMassFlowRateUnit,
-		),
+		).Size(wid * 2),
 	}
 	for i := 0; i < numPoints; i++ {
 		mfr := strconv.FormatFloat(

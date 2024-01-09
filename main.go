@@ -80,51 +80,11 @@ func init() {
 	engineMassFlowRate = append(engineMassFlowRate, massFlowRateAt(0))
 }
 
-func loop() {
-	g.SingleWindow().Layout(
-		engineDisplacementRow(),
-		g.Table().
-			Size(g.Auto, 190).
-			Rows(
-				engineSpeedRow(),
-				volumetricEfficiencyRow(),
-				intakeAirTemperatureRow(),
-				manifoldPressureRow(),
-				pressureRatioRow(),
-				massFlowRateRow(),
-				duplicateDeleteRow(),
-			).
-			Columns(
-				columns()...,
-			),
-		selectCompressor(),
-		g.Custom(compressorWidget),
-	)
-}
-
 var (
 	compressorImage    *image.RGBA
 	compressorTexture  *g.Texture
 	selectedCompressor compressor.Compressor
 )
-
-func setCompressor(c compressor.Compressor) {
-	f, err := os.Open(c.FileName)
-	util.Check(err)
-	defer f.Close()
-
-	j, _, err := image.Decode(f)
-	util.Check(err)
-
-	b := j.Bounds()
-	m := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
-	draw.Draw(m, m.Bounds(), j, b.Min, draw.Src)
-
-	selectedCompressor = c
-	compressorImage = m
-
-	go updateCompImg()
-}
 
 func init() {
 	manufacturer := "garrett"
@@ -151,4 +111,45 @@ func main() {
 	})
 
 	wnd.Run(loop)
+}
+
+func setCompressor(c compressor.Compressor) {
+	f, err := os.Open(c.FileName)
+	util.Check(err)
+	defer f.Close()
+
+	j, _, err := image.Decode(f)
+	util.Check(err)
+
+	b := j.Bounds()
+	m := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(m, m.Bounds(), j, b.Min, draw.Src)
+
+	selectedCompressor = c
+	compressorImage = m
+
+	go updateCompImg()
+}
+
+func loop() {
+	g.SingleWindow().Layout(
+		engineDisplacementRow(),
+		g.Table().
+			Size(g.Auto, 190).
+			Rows(
+				engineSpeedRow(),
+				volumetricEfficiencyRow(),
+				intakeAirTemperatureRow(),
+				manifoldPressureRow(),
+				pressureRatioRow(),
+				massFlowRateRow(),
+				duplicateDeleteRow(),
+			).
+			Columns(
+				columns()...,
+			).
+			Flags(g.TableFlagsSizingFixedFit),
+		selectCompressor(),
+		g.Custom(compressorWidget),
+	)
 }
