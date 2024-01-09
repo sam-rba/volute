@@ -1,4 +1,4 @@
-module github.com/sam-anthony/volute
+module volute
 
 go 1.18
 

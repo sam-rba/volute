@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sam-anthony/volute/mass"
-	"github.com/sam-anthony/volute/pressure"
-	"github.com/sam-anthony/volute/temperature"
+	"volute/mass"
+	"volute/pressure"
+	"volute/temperature"
 )
 
 func Check(err error) {

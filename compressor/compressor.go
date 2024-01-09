@@ -6,8 +6,8 @@ import (
 	fp "path/filepath"
 	"strings"
 
-	"github.com/sam-anthony/volute/mass"
-	"github.com/sam-anthony/volute/util"
+	"volute/mass"
+	"volute/util"
 )
 
 const root = "compressor_maps/"

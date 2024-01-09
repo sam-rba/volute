@@ -8,12 +8,12 @@ import (
 	_ "image/jpeg"
 	"os"
 
-	"github.com/sam-anthony/volute/compressor"
-	"github.com/sam-anthony/volute/mass"
-	"github.com/sam-anthony/volute/pressure"
-	"github.com/sam-anthony/volute/temperature"
-	"github.com/sam-anthony/volute/util"
-	"github.com/sam-anthony/volute/volume"
+	"volute/compressor"
+	"volute/mass"
+	"volute/pressure"
+	"volute/temperature"
+	"volute/util"
+	"volute/volume"
 )
 
 const (
