@@ -10,7 +10,7 @@ import (
 	"github.com/sam-anthony/volute/util"
 )
 
-const root = "compressor/res/"
+const root = "compressor_maps/"
 
 type Compressor struct {
 	Name     string
