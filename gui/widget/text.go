@@ -45,12 +45,11 @@ func drawText(text []byte, dst draw.Image, r image.Rectangle) {
 		Dot:  fixed.P(0, 0),
 	}
 
-	bounds := textBounds(text, drawer)
-
 	// background
 	draw.Draw(dst, r, BG_COLOR, image.ZP, draw.Src)
 
 	// text image
+	bounds := textBounds(text, drawer)
 	textImg := image.NewRGBA(bounds)
 	draw.Draw(textImg, bounds, BG_COLOR, image.ZP, draw.Src)
 	drawer.Dst = textImg

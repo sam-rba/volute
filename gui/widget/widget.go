@@ -42,7 +42,7 @@ func Input(env gui.Env, r image.Rectangle, val chan<- float64) {
 			text = fmt.Appendf(text, "%c", event.Rune)
 			env.Draw() <- redraw(text)
 		case win.KbDown:
-			if event.Key == win.KeyBackspace && len(text) > 0 {
+			if event.Key == win.KeyBackspace && focus && len(text) > 0 {
 				text = text[:len(text)-1]
 				env.Draw() <- redraw(text)
 			}
