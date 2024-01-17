@@ -18,7 +18,10 @@ func run() {
 	mux, env := gui.NewMux(w)
 
 	var (
-		displacementChan = make(chan float64)
+		displacementChan = make(chan uint)
+		output           = make(chan uint)
+
+		displacement uint = 0
 	)
 
 	pad := 10
@@ -36,23 +39,36 @@ func run() {
 	)
 	go widget.Label("cc", r, mux.MakeEnv())
 
+	r = image.Rect(
+		pad,
+		r.Max.Y+pad,
+		pad+widget.TextWidth(6),
+		r.Max.Y+pad+widget.TextHeight(),
+	)
+	go widget.Output(output, r, mux.MakeEnv())
+
 Loop:
-	for event := range env.Events() {
-		switch event := event.(type) {
-		case win.WiClose:
-			break Loop
-		case win.KbType:
-			if event.Rune == 'q' {
+	for {
+		select {
+		case displacement = <-displacementChan:
+			output <- displacement
+		case event, ok := <-env.Events():
+			if !ok { // channel closed
 				break Loop
 			}
-		}
-		select {
-		case _ = <-displacementChan:
-		default:
+			switch event := event.(type) {
+			case win.WiClose:
+				break Loop
+			case win.KbType:
+				if event.Rune == 'q' {
+					break Loop
+				}
+			}
 		}
 	}
 	close(env.Draw())
 	close(displacementChan)
+	close(output)
 }
 
 func main() {

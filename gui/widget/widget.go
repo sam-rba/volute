@@ -28,7 +28,7 @@ func Label(text string, r image.Rectangle, env gui.Env) {
 	close(env.Draw())
 }
 
-func Input(val chan<- float64, r image.Rectangle, env gui.Env) {
+func Input(val chan<- uint, r image.Rectangle, env gui.Env) {
 	redraw := func(text []byte) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
 			drawText(text, drw, r)
@@ -51,17 +51,44 @@ func Input(val chan<- float64, r image.Rectangle, env gui.Env) {
 				focus = true
 			}
 		case win.KbType:
-			if !focus ||
-				(!isDigit(event.Rune) && event.Rune != '.') ||
-				(event.Rune == '.' && contains(text, '.')) {
-				continue
+			if focus && isDigit(event.Rune) {
+				text = fmt.Appendf(text, "%c", event.Rune)
+				env.Draw() <- redraw(text)
+				val <- atoi(text)
 			}
-			text = fmt.Appendf(text, "%c", event.Rune)
-			env.Draw() <- redraw(text)
 		case win.KbDown:
-			if event.Key == win.KeyBackspace && focus && len(text) > 0 {
+			if focus && event.Key == win.KeyBackspace && len(text) > 0 {
 				text = text[:len(text)-1]
 				env.Draw() <- redraw(text)
+				val <- atoi(text)
+			}
+		}
+	}
+	close(env.Draw())
+}
+
+func Output(val <-chan uint, r image.Rectangle, env gui.Env) {
+	redraw := func(n uint) func(draw.Image) image.Rectangle {
+		return func(drw draw.Image) image.Rectangle {
+			drawText([]byte(fmt.Sprint(n)), drw, r)
+			return r
+		}
+	}
+
+	var n uint = 0
+	env.Draw() <- redraw(n)
+
+Loop:
+	for {
+		select {
+		case n = <-val:
+			env.Draw() <- redraw(n)
+		case event, ok := <-env.Events():
+			if !ok { // channel closed
+				break Loop
+			}
+			if event, ok := event.(win.WiFocus); ok && event.Focused {
+				env.Draw() <- redraw(n)
 			}
 		}
 	}
@@ -79,4 +106,12 @@ func contains[T cmp.Ordered](slc []T, v T) bool {
 		}
 	}
 	return false
+}
+
+func atoi(s []byte) uint {
+	var n uint = 0
+	for _, d := range s {
+		n = n*10 + uint(d-'0')
+	}
+	return n
 }
