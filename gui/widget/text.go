@@ -14,11 +14,12 @@ import (
 )
 
 var (
-	FONT               = goregular.TTF
-	FONT_SIZE  float64 = 15
-	DPI        float64 = 72
-	BG_COLOR           = image.White
-	TEXT_COLOR         = image.Black
+	FONT       = goregular.TTF
+	FONT_SIZE  = 15
+	DPI        = 72
+	PADDING    = 3
+	BG_COLOR   = image.White
+	TEXT_COLOR = image.Black
 )
 
 var face *concurrentFace
@@ -29,13 +30,21 @@ func init() {
 		log.Fatal(err)
 	}
 	fce, err := opentype.NewFace(fnt, &opentype.FaceOptions{
-		Size: FONT_SIZE,
-		DPI:  DPI,
+		Size: float64(FONT_SIZE),
+		DPI:  float64(DPI),
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 	face = &concurrentFace{sync.Mutex{}, fce}
+}
+
+func TextWidth(nchars int) int {
+	return nchars*FONT_SIZE + 2*PADDING // very rough estimation
+}
+
+func TextHeight() int {
+	return FONT_SIZE + 2*PADDING
 }
 
 func drawText(text []byte, dst draw.Image, r image.Rectangle) {

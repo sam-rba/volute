@@ -11,7 +11,24 @@ import (
 	"volute/gui/win"
 )
 
-func Input(env gui.Env, r image.Rectangle, val chan<- float64) {
+func Label(text string, r image.Rectangle, env gui.Env) {
+	redraw := func(drw draw.Image) image.Rectangle {
+		drawText([]byte(text), drw, r)
+		return r
+	}
+	env.Draw() <- redraw
+	for event := range env.Events() {
+		switch event := event.(type) {
+		case win.WiFocus:
+			if event.Focused {
+				env.Draw() <- redraw
+			}
+		}
+	}
+	close(env.Draw())
+}
+
+func Input(val chan<- float64, r image.Rectangle, env gui.Env) {
 	redraw := func(text []byte) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
 			drawText(text, drw, r)

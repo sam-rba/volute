@@ -21,7 +21,20 @@ func run() {
 		displacementChan = make(chan float64)
 	)
 
-	go widget.Input(mux.MakeEnv(), image.Rect(20, 20, 100, 40), displacementChan)
+	pad := 10
+	r := image.Rect(pad, pad, pad+widget.TextWidth(6), pad+widget.TextHeight())
+	go widget.Input(
+		displacementChan,
+		r,
+		mux.MakeEnv(),
+	)
+	r = image.Rect(
+		r.Max.X+pad,
+		r.Min.Y,
+		r.Max.X+pad+widget.TextWidth(len("cc")),
+		r.Max.Y,
+	)
+	go widget.Label("cc", r, mux.MakeEnv())
 
 Loop:
 	for event := range env.Events() {
