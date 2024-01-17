@@ -1,155 +1,47 @@
 package main
 
 import (
-	"fmt"
-	g "github.com/AllenDang/giu"
 	"image"
-	"image/draw"
-	_ "image/jpeg"
-	"os"
 
-	"volute/compressor"
-	"volute/mass"
-	"volute/pressure"
-	"volute/temperature"
-	"volute/util"
-	"volute/volume"
+	"github.com/faiface/mainthread"
+	"volute/gui"
+	"volute/gui/widget"
+	"volute/gui/win"
 )
 
-const (
-	gasConstant  = 8.314472
-	airMolarMass = 0.0289647 // kg/mol
-)
-
-// numPoints is the number of datapoints on the compressor map.
-var numPoints = 1
-
-var (
-	displacement = 2000 * volume.CubicCentimetre
-	// volumeUnitIndex is used to index volume.UnitStrings().
-	volumeUnitIndex = volume.DefaultUnitIndex
-
-	engineSpeed = []int32{2000}
-
-	volumetricEfficiency = []int32{80}
-
-	intakeAirTemperature = []temperature.Temperature{{25, temperature.Celcius}}
-	// temperatureUnitIndex is used to index temperature.UnitStrings().
-	temperatureUnitIndex = temperature.DefaultUnitIndex
-
-	manifoldPressure = []pressure.Pressure{pressure.Atmospheric()}
-	// pressureUnitIndex is used to index pressure.UnitStrings().
-	pressureUnitIndex = pressure.DefaultUnitIndex
-)
-
-var pressureRatio []float32
-
-func pressureRatioAt(point int) float32 {
-	u := pressure.Pascal
-	m := manifoldPressure[point] / u
-	a := pressure.Atmospheric() / u
-	return float32(m / a)
-}
-func init() {
-	pressureRatio = append(pressureRatio, pressureRatioAt(0))
-}
-
-var (
-	engineMassFlowRate []mass.FlowRate
-	// selectedMassFlowRateUnit is used to index mass.FlowRateUnitStrings().
-	selectedMassFlowRateUnit = mass.DefaultFlowRateUnitIndex
-)
-
-func massFlowRateAt(point int) mass.FlowRate {
-	rpm := float32(engineSpeed[point])
-	disp := float32(displacement / volume.CubicMetre)
-	ve := float32(volumetricEfficiency[point]) / 100.0
-	cubicMetresPerMin := (rpm / 2.0) * disp * ve
-
-	iat, err := intakeAirTemperature[point].AsUnit(temperature.Kelvin)
-	util.Check(err)
-	pres := manifoldPressure[point] / pressure.Pascal
-	molsPerMin := (float32(pres) * cubicMetresPerMin) / (gasConstant * iat)
-
-	kgPerMin := molsPerMin * airMolarMass
-
-	mfr := mass.FlowRate(kgPerMin/60.0) * mass.KilogramsPerSecond
-	return mfr
-}
-func init() {
-	engineMassFlowRate = append(engineMassFlowRate, massFlowRateAt(0))
-}
-
-var (
-	compressorImage    *image.RGBA
-	compressorTexture  *g.Texture
-	selectedCompressor compressor.Compressor
-)
-
-func init() {
-	manufacturer := "garrett"
-	series := "g"
-	model := "25-660"
-	c, ok := compressor.Compressors()[manufacturer][series][model]
-	if !ok {
-		fmt.Printf("compressor.Compressors()[\"%s\"][\"%s\"][\"%s\"] does not exist.\n",
-			manufacturer, series, model,
-		)
-		os.Exit(1)
+func run() {
+	w, err := win.New(win.Title("volute"), win.Size(800, 600))
+	if err != nil {
+		panic(err)
 	}
 
-	setCompressor(c)
+	mux, env := gui.NewMux(w)
+
+	var (
+		displacementChan = make(chan float64)
+	)
+
+	go widget.Input(mux.MakeEnv(), image.Rect(20, 20, 100, 40), displacementChan)
+
+Loop:
+	for event := range env.Events() {
+		switch event := event.(type) {
+		case win.WiClose:
+			break Loop
+		case win.KbType:
+			if event.Rune == 'q' {
+				break Loop
+			}
+		}
+		select {
+		case _ = <-displacementChan:
+		default:
+		}
+	}
+	close(env.Draw())
+	close(displacementChan)
 }
 
 func main() {
-	wnd := g.NewMasterWindow("volute", 400, 200, 0)
-
-	go updateCompImg()
-	m := <-updatedCompImg
-	g.EnqueueNewTextureFromRgba(m, func(tex *g.Texture) {
-		compressorTexture = tex
-	})
-
-	wnd.Run(loop)
-}
-
-func setCompressor(c compressor.Compressor) {
-	f, err := os.Open(c.FileName)
-	util.Check(err)
-	defer f.Close()
-
-	j, _, err := image.Decode(f)
-	util.Check(err)
-
-	b := j.Bounds()
-	m := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
-	draw.Draw(m, m.Bounds(), j, b.Min, draw.Src)
-
-	selectedCompressor = c
-	compressorImage = m
-
-	go updateCompImg()
-}
-
-func loop() {
-	g.SingleWindow().Layout(
-		engineDisplacementRow(),
-		g.Table().
-			Size(g.Auto, 190).
-			Rows(
-				engineSpeedRow(),
-				volumetricEfficiencyRow(),
-				intakeAirTemperatureRow(),
-				manifoldPressureRow(),
-				pressureRatioRow(),
-				massFlowRateRow(),
-				duplicateDeleteRow(),
-			).
-			Columns(
-				columns()...,
-			).
-			Flags(g.TableFlagsSizingFixedFit),
-		selectCompressor(),
-		g.Custom(compressorWidget),
-	)
+	mainthread.Run(run)
 }
