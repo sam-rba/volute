@@ -123,7 +123,7 @@ func setCompressor(c Compressor) {
 
 func loop() {
 	g.SingleWindow().Layout(
-		engineDisplacementRow(),
+		displacementRow(),
 		g.Table().
 			Size(g.Auto, 190).
 			Rows(

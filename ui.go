@@ -13,7 +13,7 @@ func red() color.RGBA {
 	return color.RGBA{255, 0, 0, 255}
 }
 
-func engineDisplacementRow() *g.RowWidget {
+func displacementRow() *g.RowWidget {
 	s := VolumeUnits[volumeUnitIndex]
 	unit, err := ParseVolumeUnit(s)
 	Check(err)
