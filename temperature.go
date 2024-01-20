@@ -1,32 +1,21 @@
-package temperature
+package main
 
 import (
 	"errors"
 	"fmt"
 )
 
-type unit int
+type TemperatureUnit int
 
 const (
-	Celcius unit = iota
+	Celcius TemperatureUnit = iota
 	Kelvin
 	Fahrenheit
 )
 
-// UnitStrings returns a slice of strings, each representing a
-// unit.
-// This is necessary because giu.Combo only works with strings.
-func UnitStrings() []string {
-	return []string{"°C", "°K", "°F"}
-}
+var TemperatureUnits = []string{"°C", "°K", "°F"}
 
-const (
-	DefaultUnit unit = Celcius
-	// DefaultUnitIndex is used to index UnitStrings().
-	DefaultUnitIndex int32 = 0 // celcius
-)
-
-func UnitFromString(s string) (unit, error) {
+func ParseTemperatureUnit(s string) (TemperatureUnit, error) {
 	// Each case corresponds to a value in UnitStrings().
 	switch s {
 	case "°C":
@@ -36,16 +25,16 @@ func UnitFromString(s string) (unit, error) {
 	case "°F":
 		return Fahrenheit, nil
 	default:
-		return *new(unit), errors.New(fmt.Sprintf("invalid unit: '%s'", s))
+		return *new(TemperatureUnit), errors.New(fmt.Sprintf("invalid unit: '%s'", s))
 	}
 }
 
 type Temperature struct {
 	Val  float32
-	Unit unit
+	Unit TemperatureUnit
 }
 
-func (t Temperature) AsUnit(u unit) (float32, error) {
+func (t Temperature) AsUnit(u TemperatureUnit) (float32, error) {
 	// Convert to celcius
 	var c float32
 	switch t.Unit {

@@ -7,13 +7,6 @@ import (
 	"image/color"
 	"image/draw"
 	"strconv"
-
-	"volute/compressor"
-	"volute/mass"
-	"volute/pressure"
-	"volute/temperature"
-	"volute/util"
-	"volute/volume"
 )
 
 func red() color.RGBA {
@@ -21,34 +14,34 @@ func red() color.RGBA {
 }
 
 func engineDisplacementRow() *g.RowWidget {
-	s := volume.UnitStrings()[volumeUnitIndex]
-	unit, err := volume.UnitFromString(s)
-	util.Check(err)
+	s := VolumeUnits[volumeUnitIndex]
+	unit, err := ParseVolumeUnit(s)
+	Check(err)
 	engDisp := float32(displacement / unit)
 	valWid, _ := g.CalcTextSize("12345.67")
-	unitWid, _ := g.CalcTextSize(volume.UnitStrings()[volumeUnitIndex])
+	unitWid, _ := g.CalcTextSize(VolumeUnits[volumeUnitIndex])
 	return g.Row(
 		g.Label("Engine Displacement"),
 		g.InputFloat(&engDisp).
 			Format("%.2f").
 			OnChange(func() {
-				displacement = volume.Volume(engDisp) * unit
+				displacement = Volume(engDisp) * unit
 				for i := 0; i < numPoints; i++ {
-					engineMassFlowRate[i] = massFlowRateAt(i)
+					massFlowRateAir[i] = massFlowRateAt(i)
 					go updateCompImg()
 				}
 			}).
 			Size(valWid),
 		g.Combo(
 			"",
-			volume.UnitStrings()[volumeUnitIndex],
-			volume.UnitStrings(),
+			VolumeUnits[volumeUnitIndex],
+			VolumeUnits,
 			&volumeUnitIndex,
 		).Size(unitWid*2),
 	)
 }
 
-func engineSpeedRow() *g.TableRowWidget {
+func speedRow() *g.TableRowWidget {
 	widgets := []g.Widget{
 		g.Label("Engine Speed"),
 		g.Label("rpm"),
@@ -57,8 +50,8 @@ func engineSpeedRow() *g.TableRowWidget {
 		i := i
 		widgets = append(
 			widgets,
-			g.InputInt(&engineSpeed[i]).OnChange(func() {
-				engineMassFlowRate[i] = massFlowRateAt(i)
+			g.InputInt(&speed[i]).OnChange(func() {
+				massFlowRateAir[i] = massFlowRateAt(i)
 				go updateCompImg()
 			}),
 		)
@@ -76,7 +69,7 @@ func volumetricEfficiencyRow() *g.TableRowWidget {
 		widgets = append(
 			widgets,
 			g.InputInt(&volumetricEfficiency[i]).OnChange(func() {
-				engineMassFlowRate[i] = massFlowRateAt(i)
+				massFlowRateAir[i] = massFlowRateAt(i)
 				go updateCompImg()
 			}),
 		)
@@ -85,23 +78,23 @@ func volumetricEfficiencyRow() *g.TableRowWidget {
 }
 
 func intakeAirTemperatureRow() *g.TableRowWidget {
-	wid, _ := g.CalcTextSize(temperature.UnitStrings()[temperatureUnitIndex])
+	wid, _ := g.CalcTextSize(TemperatureUnits[temperatureUnitIndex])
 	widgets := []g.Widget{
 		g.Label("Intake Air Temperature"),
 		g.Combo(
 			"",
-			temperature.UnitStrings()[temperatureUnitIndex],
-			temperature.UnitStrings(),
+			TemperatureUnits[temperatureUnitIndex],
+			TemperatureUnits,
 			&temperatureUnitIndex,
 		).OnChange(func() {
-			s := temperature.UnitStrings()[temperatureUnitIndex]
-			u, err := temperature.UnitFromString(s)
-			util.Check(err)
+			s := TemperatureUnits[temperatureUnitIndex]
+			u, err := ParseTemperatureUnit(s)
+			Check(err)
 
 			for i := range intakeAirTemperature {
 				t, err := intakeAirTemperature[i].AsUnit(u)
-				util.Check(err)
-				intakeAirTemperature[i] = temperature.Temperature{t, u}
+				Check(err)
+				intakeAirTemperature[i] = Temperature{t, u}
 			}
 		}).Size(wid * 2),
 	}
@@ -112,7 +105,7 @@ func intakeAirTemperatureRow() *g.TableRowWidget {
 			g.InputFloat(&intakeAirTemperature[i].Val).
 				Format("%.2f").
 				OnChange(func() {
-					engineMassFlowRate[i] = massFlowRateAt(i)
+					massFlowRateAir[i] = massFlowRateAt(i)
 					go updateCompImg()
 				}),
 		)
@@ -121,16 +114,16 @@ func intakeAirTemperatureRow() *g.TableRowWidget {
 }
 
 func manifoldPressureRow() *g.TableRowWidget {
-	s := pressure.UnitStrings()[pressureUnitIndex]
-	unit, err := pressure.UnitFromString(s)
-	util.Check(err)
-	wid, _ := g.CalcTextSize(pressure.UnitStrings()[pressureUnitIndex])
+	s := PressureUnits[pressureUnitIndex]
+	unit, err := ParsePressureUnit(s)
+	Check(err)
+	wid, _ := g.CalcTextSize(PressureUnits[pressureUnitIndex])
 	widgets := []g.Widget{
 		g.Label("Manifold Absolute Pressure"),
 		g.Combo(
 			"",
-			pressure.UnitStrings()[pressureUnitIndex],
-			pressure.UnitStrings(),
+			PressureUnits[pressureUnitIndex],
+			PressureUnits,
 			&pressureUnitIndex,
 		).Size(wid * 2),
 	}
@@ -141,9 +134,9 @@ func manifoldPressureRow() *g.TableRowWidget {
 			widgets,
 			g.InputFloat(&manPres).Format("%.2f").
 				OnChange(func() {
-					manifoldPressure[i] = pressure.Pressure(manPres * float32(unit))
+					manifoldPressure[i] = Pressure(manPres * float32(unit))
 					pressureRatio[i] = pressureRatioAt(i)
-					engineMassFlowRate[i] = massFlowRateAt(i)
+					massFlowRateAir[i] = massFlowRateAt(i)
 					go updateCompImg()
 				}),
 		)
@@ -167,23 +160,23 @@ func pressureRatioRow() *g.TableRowWidget {
 }
 
 func massFlowRateRow() *g.TableRowWidget {
-	s := mass.FlowRateUnitStrings()[selectedMassFlowRateUnit]
-	mfrUnit, err := mass.FlowRateUnitFromString(s)
-	util.Check(err)
+	s := MassFlowRateUnits[massFlowRateUnitIndex]
+	mfrUnit, err := ParseMassFlowRateUnit(s)
+	Check(err)
 
-	wid, _ := g.CalcTextSize(mass.FlowRateUnitStrings()[selectedMassFlowRateUnit])
+	wid, _ := g.CalcTextSize(MassFlowRateUnits[massFlowRateUnitIndex])
 	widgets := []g.Widget{
 		g.Label("Mass Flow Rate"),
 		g.Combo(
 			"",
-			mass.FlowRateUnitStrings()[selectedMassFlowRateUnit],
-			mass.FlowRateUnitStrings(),
-			&selectedMassFlowRateUnit,
+			MassFlowRateUnits[massFlowRateUnitIndex],
+			MassFlowRateUnits,
+			&massFlowRateUnitIndex,
 		).Size(wid * 2),
 	}
 	for i := 0; i < numPoints; i++ {
 		mfr := strconv.FormatFloat(
-			float64(engineMassFlowRate[i]/mfrUnit),
+			float64(massFlowRateAir[i]/mfrUnit),
 			'f',
 			3,
 			32,
@@ -203,34 +196,34 @@ func duplicateDeleteRow() *g.TableRowWidget {
 		widgets = append(widgets, g.Row(
 			g.Button("Duplicate").OnClick(func() {
 				numPoints++
-				engineSpeed = util.Insert(
-					engineSpeed,
-					engineSpeed[i],
+				speed = Insert(
+					speed,
+					speed[i],
 					i,
 				)
-				volumetricEfficiency = util.Insert(
+				volumetricEfficiency = Insert(
 					volumetricEfficiency,
 					volumetricEfficiency[i],
 					i,
 				)
-				intakeAirTemperature = util.Insert(
+				intakeAirTemperature = Insert(
 					intakeAirTemperature,
 					intakeAirTemperature[i],
 					i,
 				)
-				manifoldPressure = util.Insert(
+				manifoldPressure = Insert(
 					manifoldPressure,
 					manifoldPressure[i],
 					i,
 				)
-				pressureRatio = util.Insert(
+				pressureRatio = Insert(
 					pressureRatio,
 					pressureRatio[i],
 					i,
 				)
-				engineMassFlowRate = util.Insert(
-					engineMassFlowRate,
-					engineMassFlowRate[i],
+				massFlowRateAir = Insert(
+					massFlowRateAir,
+					massFlowRateAir[i],
 					i,
 				)
 				go updateCompImg()
@@ -240,12 +233,12 @@ func duplicateDeleteRow() *g.TableRowWidget {
 					return
 				}
 				numPoints--
-				engineSpeed = util.Remove(engineSpeed, i)
-				volumetricEfficiency = util.Remove(volumetricEfficiency, i)
-				intakeAirTemperature = util.Remove(intakeAirTemperature, i)
-				manifoldPressure = util.Remove(manifoldPressure, i)
-				pressureRatio = util.Remove(pressureRatio, i)
-				engineMassFlowRate = util.Remove(engineMassFlowRate, i)
+				speed = Remove(speed, i)
+				volumetricEfficiency = Remove(volumetricEfficiency, i)
+				intakeAirTemperature = Remove(intakeAirTemperature, i)
+				manifoldPressure = Remove(manifoldPressure, i)
+				pressureRatio = Remove(pressureRatio, i)
+				massFlowRateAir = Remove(massFlowRateAir, i)
 				go updateCompImg()
 			}),
 		))
@@ -270,14 +263,13 @@ func columns() []*g.TableColumnWidget {
 var compressorTree []g.Widget
 
 func init() {
-	compressors := compressor.Compressors()
-	for man := range compressors {
+	for man := range Compressors {
 		man := man // Manufacturer
 		var serNodes []g.Widget
-		for ser := range compressors[man] {
+		for ser := range Compressors[man] {
 			ser := ser // Series
 			var modNodes []g.Widget
-			for mod, c := range compressors[man][ser] {
+			for mod, c := range Compressors[man][ser] {
 				mod := mod // Model
 				c := c     // Compressor
 				modNodes = append(
@@ -365,8 +357,8 @@ func copyImage(old *image.RGBA) *image.RGBA {
 
 // The position on the compressor map of an operating point.
 func pointPos(i int) (pos image.Point) {
-	const unit = mass.KilogramsPerSecond
-	mfr := engineMassFlowRate[i] / unit
+	const unit = KilogramsPerSecond
+	mfr := massFlowRateAir[i] / unit
 	maxMfr := selectedCompressor.MaxFlow / unit
 	min := selectedCompressor.MinX
 	max := selectedCompressor.MaxX
