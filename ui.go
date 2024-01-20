@@ -9,9 +9,7 @@ import (
 	"strconv"
 )
 
-func red() color.RGBA {
-	return color.RGBA{255, 0, 0, 255}
-}
+var red = color.RGBA{255, 0, 0, 255}
 
 func displacementRow() *g.RowWidget {
 	s := VolumeUnits[volumeUnitIndex]
@@ -303,7 +301,7 @@ func updateCompImg() {
 		ps := img.Bounds().Dx() / 100 // Point size
 		draw.Draw(img,
 			image.Rect(pos.X-ps/2, pos.Y-ps/2, pos.X+ps/2, pos.Y+ps/2),
-			&image.Uniform{red()},
+			&image.Uniform{red},
 			image.ZP,
 			draw.Src,
 		)
