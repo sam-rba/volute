@@ -29,7 +29,7 @@ func run() {
 		displacementChan = make(chan uint)
 		rpmChan          = make([]chan uint, POINTS)
 		veChan           = make([]chan uint, POINTS)
-		focus            = NewFocus(1 + 2*POINTS)
+		focus            = NewFocus([]int{1, POINTS, POINTS})
 	)
 	for i := 0; i < POINTS; i++ {
 		rpmChan[i] = make(chan uint)
@@ -52,7 +52,7 @@ func run() {
 	go widget.Input(
 		displacementChan,
 		bounds[1],
-		focus.widgets[0],
+		focus.widgets[0][0],
 		mux.MakeEnv(),
 	)
 	go widget.Label("speed (rpm)", bounds[2], mux.MakeEnv())
@@ -61,24 +61,25 @@ func run() {
 		go widget.Input(
 			rpmChan[i],
 			bounds[3+i],
-			focus.widgets[1+i],
+			focus.widgets[1][i],
 			mux.MakeEnv(),
 		)
 		go widget.Input(
 			veChan[i],
 			bounds[3+POINTS+1+i],
-			focus.widgets[1+POINTS+i],
+			focus.widgets[2][i],
 			mux.MakeEnv(),
 		)
 	}
 
-	focus.widgets[focus.i] <- true
+	focus.widgets[focus.p.Y][focus.p.X] <- true
 
 Loop:
 	for {
 		select {
 		case _ = <-displacementChan:
 		case _ = <-rpmChan[0]:
+		case _ = <-veChan[0]:
 		case event, ok := <-env.Events():
 			if !ok { // channel closed
 				break Loop
@@ -90,10 +91,14 @@ Loop:
 				switch event.Rune {
 				case 'q':
 					break Loop
-				case 'j', 'l':
-					focus.Next()
-				case 'k', 'h':
-					focus.Prev()
+				case 'h':
+					focus.Left()
+				case 'j':
+					focus.Down()
+				case 'k':
+					focus.Up()
+				case 'l':
+					focus.Right()
 				}
 			}
 		}
