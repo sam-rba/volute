@@ -18,7 +18,7 @@ var (
 	FONT      = goregular.TTF
 	FONT_SIZE = 15
 	DPI       = 72
-	PADDING   = 3
+	PAD       = 3
 )
 
 var face *concurrentFace
@@ -39,11 +39,11 @@ func init() {
 }
 
 func TextWidth(nchars int) int {
-	return nchars*FONT_SIZE + 2*PADDING // very rough estimation
+	return nchars*FONT_SIZE + 2*PAD // very rough estimation
 }
 
 func TextHeight() int {
-	return FONT_SIZE + 2*PADDING
+	return FONT_SIZE + 2*PAD
 }
 
 func drawText(text []byte, dst draw.Image, r image.Rectangle, fg, bg color.Color) {
@@ -64,9 +64,9 @@ func drawText(text []byte, dst draw.Image, r image.Rectangle, fg, bg color.Color
 	drawer.DrawBytes(text)
 
 	// draw text image over background
-	left := image.Pt(bounds.Min.X, (bounds.Min.Y+bounds.Max.Y)/2)
-	target := image.Pt(r.Min.X, (r.Min.Y+r.Max.Y)/2)
-	delta := target.Sub(left)
+	leftCentre := image.Pt(bounds.Min.X, (bounds.Min.Y+bounds.Max.Y)/2)
+	target := image.Pt(r.Max.X-bounds.Max.X-PAD, (r.Min.Y+r.Max.Y)/2)
+	delta := target.Sub(leftCentre)
 	draw.Draw(dst, bounds.Add(delta).Intersect(r), drawer.Dst, bounds.Min, draw.Src)
 }
 

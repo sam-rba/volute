@@ -54,7 +54,7 @@ func run() {
 		mux.MakeEnv(),
 	)
 
-	go widget.Label("Speed (rpm)", bounds[2], mux.MakeEnv())
+	go widget.Label("speed (rpm)", bounds[2], mux.MakeEnv())
 	for i := 0; i < len(rpmChan); i++ {
 		go widget.Input(
 			rpmChan[i],
