@@ -5,15 +5,22 @@ import (
 	"fmt"
 
 	"image"
+	"image/color"
 	"image/draw"
 
 	"volute/gui"
 	"volute/gui/win"
 )
 
+var (
+	FOCUS_COLOR = color.RGBA{179, 217, 255, 255}
+	BLACK       = color.Gray{0}
+	WHITE       = color.Gray{255}
+)
+
 func Label(text string, r image.Rectangle, env gui.Env) {
 	redraw := func(drw draw.Image) image.Rectangle {
-		drawText([]byte(text), drw, r)
+		drawText([]byte(text), drw, r, BLACK, WHITE)
 		return r
 	}
 	env.Draw() <- redraw
@@ -29,36 +36,41 @@ func Label(text string, r image.Rectangle, env gui.Env) {
 }
 
 func Input(val chan<- uint, r image.Rectangle, focusChan <-chan bool, env gui.Env) {
-	redraw := func(text []byte) func(draw.Image) image.Rectangle {
+	redraw := func(text []byte, focus bool) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
-			drawText(text, drw, r)
+			if focus {
+				drawText(text, drw, r, BLACK, FOCUS_COLOR)
+			} else {
+				drawText(text, drw, r, BLACK, WHITE)
+			}
 			return r
 		}
 	}
 	text := []byte{'0'}
 	focus := false
 
-	env.Draw() <- redraw(text)
+	env.Draw() <- redraw(text, focus)
 
 	for {
 		select {
 		case focus = <-focusChan:
+			env.Draw() <- redraw(text, focus)
 		case event := <-env.Events():
 			switch event := event.(type) {
 			case win.WiFocus:
 				if event.Focused {
-					env.Draw() <- redraw(text)
+					env.Draw() <- redraw(text, focus)
 				}
 			case win.KbType:
 				if focus && isDigit(event.Rune) {
 					text = fmt.Appendf(text, "%c", event.Rune)
-					env.Draw() <- redraw(text)
+					env.Draw() <- redraw(text, focus)
 					val <- atoi(text)
 				}
 			case win.KbDown:
 				if focus && event.Key == win.KeyBackspace && len(text) > 0 {
 					text = text[:len(text)-1]
-					env.Draw() <- redraw(text)
+					env.Draw() <- redraw(text, focus)
 					val <- atoi(text)
 				}
 			}
@@ -70,7 +82,7 @@ func Input(val chan<- uint, r image.Rectangle, focusChan <-chan bool, env gui.En
 func Output(val <-chan uint, r image.Rectangle, env gui.Env) {
 	redraw := func(n uint) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
-			drawText([]byte(fmt.Sprint(n)), drw, r)
+			drawText([]byte(fmt.Sprint(n)), drw, r, BLACK, WHITE)
 			return r
 		}
 	}

@@ -2,73 +2,75 @@ package main
 
 import (
 	"image"
+	"image/color"
 
 	"github.com/faiface/mainthread"
 	"volute/gui"
+	"volute/gui/layout"
 	"volute/gui/widget"
 	"volute/gui/win"
 )
 
+const (
+	WIDTH  = 800
+	HEIGHT = 600
+
+	POINTS = 6
+)
+
 func run() {
-	w, err := win.New(win.Title("volute"), win.Size(800, 600))
+	w, err := win.New(win.Title("volute"), win.Size(WIDTH, HEIGHT))
 	if err != nil {
 		panic(err)
 	}
-
 	mux, env := gui.NewMux(w)
 
 	var (
 		displacementChan = make(chan uint)
-		output           = make(chan uint)
-		focus            = NewFocus(2)
-
-		displacement uint = 0
+		rpmChan          = make([]chan uint, POINTS)
+		focus            = NewFocus(1 + POINTS)
 	)
+	for i := 0; i < POINTS; i++ {
+		rpmChan[i] = make(chan uint)
+	}
 
-	pad := 10
-	r := image.Rect(pad, pad, pad+widget.TextWidth(6), pad+widget.TextHeight())
+	bounds := layout.Grid{
+		Rows:        []int{2, 8, 8},
+		Background:  color.Gray{255},
+		Gap:         1,
+		Split:       layout.EvenSplit,
+		SplitRows:   layout.EvenSplit,
+		Margin:      0,
+		Border:      0,
+		BorderColor: color.Gray{16},
+		Flip:        false,
+	}.Lay(image.Rect(0, 0, WIDTH, HEIGHT))
+
+	go widget.Label("displacement (cc)", bounds[0], mux.MakeEnv())
 	go widget.Input(
 		displacementChan,
-		r,
+		bounds[1],
 		focus.widgets[0],
 		mux.MakeEnv(),
 	)
-	r = image.Rect(
-		r.Max.X+pad,
-		r.Min.Y,
-		r.Max.X+pad+widget.TextWidth(len("cc")),
-		r.Max.Y,
-	)
-	go widget.Label("cc", r, mux.MakeEnv())
 
-	r = image.Rect(
-		r.Max.X+pad,
-		r.Min.Y,
-		r.Max.X+pad+widget.TextWidth(6),
-		r.Max.Y,
-	)
-	go widget.Input(
-		displacementChan,
-		r,
-		focus.widgets[1],
-		mux.MakeEnv(),
-	)
-
-	r = image.Rect(
-		pad,
-		r.Max.Y+pad,
-		pad+widget.TextWidth(6),
-		r.Max.Y+pad+widget.TextHeight(),
-	)
-	go widget.Output(output, r, mux.MakeEnv())
+	go widget.Label("Speed (rpm)", bounds[2], mux.MakeEnv())
+	for i := 0; i < len(rpmChan); i++ {
+		go widget.Input(
+			rpmChan[i],
+			bounds[i+3],
+			focus.widgets[i+1],
+			mux.MakeEnv(),
+		)
+	}
 
 	focus.widgets[focus.i] <- true
 
 Loop:
 	for {
 		select {
-		case displacement = <-displacementChan:
-			output <- displacement
+		case _ = <-displacementChan:
+		case _ = <-rpmChan[0]:
 		case event, ok := <-env.Events():
 			if !ok { // channel closed
 				break Loop
@@ -90,7 +92,9 @@ Loop:
 	}
 	close(env.Draw())
 	close(displacementChan)
-	close(output)
+	for i := range rpmChan {
+		close(rpmChan[i])
+	}
 }
 
 func main() {

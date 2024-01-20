@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"image"
+	"image/color"
 	"image/draw"
 
 	"golang.org/x/image/font"
@@ -14,12 +15,10 @@ import (
 )
 
 var (
-	FONT       = goregular.TTF
-	FONT_SIZE  = 15
-	DPI        = 72
-	PADDING    = 3
-	BG_COLOR   = image.White
-	TEXT_COLOR = image.Black
+	FONT      = goregular.TTF
+	FONT_SIZE = 15
+	DPI       = 72
+	PADDING   = 3
 )
 
 var face *concurrentFace
@@ -47,20 +46,20 @@ func TextHeight() int {
 	return FONT_SIZE + 2*PADDING
 }
 
-func drawText(text []byte, dst draw.Image, r image.Rectangle) {
+func drawText(text []byte, dst draw.Image, r image.Rectangle, fg, bg color.Color) {
 	drawer := font.Drawer{
-		Src:  TEXT_COLOR,
+		Src:  &image.Uniform{fg},
 		Face: face,
 		Dot:  fixed.P(0, 0),
 	}
 
 	// background
-	draw.Draw(dst, r, BG_COLOR, image.ZP, draw.Src)
+	draw.Draw(dst, r, &image.Uniform{bg}, image.ZP, draw.Src)
 
 	// text image
 	bounds := textBounds(text, drawer)
 	textImg := image.NewRGBA(bounds)
-	draw.Draw(textImg, bounds, BG_COLOR, image.ZP, draw.Src)
+	draw.Draw(textImg, bounds, &image.Uniform{bg}, image.ZP, draw.Src)
 	drawer.Dst = textImg
 	drawer.DrawBytes(text)
 
