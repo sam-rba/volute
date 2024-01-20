@@ -38,12 +38,9 @@ func init() {
 	face = &concurrentFace{sync.Mutex{}, fce}
 }
 
-func TextWidth(nchars int) int {
-	return nchars*FONT_SIZE + 2*PAD // very rough estimation
-}
-
-func TextHeight() int {
-	return FONT_SIZE + 2*PAD
+func TextSize(text string) image.Point {
+	bounds := textBounds([]byte(text), font.Drawer{Face: face})
+	return image.Point{bounds.Max.X - bounds.Min.X + 2*PAD, bounds.Max.Y - bounds.Min.Y + 2*PAD}
 }
 
 func drawText(text []byte, dst draw.Image, r image.Rectangle, fg, bg color.Color) {

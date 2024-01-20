@@ -38,8 +38,8 @@ func run() {
 		Rows:        []int{2, 8, 8},
 		Background:  color.Gray{255},
 		Gap:         1,
-		Split:       layout.EvenSplit,
-		SplitRows:   layout.EvenSplit,
+		Split:       split,
+		SplitRows:   splitRows,
 		Margin:      0,
 		Border:      0,
 		BorderColor: color.Gray{16},
@@ -95,6 +95,29 @@ Loop:
 	for i := range rpmChan {
 		close(rpmChan[i])
 	}
+}
+
+func split(elements int, space int) []int {
+	bounds := make([]int, elements)
+	widths := []int{
+		widget.TextSize("displacement (cc)").X,
+		widget.TextSize("123456").X,
+	}
+	for i := 0; i < elements && space > 0; i++ {
+		bounds[i] = min(widths[min(i, len(widths)-1)], space)
+		space -= bounds[i]
+	}
+	return bounds
+}
+
+func splitRows(elements int, space int) []int {
+	bounds := make([]int, elements)
+	height := widget.TextSize("1").Y
+	for i := 0; i < elements && space > 0; i++ {
+		bounds[i] = min(height, space)
+		space -= bounds[i]
+	}
+	return bounds
 }
 
 func main() {
