@@ -36,5 +36,5 @@ func ParsePressureUnit(s string) (Pressure, error) {
 }
 
 func AtmosphericPressure() Pressure {
-	return 101.325 * Pascal
+	return 101_325 * Pascal
 }
