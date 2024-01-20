@@ -14,19 +14,32 @@ const (
 	airMolarMass = 0.0289647 // kg/mol
 )
 
+var (
+	defaultDisplacement       = 2 * Litre
+	defaultSpeed        int32 = 2000
+	defaultVE           int32 = 80
+	defaultTemperature        = Temperature{25, Celcius}
+)
+
+var (
+	defaultManufacturer = "borgwarner"
+	defaultSeries       = "efr"
+	defaultModel        = "6258"
+)
+
 // Number of data points on the compressor map.
 var numPoints = 1
 
 var (
-	displacement    = 2000 * CubicCentimetre
+	displacement    = defaultDisplacement
 	volumeUnitIndex int32
 
 	// Angular crankshaft speed in RPM.
-	speed = []int32{2000}
+	speed = []int32{defaultSpeed}
 
-	volumetricEfficiency = []int32{80}
+	volumetricEfficiency = []int32{defaultVE}
 
-	intakeAirTemperature = []Temperature{{25, Celcius}}
+	intakeAirTemperature = []Temperature{defaultTemperature}
 	temperatureUnitIndex int32
 
 	manifoldPressure  = []Pressure{AtmosphericPressure()}
@@ -77,9 +90,9 @@ var (
 )
 
 func init() {
-	manufacturer := "garrett"
-	series := "g"
-	model := "25-660"
+	manufacturer := defaultManufacturer
+	series := defaultSeries
+	model := defaultModel
 	c, ok := Compressors[manufacturer][series][model]
 	if !ok {
 		fmt.Printf("compressor.Compressors()[\"%s\"][\"%s\"][\"%s\"] does not exist.\n",
