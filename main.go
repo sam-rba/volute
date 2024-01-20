@@ -20,6 +20,7 @@ func run() {
 	var (
 		displacementChan = make(chan uint)
 		output           = make(chan uint)
+		focus            = NewFocus(2)
 
 		displacement uint = 0
 	)
@@ -29,6 +30,7 @@ func run() {
 	go widget.Input(
 		displacementChan,
 		r,
+		focus.widgets[0],
 		mux.MakeEnv(),
 	)
 	r = image.Rect(
@@ -40,12 +42,27 @@ func run() {
 	go widget.Label("cc", r, mux.MakeEnv())
 
 	r = image.Rect(
+		r.Max.X+pad,
+		r.Min.Y,
+		r.Max.X+pad+widget.TextWidth(6),
+		r.Max.Y,
+	)
+	go widget.Input(
+		displacementChan,
+		r,
+		focus.widgets[1],
+		mux.MakeEnv(),
+	)
+
+	r = image.Rect(
 		pad,
 		r.Max.Y+pad,
 		pad+widget.TextWidth(6),
 		r.Max.Y+pad+widget.TextHeight(),
 	)
 	go widget.Output(output, r, mux.MakeEnv())
+
+	focus.widgets[focus.i] <- true
 
 Loop:
 	for {
@@ -60,8 +77,13 @@ Loop:
 			case win.WiClose:
 				break Loop
 			case win.KbType:
-				if event.Rune == 'q' {
+				switch event.Rune {
+				case 'q':
 					break Loop
+				case 'j', 'l':
+					focus.Next()
+				case 'k', 'h':
+					focus.Prev()
 				}
 			}
 		}

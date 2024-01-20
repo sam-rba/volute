@@ -28,7 +28,7 @@ func Label(text string, r image.Rectangle, env gui.Env) {
 	close(env.Draw())
 }
 
-func Input(val chan<- uint, r image.Rectangle, env gui.Env) {
+func Input(val chan<- uint, r image.Rectangle, focusChan <-chan bool, env gui.Env) {
 	redraw := func(text []byte) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
 			drawText(text, drw, r)
@@ -40,27 +40,27 @@ func Input(val chan<- uint, r image.Rectangle, env gui.Env) {
 
 	env.Draw() <- redraw(text)
 
-	for event := range env.Events() {
-		switch event := event.(type) {
-		case win.WiFocus:
-			if event.Focused {
-				env.Draw() <- redraw(text)
-			}
-		case win.MoDown:
-			if event.Point.In(r) {
-				focus = true
-			}
-		case win.KbType:
-			if focus && isDigit(event.Rune) {
-				text = fmt.Appendf(text, "%c", event.Rune)
-				env.Draw() <- redraw(text)
-				val <- atoi(text)
-			}
-		case win.KbDown:
-			if focus && event.Key == win.KeyBackspace && len(text) > 0 {
-				text = text[:len(text)-1]
-				env.Draw() <- redraw(text)
-				val <- atoi(text)
+	for {
+		select {
+		case focus = <-focusChan:
+		case event := <-env.Events():
+			switch event := event.(type) {
+			case win.WiFocus:
+				if event.Focused {
+					env.Draw() <- redraw(text)
+				}
+			case win.KbType:
+				if focus && isDigit(event.Rune) {
+					text = fmt.Appendf(text, "%c", event.Rune)
+					env.Draw() <- redraw(text)
+					val <- atoi(text)
+				}
+			case win.KbDown:
+				if focus && event.Key == win.KeyBackspace && len(text) > 0 {
+					text = text[:len(text)-1]
+					env.Draw() <- redraw(text)
+					val <- atoi(text)
+				}
 			}
 		}
 	}
