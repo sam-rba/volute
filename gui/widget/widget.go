@@ -14,6 +14,7 @@ import (
 
 var (
 	FOCUS_COLOR = color.RGBA{179, 217, 255, 255}
+	GREEN       = color.RGBA{51, 102, 0, 255}
 	BLACK       = color.Gray{0}
 	WHITE       = color.Gray{255}
 )
@@ -39,9 +40,9 @@ func Input(val chan<- uint, r image.Rectangle, focusChan <-chan bool, env gui.En
 	redraw := func(text []byte, focus bool) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
 			if focus {
-				drawText(text, drw, r, BLACK, FOCUS_COLOR)
+				drawText(text, drw, r, GREEN, FOCUS_COLOR)
 			} else {
-				drawText(text, drw, r, BLACK, WHITE)
+				drawText(text, drw, r, GREEN, WHITE)
 			}
 			return r
 		}

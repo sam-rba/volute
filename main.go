@@ -28,14 +28,16 @@ func run() {
 	var (
 		displacementChan = make(chan uint)
 		rpmChan          = make([]chan uint, POINTS)
-		focus            = NewFocus(1 + POINTS)
+		veChan           = make([]chan uint, POINTS)
+		focus            = NewFocus(1 + 2*POINTS)
 	)
 	for i := 0; i < POINTS; i++ {
 		rpmChan[i] = make(chan uint)
+		veChan[i] = make(chan uint)
 	}
 
 	bounds := layout.Grid{
-		Rows:        []int{2, 8, 8},
+		Rows:        []int{2, 7, 7},
 		Background:  color.Gray{255},
 		Gap:         1,
 		Split:       split,
@@ -53,13 +55,19 @@ func run() {
 		focus.widgets[0],
 		mux.MakeEnv(),
 	)
-
 	go widget.Label("speed (rpm)", bounds[2], mux.MakeEnv())
-	for i := 0; i < len(rpmChan); i++ {
+	go widget.Label("VE (%)", bounds[3+POINTS], mux.MakeEnv())
+	for i := 0; i < POINTS; i++ {
 		go widget.Input(
 			rpmChan[i],
-			bounds[i+3],
-			focus.widgets[i+1],
+			bounds[3+i],
+			focus.widgets[1+i],
+			mux.MakeEnv(),
+		)
+		go widget.Input(
+			veChan[i],
+			bounds[3+POINTS+1+i],
+			focus.widgets[1+POINTS+i],
 			mux.MakeEnv(),
 		)
 	}
