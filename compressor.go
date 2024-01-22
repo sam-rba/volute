@@ -1,13 +1,10 @@
-package compressor
+package main
 
 import (
 	"github.com/BurntSushi/toml"
 	"io/fs"
 	fp "path/filepath"
 	"strings"
-
-	"volute/mass"
-	"volute/util"
 )
 
 const root = "compressor_maps/"
@@ -27,17 +24,17 @@ type Compressor struct {
 	// image in pixels.
 	MaxY int
 	// MaxFlow is the mass flow rate at MaxX.
-	MaxFlow mass.FlowRate
+	MaxFlow MassFlowRate
 	// MaxPR is the pressure ratio at MaxY.
 	MaxPR float32
 }
 
 // [manufacturer][series][model]
-var compressors = make(map[string]map[string]map[string]Compressor)
+var Compressors = make(map[string]map[string]map[string]Compressor)
 
 func init() {
 	// Walk root, looking for .toml files describing a compressor.
-	// Parse these toml files, create a Compressor and add it to compressors.
+	// Parse these toml files, create a Compressor and add it to Compressors.
 	err := fp.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -57,11 +54,11 @@ func init() {
 		man, ser := fp.Split(manSer)
 		man = fp.Clean(man) // Clean trailing slash
 
-		if _, ok := compressors[man]; !ok { // Manufacturer does NOT exist
-			compressors[man] = make(map[string]map[string]Compressor)
+		if _, ok := Compressors[man]; !ok { // Manufacturer does NOT exist
+			Compressors[man] = make(map[string]map[string]Compressor)
 		}
-		if _, ok := compressors[man][ser]; !ok { // Series does NOT exist
-			compressors[man][ser] = make(map[string]Compressor)
+		if _, ok := Compressors[man][ser]; !ok { // Series does NOT exist
+			Compressors[man][ser] = make(map[string]Compressor)
 		}
 
 		tomlFile := fp.Join(root, path)
@@ -74,17 +71,13 @@ func init() {
 		if err != nil {
 			return err
 		}
-		compressors[man][ser][mod] = c
+		Compressors[man][ser][mod] = c
 		return nil
 	})
-	util.Check(err)
+	Check(err)
 }
 
-func Compressors() map[string]map[string]map[string]Compressor {
-	return compressors
-}
-
-func readMaxFlow(tomlFile string) (mass.FlowRate, error) {
+func readMaxFlow(tomlFile string) (MassFlowRate, error) {
 	flow := struct {
 		FlowVal  float32
 		FlowUnit string
@@ -92,9 +85,9 @@ func readMaxFlow(tomlFile string) (mass.FlowRate, error) {
 	if _, err := toml.DecodeFile(tomlFile, &flow); err != nil {
 		return -1, err
 	}
-	unit, err := mass.FlowRateUnitFromString(flow.FlowUnit)
+	unit, err := ParseMassFlowRateUnit(flow.FlowUnit)
 	if err != nil {
 		return -1, err
 	}
-	return mass.FlowRate(flow.FlowVal) * unit, nil
+	return MassFlowRate(flow.FlowVal) * unit, nil
 }
