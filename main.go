@@ -16,6 +16,9 @@ const (
 	HEIGHT = 600
 
 	POINTS = 6
+
+	R = 8314.3 // gas constant
+	M = 28.962 // molar mass of air
 )
 
 func run() {
@@ -27,17 +30,23 @@ func run() {
 
 	var (
 		displacementChan = make(chan uint)
-		rpmChan          = make([]chan uint, POINTS)
-		veChan           = make([]chan uint, POINTS)
-		focus            = NewFocus([]int{1, POINTS, POINTS})
+
+		rpmChan  [POINTS]chan uint
+		veChan   [POINTS]chan uint
+		imapChan [POINTS]chan uint
+		actChan  [POINTS]chan uint
+
+		focus = NewFocus([]int{1, POINTS, POINTS, POINTS, POINTS})
 	)
 	for i := 0; i < POINTS; i++ {
 		rpmChan[i] = make(chan uint)
 		veChan[i] = make(chan uint)
+		imapChan[i] = make(chan uint)
+		actChan[i] = make(chan uint)
 	}
 
 	bounds := layout.Grid{
-		Rows:        []int{2, 7, 7},
+		Rows:        []int{2, 7, 7, 7, 7},
 		Background:  color.Gray{255},
 		Gap:         1,
 		Split:       split,
@@ -57,17 +66,31 @@ func run() {
 	)
 	go widget.Label("speed (rpm)", bounds[2], mux.MakeEnv())
 	go widget.Label("VE (%)", bounds[3+POINTS], mux.MakeEnv())
+	go widget.Label("IMAP (mbar)", bounds[4+2*POINTS], mux.MakeEnv())
+	go widget.Label("ACT (*C)", bounds[5+3*POINTS], mux.MakeEnv())
 	for i := 0; i < POINTS; i++ {
-		go widget.Input(
+		go widget.Input( // speed
 			rpmChan[i],
 			bounds[3+i],
 			focus.widgets[1][i],
 			mux.MakeEnv(),
 		)
-		go widget.Input(
+		go widget.Input( // VE
 			veChan[i],
-			bounds[3+POINTS+1+i],
+			bounds[4+POINTS+i],
 			focus.widgets[2][i],
+			mux.MakeEnv(),
+		)
+		go widget.Input( // IMAP
+			imapChan[i],
+			bounds[5+2*POINTS+i],
+			focus.widgets[3][i],
+			mux.MakeEnv(),
+		)
+		go widget.Input( // ACT
+			actChan[i],
+			bounds[6+3*POINTS+i],
+			focus.widgets[4][i],
 			mux.MakeEnv(),
 		)
 	}
