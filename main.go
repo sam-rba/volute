@@ -89,7 +89,7 @@ func run() {
 	wg.Add(1)
 	go widget.Label("IMAP (mbar)", bounds[4+2*POINTS], mux.MakeEnv(), wg)
 	wg.Add(1)
-	go widget.Label("ACT (*C)", bounds[5+3*POINTS], mux.MakeEnv(), wg)
+	go widget.Label("ACT (°C)", bounds[5+3*POINTS], mux.MakeEnv(), wg)
 	for i := 0; i < POINTS; i++ {
 		wg.Add(1)
 		go widget.Input( // speed
