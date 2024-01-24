@@ -89,31 +89,30 @@ Loop:
 	}
 }
 
-func Output(val <-chan uint, r image.Rectangle, env gui.Env, wg *sync.WaitGroup) {
+func Output(val <-chan float64, r image.Rectangle, env gui.Env, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer close(env.Draw())
 
-	redraw := func(n uint) func(draw.Image) image.Rectangle {
+	redraw := func(v float64) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
-			drawText([]byte(fmt.Sprint(n)), drw, r, BLACK, WHITE)
+			drawText([]byte(fmt.Sprintf("%.3f", v)), drw, r, BLACK, WHITE)
 			return r
 		}
 	}
+	var v float64 = 0.0
 
-	var n uint = 0
-
-	env.Draw() <- redraw(n)
+	env.Draw() <- redraw(v)
 Loop:
 	for {
 		select {
-		case n = <-val:
-			env.Draw() <- redraw(n)
+		case v = <-val:
+			env.Draw() <- redraw(v)
 		case event, ok := <-env.Events():
 			if !ok { // channel closed
 				break Loop
 			}
 			if event, ok := event.(win.WiFocus); ok && event.Focused {
-				env.Draw() <- redraw(n)
+				env.Draw() <- redraw(v)
 			}
 		}
 	}

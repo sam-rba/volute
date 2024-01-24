@@ -22,6 +22,8 @@ const (
 
 	R = 8314.3 // gas constant
 	M = 28.962 // molar mass of air
+
+	WIDEST_LABEL = "mass flow (kg/min)"
 )
 
 func run() {
@@ -36,6 +38,8 @@ func run() {
 		veChan   [POINTS]chan uint
 		imapChan [POINTS]chan uint
 		actChan  [POINTS]chan uint
+
+		flowChan [POINTS]chan float64
 	)
 	defer wg.Wait()
 	defer focus.Close()
@@ -45,11 +49,13 @@ func run() {
 		veChan[i] = make(chan uint)
 		imapChan[i] = make(chan uint)
 		actChan[i] = make(chan uint)
-
 		defer close(rpmChan[i])
 		defer close(veChan[i])
 		defer close(imapChan[i])
 		defer close(actChan[i])
+
+		flowChan[i] = make(chan float64)
+		defer close(flowChan[i])
 	}
 
 	w, err := win.New(win.Title("volute"), win.Size(WIDTH, HEIGHT))
@@ -61,7 +67,7 @@ func run() {
 	defer close(env.Draw())
 
 	bounds := layout.Grid{
-		Rows:        []int{2, 7, 7, 7, 7},
+		Rows:        []int{2, 7, 7, 7, 7, 7},
 		Background:  color.Gray{255},
 		Gap:         1,
 		Split:       split,
@@ -90,6 +96,8 @@ func run() {
 	go widget.Label("IMAP (mbar)", bounds[4+2*POINTS], mux.MakeEnv(), wg)
 	wg.Add(1)
 	go widget.Label("ACT (°C)", bounds[5+3*POINTS], mux.MakeEnv(), wg)
+	wg.Add(1)
+	go widget.Label("mass flow (kg/min)", bounds[6+4*POINTS], mux.MakeEnv(), wg)
 	for i := 0; i < POINTS; i++ {
 		wg.Add(1)
 		go widget.Input( // speed
@@ -120,6 +128,13 @@ func run() {
 			actChan[i],
 			bounds[6+3*POINTS+i],
 			focus.widgets[4][i],
+			mux.MakeEnv(),
+			wg,
+		)
+		wg.Add(1)
+		go widget.Output( // mass flow
+			flowChan[i],
+			bounds[7+4*POINTS+i],
 			mux.MakeEnv(),
 			wg,
 		)
@@ -162,7 +177,7 @@ Loop:
 func split(elements int, space int) []int {
 	bounds := make([]int, elements)
 	widths := []int{
-		widget.TextSize("displacement (cc)").X,
+		widget.TextSize(WIDEST_LABEL).X,
 		widget.TextSize("123456").X,
 	}
 	for i := 0; i < elements && space > 0; i++ {
