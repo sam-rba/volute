@@ -3,6 +3,7 @@ package widget
 import (
 	"cmp"
 	"fmt"
+	"sync"
 
 	"image"
 	"image/color"
@@ -19,11 +20,15 @@ var (
 	WHITE       = color.Gray{255}
 )
 
-func Label(text string, r image.Rectangle, env gui.Env) {
+func Label(text string, r image.Rectangle, env gui.Env, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer close(env.Draw())
+
 	redraw := func(drw draw.Image) image.Rectangle {
 		drawText([]byte(text), drw, r, BLACK, WHITE)
 		return r
 	}
+
 	env.Draw() <- redraw
 	for event := range env.Events() {
 		switch event := event.(type) {
@@ -33,10 +38,12 @@ func Label(text string, r image.Rectangle, env gui.Env) {
 			}
 		}
 	}
-	close(env.Draw())
 }
 
-func Input(val chan<- uint, r image.Rectangle, focusChan <-chan bool, env gui.Env) {
+func Input(val chan<- uint, r image.Rectangle, focusChan <-chan bool, env gui.Env, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer close(env.Draw())
+
 	redraw := func(text []byte, focus bool) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
 			if focus {
@@ -51,12 +58,15 @@ func Input(val chan<- uint, r image.Rectangle, focusChan <-chan bool, env gui.En
 	focus := false
 
 	env.Draw() <- redraw(text, focus)
-
+Loop:
 	for {
 		select {
 		case focus = <-focusChan:
 			env.Draw() <- redraw(text, focus)
-		case event := <-env.Events():
+		case event, ok := <-env.Events():
+			if !ok { // channel closed
+				break Loop
+			}
 			switch event := event.(type) {
 			case win.WiFocus:
 				if event.Focused {
@@ -77,10 +87,12 @@ func Input(val chan<- uint, r image.Rectangle, focusChan <-chan bool, env gui.En
 			}
 		}
 	}
-	close(env.Draw())
 }
 
-func Output(val <-chan uint, r image.Rectangle, env gui.Env) {
+func Output(val <-chan uint, r image.Rectangle, env gui.Env, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer close(env.Draw())
+
 	redraw := func(n uint) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
 			drawText([]byte(fmt.Sprint(n)), drw, r, BLACK, WHITE)
@@ -89,8 +101,8 @@ func Output(val <-chan uint, r image.Rectangle, env gui.Env) {
 	}
 
 	var n uint = 0
-	env.Draw() <- redraw(n)
 
+	env.Draw() <- redraw(n)
 Loop:
 	for {
 		select {
@@ -105,7 +117,6 @@ Loop:
 			}
 		}
 	}
-	close(env.Draw())
 }
 
 func isDigit(r rune) bool {

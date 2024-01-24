@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
+	"os"
+	"sync"
 
 	"github.com/faiface/mainthread"
 	"volute/gui"
@@ -22,28 +25,40 @@ const (
 )
 
 func run() {
-	w, err := win.New(win.Title("volute"), win.Size(WIDTH, HEIGHT))
-	if err != nil {
-		panic(err)
-	}
-	mux, env := gui.NewMux(w)
-
 	var (
+		wg = new(sync.WaitGroup)
+
+		focus = NewFocus([]int{1, POINTS, POINTS, POINTS, POINTS})
+
 		displacementChan = make(chan uint)
 
 		rpmChan  [POINTS]chan uint
 		veChan   [POINTS]chan uint
 		imapChan [POINTS]chan uint
 		actChan  [POINTS]chan uint
-
-		focus = NewFocus([]int{1, POINTS, POINTS, POINTS, POINTS})
 	)
+	defer wg.Wait()
+	defer focus.Close()
+	defer close(displacementChan)
 	for i := 0; i < POINTS; i++ {
 		rpmChan[i] = make(chan uint)
 		veChan[i] = make(chan uint)
 		imapChan[i] = make(chan uint)
 		actChan[i] = make(chan uint)
+
+		defer close(rpmChan[i])
+		defer close(veChan[i])
+		defer close(imapChan[i])
+		defer close(actChan[i])
 	}
+
+	w, err := win.New(win.Title("volute"), win.Size(WIDTH, HEIGHT))
+	if err != nil {
+		fmt.Println("error creating window:", err)
+		os.Exit(1)
+	}
+	mux, env := gui.NewMux(w)
+	defer close(env.Draw())
 
 	bounds := layout.Grid{
 		Rows:        []int{2, 7, 7, 7, 7},
@@ -57,41 +72,56 @@ func run() {
 		Flip:        false,
 	}.Lay(image.Rect(0, 0, WIDTH, HEIGHT))
 
-	go widget.Label("displacement (cc)", bounds[0], mux.MakeEnv())
+	wg.Add(1)
+	go widget.Label("displacement (cc)", bounds[0], mux.MakeEnv(), wg)
+	wg.Add(1)
 	go widget.Input(
 		displacementChan,
 		bounds[1],
 		focus.widgets[0][0],
 		mux.MakeEnv(),
+		wg,
 	)
-	go widget.Label("speed (rpm)", bounds[2], mux.MakeEnv())
-	go widget.Label("VE (%)", bounds[3+POINTS], mux.MakeEnv())
-	go widget.Label("IMAP (mbar)", bounds[4+2*POINTS], mux.MakeEnv())
-	go widget.Label("ACT (*C)", bounds[5+3*POINTS], mux.MakeEnv())
+	wg.Add(1)
+	go widget.Label("speed (rpm)", bounds[2], mux.MakeEnv(), wg)
+	wg.Add(1)
+	go widget.Label("VE (%)", bounds[3+POINTS], mux.MakeEnv(), wg)
+	wg.Add(1)
+	go widget.Label("IMAP (mbar)", bounds[4+2*POINTS], mux.MakeEnv(), wg)
+	wg.Add(1)
+	go widget.Label("ACT (*C)", bounds[5+3*POINTS], mux.MakeEnv(), wg)
 	for i := 0; i < POINTS; i++ {
+		wg.Add(1)
 		go widget.Input( // speed
 			rpmChan[i],
 			bounds[3+i],
 			focus.widgets[1][i],
 			mux.MakeEnv(),
+			wg,
 		)
+		wg.Add(1)
 		go widget.Input( // VE
 			veChan[i],
 			bounds[4+POINTS+i],
 			focus.widgets[2][i],
 			mux.MakeEnv(),
+			wg,
 		)
+		wg.Add(1)
 		go widget.Input( // IMAP
 			imapChan[i],
 			bounds[5+2*POINTS+i],
 			focus.widgets[3][i],
 			mux.MakeEnv(),
+			wg,
 		)
+		wg.Add(1)
 		go widget.Input( // ACT
 			actChan[i],
 			bounds[6+3*POINTS+i],
 			focus.widgets[4][i],
 			mux.MakeEnv(),
+			wg,
 		)
 	}
 
@@ -126,11 +156,7 @@ Loop:
 			}
 		}
 	}
-	close(env.Draw())
-	close(displacementChan)
-	for i := range rpmChan {
-		close(rpmChan[i])
-	}
+	fmt.Println("Shutting down...")
 }
 
 func split(elements int, space int) []int {

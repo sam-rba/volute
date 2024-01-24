@@ -19,6 +19,14 @@ func NewFocus(rows []int) Focus {
 	return f
 }
 
+func (f *Focus) Close() {
+	for i := range f.widgets {
+		for j := range f.widgets[i] {
+			close(f.widgets[i][j])
+		}
+	}
+}
+
 func (f *Focus) Left() {
 	f.widgets[f.p.Y][f.p.X] <- false
 	if f.p.X <= 0 {
