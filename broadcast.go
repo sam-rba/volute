@@ -13,15 +13,15 @@ type Broadcast[T any] struct {
 
 // The caller is responsible for closing source. When source is closed,
 // Broadcast will close all destinations.
-func NewBroadcast[T any](source chan T) Broadcast[T] {
-	bc := Broadcast[T]{
+func NewBroadcast[T any](source chan T) *Broadcast[T] {
+	bc := &Broadcast[T]{
 		source,
 		make([]chan<- T, 0),
 		sync.Mutex{},
 		sync.WaitGroup{},
 	}
 
-	go func(bc *Broadcast[T]) {
+	go func() {
 		bc.wg.Add(1)
 
 		for v := range bc.source {
@@ -39,7 +39,7 @@ func NewBroadcast[T any](source chan T) Broadcast[T] {
 		bc.mu.Unlock()
 
 		bc.wg.Done()
-	}(&bc)
+	}()
 	return bc
 }
 
