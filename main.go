@@ -27,13 +27,17 @@ const (
 )
 
 func run() {
+	wg := new(sync.WaitGroup)
+	defer wg.Wait()
+
+	focus := NewFocus([]int{1, POINTS, POINTS, POINTS, POINTS})
+	defer focus.Close()
+
+	displacementChan := make(chan uint)
+	displacementBroadcast := NewBroadcast(displacementChan)
+	defer displacementBroadcast.Wait()
+
 	var (
-		wg = new(sync.WaitGroup)
-
-		focus = NewFocus([]int{1, POINTS, POINTS, POINTS, POINTS})
-
-		displacementChan = make(chan uint)
-
 		rpmChan  [POINTS]chan uint
 		veChan   [POINTS]chan uint
 		imapChan [POINTS]chan uint
@@ -41,22 +45,8 @@ func run() {
 
 		flowChan [POINTS]chan float64
 	)
-	defer wg.Wait()
-	defer focus.Close()
-	defer close(displacementChan)
-	for i := 0; i < POINTS; i++ {
-		rpmChan[i] = make(chan uint)
-		veChan[i] = make(chan uint)
-		imapChan[i] = make(chan uint)
-		actChan[i] = make(chan uint)
-		defer close(rpmChan[i])
-		defer close(veChan[i])
-		defer close(imapChan[i])
-		defer close(actChan[i])
-
-		flowChan[i] = make(chan float64)
-		defer close(flowChan[i])
-	}
+	makeChans(rpmChan[:], veChan[:], imapChan[:], actChan[:])
+	makeChans(flowChan[:])
 
 	w, err := win.New(win.Title("volute"), win.Size(WIDTH, HEIGHT))
 	if err != nil {
@@ -66,6 +56,34 @@ func run() {
 	mux, env := gui.NewMux(w)
 	defer close(env.Draw())
 
+	spawnWidgets(
+		displacementChan,
+		rpmChan, veChan, imapChan, actChan,
+		flowChan,
+		&focus, mux, wg,
+	)
+
+	// TODO: make these output properly on screen.
+	for i := 0; i < POINTS; i++ {
+		wg.Add(1)
+		go calculateFlow(
+			flowChan[i],
+			displacementBroadcast.AddDestination(),
+			rpmChan[i], veChan[i], actChan[i], imapChan[i],
+			wg,
+		)
+	}
+
+	focus.Focus(true)
+	eventLoop(env, &focus)
+}
+
+func spawnWidgets(
+	displacementChan chan uint,
+	rpmChan, veChan, imapChan, actChan [POINTS]chan uint,
+	flowChan [POINTS]chan float64,
+	focus *Focus, mux *gui.Mux, wg *sync.WaitGroup,
+) {
 	bounds := layout.Grid{
 		Rows:        []int{2, 7, 7, 7, 7, 7},
 		Background:  color.Gray{255},
@@ -139,39 +157,36 @@ func run() {
 			wg,
 		)
 	}
+}
 
-	focus.widgets[focus.p.Y][focus.p.X] <- true
-
-Loop:
-	for {
-		select {
-		case _ = <-displacementChan:
-		case _ = <-rpmChan[0]:
-		case _ = <-veChan[0]:
-		case event, ok := <-env.Events():
-			if !ok { // channel closed
-				break Loop
-			}
-			switch event := event.(type) {
-			case win.WiClose:
-				break Loop
-			case win.KbType:
-				switch event.Rune {
-				case 'q':
-					break Loop
-				case 'h':
-					focus.Left()
-				case 'j':
-					focus.Down()
-				case 'k':
-					focus.Up()
-				case 'l':
-					focus.Right()
-				}
+func eventLoop(env gui.Env, focus *Focus) {
+	for event := range env.Events() {
+		switch event := event.(type) {
+		case win.WiClose:
+			return
+		case win.KbType:
+			switch event.Rune {
+			case 'q':
+				return
+			case 'h':
+				focus.Left()
+			case 'j':
+				focus.Down()
+			case 'k':
+				focus.Up()
+			case 'l':
+				focus.Right()
 			}
 		}
 	}
-	fmt.Println("Shutting down...")
+}
+
+func makeChans[T any](chanss ...[]chan T) {
+	for i := range chanss {
+		for j := range chanss[i] {
+			chanss[i][j] = make(chan T)
+		}
+	}
 }
 
 func split(elements int, space int) []int {
@@ -195,6 +210,49 @@ func splitRows(elements int, space int) []int {
 		space -= bounds[i]
 	}
 	return bounds
+}
+
+func calculateFlow(
+	flow chan<- float64,
+	displacementChan, rpmChan, veChan, actChan, imapChan <-chan uint,
+	wg *sync.WaitGroup,
+) {
+	defer wg.Done()
+	defer close(flow)
+
+	var (
+		displacement Volume
+		rpm          uint
+		ve           uint
+		act          Temperature
+		imap         Pressure
+
+		v  uint
+		ok bool
+	)
+
+	for {
+		select {
+		case v, ok = <-displacementChan:
+			displacement = Volume(v) * CubicCentimetre
+		case rpm, ok = <-rpmChan:
+		case ve, ok = <-veChan:
+		case v, ok = <-actChan:
+			act = Temperature{float64(v), Celcius}
+		case v, ok = <-imapChan:
+			imap = Pressure(v) * Millibar
+		}
+		if !ok {
+			return
+		}
+		flow <- massFlow(displacement, rpm, ve, act, imap)
+	}
+}
+
+func massFlow(displacement Volume, rpm, ve uint, act Temperature, imap Pressure) float64 {
+	density := (M / R) * float64(imap/Pascal) / act.AsUnit(Kelvin)                          // kg/m3
+	volumeFlow := float64(displacement/CubicMetre) * float64(rpm/2) * (float64(ve) / 100.0) // m3/min
+	return density * volumeFlow
 }
 
 func main() {

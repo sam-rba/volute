@@ -43,6 +43,7 @@ func Label(text string, r image.Rectangle, env gui.Env, wg *sync.WaitGroup) {
 func Input(val chan<- uint, r image.Rectangle, focusChan <-chan bool, env gui.Env, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer close(env.Draw())
+	defer close(val)
 
 	redraw := func(text []byte, focus bool) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
