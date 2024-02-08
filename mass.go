@@ -9,6 +9,7 @@ type MassFlowRate float32
 
 const (
 	KilogramsPerSecond MassFlowRate = 1
+	KilogramsPerMinute MassFlowRate = 1.0 / 60.0
 	PoundsPerMinute    MassFlowRate = 0.007_559_872_833
 )
 
