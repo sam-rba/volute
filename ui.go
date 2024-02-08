@@ -14,7 +14,9 @@ func spawnWidgets(
 	displacementChan chan uint,
 	rpmChan, veChan, imapChan, actChan [POINTS]chan uint,
 	flowChan [POINTS]chan float64,
-	focus *Focus, mux *gui.Mux, wg *sync.WaitGroup,
+	focus *widget.Focus,
+	mux *gui.Mux,
+	wg *sync.WaitGroup,
 ) {
 	bounds := layout.Grid{
 		Rows:        []int{2, 7, 7, 7, 7, 7},
@@ -34,7 +36,7 @@ func spawnWidgets(
 	go widget.Input(
 		displacementChan,
 		bounds[1],
-		focus.widgets[0][0],
+		focus.Widgets[0][0],
 		mux.MakeEnv(),
 		wg,
 	)
@@ -53,7 +55,7 @@ func spawnWidgets(
 		go widget.Input( // speed
 			rpmChan[i],
 			bounds[3+i],
-			focus.widgets[1][i],
+			focus.Widgets[1][i],
 			mux.MakeEnv(),
 			wg,
 		)
@@ -61,7 +63,7 @@ func spawnWidgets(
 		go widget.Input( // VE
 			veChan[i],
 			bounds[4+POINTS+i],
-			focus.widgets[2][i],
+			focus.Widgets[2][i],
 			mux.MakeEnv(),
 			wg,
 		)
@@ -69,7 +71,7 @@ func spawnWidgets(
 		go widget.Input( // IMAP
 			imapChan[i],
 			bounds[5+2*POINTS+i],
-			focus.widgets[3][i],
+			focus.Widgets[3][i],
 			mux.MakeEnv(),
 			wg,
 		)
@@ -77,7 +79,7 @@ func spawnWidgets(
 		go widget.Input( // ACT
 			actChan[i],
 			bounds[6+3*POINTS+i],
-			focus.widgets[4][i],
+			focus.Widgets[4][i],
 			mux.MakeEnv(),
 			wg,
 		)

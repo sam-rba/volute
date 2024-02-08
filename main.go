@@ -7,6 +7,7 @@ import (
 
 	"github.com/faiface/mainthread"
 	"volute/gui"
+	"volute/gui/widget"
 	"volute/gui/win"
 )
 
@@ -26,7 +27,7 @@ func run() {
 	wg := new(sync.WaitGroup)
 	defer wg.Wait()
 
-	focus := NewFocus([]int{1, POINTS, POINTS, POINTS, POINTS})
+	focus := widget.NewFocus([]int{1, POINTS, POINTS, POINTS, POINTS})
 	defer focus.Close()
 
 	displacementChan := make(chan uint)
@@ -56,7 +57,9 @@ func run() {
 		displacementChan,
 		rpmChan, veChan, imapChan, actChan,
 		flowChan,
-		&focus, mux, wg,
+		&focus,
+		mux,
+		wg,
 	)
 
 	for i := 0; i < POINTS; i++ {
@@ -73,7 +76,7 @@ func run() {
 	eventLoop(env, &focus)
 }
 
-func eventLoop(env gui.Env, focus *Focus) {
+func eventLoop(env gui.Env, focus *widget.Focus) {
 	for event := range env.Events() {
 		switch event := event.(type) {
 		case win.WiClose:
