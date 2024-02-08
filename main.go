@@ -59,7 +59,6 @@ func run() {
 		&focus, mux, wg,
 	)
 
-	// TODO: make these output properly on screen.
 	for i := 0; i < POINTS; i++ {
 		wg.Add(1)
 		go calculateFlow(
