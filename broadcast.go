@@ -23,21 +23,14 @@ func NewBroadcast[T any](source chan T) *Broadcast[T] {
 
 	go func() {
 		bc.wg.Add(1)
-
 		for v := range bc.source {
-			bc.mu.Lock()
-			for _, dest := range bc.destinations {
-				dest <- v
-			}
-			bc.mu.Unlock()
+			bc.broadcast(v)
 		}
-
 		bc.mu.Lock()
 		for _, dest := range bc.destinations {
 			close(dest)
 		}
 		bc.mu.Unlock()
-
 		bc.wg.Done()
 	}()
 	return bc
@@ -56,4 +49,12 @@ func (bc *Broadcast[T]) AddDestination() <-chan T {
 // destinations.
 func (bc *Broadcast[T]) Wait() {
 	bc.wg.Wait()
+}
+
+func (bc *Broadcast[T]) broadcast(v T) {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+	for _, dest := range bc.destinations {
+		dest <- v
+	}
 }
