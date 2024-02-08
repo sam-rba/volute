@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"os"
 	"sync"
 
@@ -59,6 +60,16 @@ func run() {
 		flowChan,
 		&focus,
 		mux,
+		wg,
+	)
+
+	imChan := make(chan image.Image)
+	defer close(imChan)
+	wg.Add(1)
+	go widget.Image(
+		imChan,
+		image.Rect(0, 200, 100, 300),
+		mux.MakeEnv(),
 		wg,
 	)
 

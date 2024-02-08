@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	xdraw "golang.org/x/image/draw"
 	"image"
 	"image/color"
 	"image/draw"
@@ -114,6 +115,34 @@ Loop:
 			}
 			if event, ok := event.(win.WiFocus); ok && event.Focused {
 				env.Draw() <- redraw(v)
+			}
+		}
+	}
+}
+
+func Image(imChan <-chan image.Image, r image.Rectangle, env gui.Env, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer close(env.Draw())
+
+	interp := xdraw.ApproxBiLinear
+	redraw := func(im image.Image) func(draw.Image) image.Rectangle {
+		return func(drw draw.Image) image.Rectangle {
+			interp.Scale(drw, r, im, im.Bounds(), draw.Src, nil)
+			return r
+		}
+	}
+	var im image.Image = image.NewGray(r)
+
+	for {
+		select {
+		case im = <-imChan:
+			env.Draw() <- redraw(im)
+		case event, ok := <-env.Events():
+			if !ok {
+				return
+			}
+			if event, ok := event.(win.WiFocus); ok && event.Focused {
+				env.Draw() <- redraw(im)
 			}
 		}
 	}
