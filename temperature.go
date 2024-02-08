@@ -1,9 +1,6 @@
 package main
 
-import (
-	"errors"
-	"fmt"
-)
+import "fmt"
 
 type TemperatureUnit int
 
@@ -12,22 +9,6 @@ const (
 	Kelvin
 	Fahrenheit
 )
-
-var TemperatureUnits = []string{"°C", "°K", "°F"}
-
-func ParseTemperatureUnit(s string) (TemperatureUnit, error) {
-	// Each case corresponds to a value in UnitStrings().
-	switch s {
-	case "°C":
-		return Celcius, nil
-	case "°K":
-		return Kelvin, nil
-	case "°F":
-		return Fahrenheit, nil
-	default:
-		return *new(TemperatureUnit), errors.New(fmt.Sprintf("invalid unit: '%s'", s))
-	}
-}
 
 type Temperature struct {
 	Val  float32
