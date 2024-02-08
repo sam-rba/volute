@@ -11,13 +11,13 @@ const (
 )
 
 type Temperature struct {
-	Val  float32
+	Val  float64
 	Unit TemperatureUnit
 }
 
-func (t Temperature) AsUnit(u TemperatureUnit) (float32, error) {
+func (t Temperature) AsUnit(u TemperatureUnit) float64 {
 	// Convert to celcius
-	var c float32
+	var c float64
 	switch t.Unit {
 	case Celcius:
 		c = t.Val
@@ -30,12 +30,12 @@ func (t Temperature) AsUnit(u TemperatureUnit) (float32, error) {
 	// Convert to desired unit
 	switch u {
 	case Celcius:
-		return c, nil
+		return c
 	case Kelvin:
-		return c + 272.15, nil
+		return c + 272.15
 	case Fahrenheit:
-		return c*(9.0/5.0) + 32.0, nil
+		return c*(9.0/5.0) + 32.0
 	default:
-		return 0, errors.New(fmt.Sprintf("invalid unit: '%v'", u))
+		panic(fmt.Sprintf("invalid unit: '%v'", u))
 	}
 }
