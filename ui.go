@@ -14,7 +14,7 @@ func spawnWidgets(
 	displacementChan chan uint,
 	rpmChan, veChan, imapChan, actChan [POINTS]chan uint,
 	flowChan [POINTS]chan float64,
-	focus *widget.Focus,
+	focus *widget.FocusMaster,
 	mux *gui.Mux,
 	wg *sync.WaitGroup,
 ) {
@@ -36,7 +36,7 @@ func spawnWidgets(
 	go widget.Input(
 		displacementChan,
 		bounds[1],
-		focus.Widgets[0][0],
+		focus.Slave(0, 0),
 		mux.MakeEnv(),
 		wg,
 	)
@@ -55,7 +55,7 @@ func spawnWidgets(
 		go widget.Input( // speed
 			rpmChan[i],
 			bounds[3+i],
-			focus.Widgets[1][i],
+			focus.Slave(1, i),
 			mux.MakeEnv(),
 			wg,
 		)
@@ -63,7 +63,7 @@ func spawnWidgets(
 		go widget.Input( // VE
 			veChan[i],
 			bounds[4+POINTS+i],
-			focus.Widgets[2][i],
+			focus.Slave(2, i),
 			mux.MakeEnv(),
 			wg,
 		)
@@ -71,7 +71,7 @@ func spawnWidgets(
 		go widget.Input( // IMAP
 			imapChan[i],
 			bounds[5+2*POINTS+i],
-			focus.Widgets[3][i],
+			focus.Slave(3, i),
 			mux.MakeEnv(),
 			wg,
 		)
@@ -79,7 +79,7 @@ func spawnWidgets(
 		go widget.Input( // ACT
 			actChan[i],
 			bounds[6+3*POINTS+i],
-			focus.Widgets[4][i],
+			focus.Slave(4, i),
 			mux.MakeEnv(),
 			wg,
 		)

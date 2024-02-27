@@ -28,7 +28,7 @@ func run() {
 	wg := new(sync.WaitGroup)
 	defer wg.Wait()
 
-	focus := widget.NewFocus([]int{1, POINTS, POINTS, POINTS, POINTS})
+	focus := widget.NewFocusMaster([]int{1, POINTS, POINTS, POINTS, POINTS})
 	defer focus.Close()
 
 	displacementChan := make(chan uint)
@@ -87,7 +87,7 @@ func run() {
 	eventLoop(env, &focus)
 }
 
-func eventLoop(env gui.Env, focus *widget.Focus) {
+func eventLoop(env gui.Env, focus *widget.FocusMaster) {
 	for event := range env.Events() {
 		switch event := event.(type) {
 		case win.WiClose:
@@ -97,13 +97,13 @@ func eventLoop(env gui.Env, focus *widget.Focus) {
 			case 'q':
 				return
 			case 'h':
-				focus.Left()
+				focus.TryLeft()
 			case 'j':
-				focus.Down()
+				focus.TryDown()
 			case 'k':
-				focus.Up()
+				focus.TryUp()
 			case 'l':
-				focus.Right()
+				focus.TryRight()
 			}
 		}
 	}
