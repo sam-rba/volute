@@ -48,7 +48,6 @@ func Input(val chan<- uint, r image.Rectangle, focus FocusSlave, env gui.Env, wg
 
 	text := []byte{'0'}
 	focused := false
-
 	env.Draw() <- inputDraw(text, focused, r)
 Loop:
 	for {
@@ -67,7 +66,7 @@ Loop:
 			focused = false
 			env.Draw() <- inputDraw(text, focused, r)
 		case event, ok := <-env.Events():
-			if !ok { // channel closed
+			if !ok {
 				break Loop
 			}
 			switch event := event.(type) {
@@ -107,28 +106,28 @@ func Output(val <-chan float64, r image.Rectangle, env gui.Env, wg *sync.WaitGro
 	defer wg.Done()
 	defer close(env.Draw())
 
-	redraw := func(v float64) func(draw.Image) image.Rectangle {
-		return func(drw draw.Image) image.Rectangle {
-			drawText([]byte(fmt.Sprintf("%.3f", v)), drw, r, BLACK, WHITE)
-			return r
-		}
-	}
 	var v float64 = 0.0
-
-	env.Draw() <- redraw(v)
+	env.Draw() <- outputDraw(v, r)
 Loop:
 	for {
 		select {
 		case v = <-val:
-			env.Draw() <- redraw(v)
+			env.Draw() <- outputDraw(v, r)
 		case event, ok := <-env.Events():
 			if !ok { // channel closed
 				break Loop
 			}
 			if event, ok := event.(win.WiFocus); ok && event.Focused {
-				env.Draw() <- redraw(v)
+				env.Draw() <- outputDraw(v, r)
 			}
 		}
+	}
+}
+
+func outputDraw(v float64, r image.Rectangle) func(draw.Image) image.Rectangle {
+	return func(drw draw.Image) image.Rectangle {
+		drawText([]byte(fmt.Sprintf("%.3f", v)), drw, r, BLACK, WHITE)
+		return r
 	}
 }
 
