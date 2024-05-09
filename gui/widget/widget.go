@@ -19,6 +19,8 @@ var (
 	GREEN       = color.RGBA{51, 102, 0, 255}
 	BLACK       = color.Gray{0}
 	WHITE       = color.Gray{255}
+
+	interpolator = xdraw.ApproxBiLinear
 )
 
 func Label(text string, r image.Rectangle, env gui.Env, wg *sync.WaitGroup) {
@@ -135,27 +137,26 @@ func Image(imChan <-chan image.Image, r image.Rectangle, env gui.Env, wg *sync.W
 	defer wg.Done()
 	defer close(env.Draw())
 
-	interp := xdraw.ApproxBiLinear
-	redraw := func(im image.Image) func(draw.Image) image.Rectangle {
-		return func(drw draw.Image) image.Rectangle {
-			interp.Scale(drw, r, im, im.Bounds(), draw.Src, nil)
-			return r
-		}
-	}
 	var im image.Image = image.NewGray(r)
-
 	for {
 		select {
 		case im = <-imChan:
-			env.Draw() <- redraw(im)
+			env.Draw() <- imageDraw(im, r)
 		case event, ok := <-env.Events():
 			if !ok {
 				return
 			}
 			if event, ok := event.(win.WiFocus); ok && event.Focused {
-				env.Draw() <- redraw(im)
+				env.Draw() <- imageDraw(im, r)
 			}
 		}
+	}
+}
+
+func imageDraw(im image.Image, r image.Rectangle) func(draw.Image) image.Rectangle {
+	return func(drw draw.Image) image.Rectangle {
+		interpolator.Scale(drw, r, im, im.Bounds(), draw.Src, nil)
+		return r
 	}
 }
 
