@@ -46,9 +46,9 @@ func Input(val chan<- uint, r image.Rectangle, focus FocusSlave, env gui.Env, wg
 	defer close(env.Draw())
 	defer close(val)
 
-	redraw := func(text []byte, haveFocus bool) func(draw.Image) image.Rectangle {
+	redraw := func(text []byte, focused bool) func(draw.Image) image.Rectangle {
 		return func(drw draw.Image) image.Rectangle {
-			if haveFocus {
+			if focused {
 				drawText(text, drw, r, GREEN, FOCUS_COLOR)
 			} else {
 				drawText(text, drw, r, GREEN, WHITE)
@@ -57,14 +57,25 @@ func Input(val chan<- uint, r image.Rectangle, focus FocusSlave, env gui.Env, wg
 		}
 	}
 	text := []byte{'0'}
-	haveFocus := false
+	focused := false
 
-	env.Draw() <- redraw(text, haveFocus)
+	env.Draw() <- redraw(text, focused)
 Loop:
 	for {
 		select {
-		case haveFocus = <-focus.Focus:
-			env.Draw() <- redraw(text, haveFocus)
+		case _, ok := <-focus.gain:
+			if !ok {
+				break Loop
+			}
+			focused = true
+			env.Draw() <- redraw(text, focused)
+		case dir, ok := <-focus.lose:
+			if !ok {
+				break Loop
+			}
+			focus.yield <- dir
+			focused = false
+			env.Draw() <- redraw(text, focused)
 		case event, ok := <-env.Events():
 			if !ok { // channel closed
 				break Loop
@@ -72,18 +83,18 @@ Loop:
 			switch event := event.(type) {
 			case win.WiFocus:
 				if event.Focused {
-					env.Draw() <- redraw(text, haveFocus)
+					env.Draw() <- redraw(text, focused)
 				}
 			case win.KbType:
-				if haveFocus && isDigit(event.Rune) {
+				if focused && isDigit(event.Rune) {
 					text = fmt.Appendf(text, "%c", event.Rune)
-					env.Draw() <- redraw(text, haveFocus)
+					env.Draw() <- redraw(text, focused)
 					val <- atoi(text)
 				}
 			case win.KbDown:
-				if haveFocus && event.Key == win.KeyBackspace && len(text) > 0 {
+				if focused && event.Key == win.KeyBackspace && len(text) > 0 {
 					text = text[:len(text)-1]
-					env.Draw() <- redraw(text, haveFocus)
+					env.Draw() <- redraw(text, focused)
 					val <- atoi(text)
 				}
 			}

@@ -1,98 +1,136 @@
 package widget
 
 import (
+	"fmt"
 	"image"
-	"sync"
 )
 
-type FocusMaster struct {
-	slaves [][]chan bool
-	mu     sync.Mutex
-	p      image.Point // coordinates of currently focused slave
-}
+type Direction int
+
+const (
+	UP Direction = iota
+	DOWN
+	LEFT
+	RIGHT
+)
 
 type FocusSlave struct {
-	Focus <-chan bool
-	Mu    *sync.Mutex
+	gain  <-chan bool
+	lose  <-chan Direction // forward to yield if widget accepts focus loss
+	yield chan<- Direction
 }
 
-func NewFocusMaster(rows []int) FocusMaster {
-	f := FocusMaster{
-		make([][]chan bool, len(rows)),
-		sync.Mutex{},
-		image.Point{},
+type focusSlave struct {
+	gain chan bool
+	lose chan Direction
+}
+
+func (fs focusSlave) close() {
+	close(fs.gain)
+	close(fs.lose)
+}
+
+type FocusMaster struct {
+	slaves  [][]focusSlave
+	yield   chan Direction
+	focused image.Point // coordinates of focused slave
+}
+
+func NewFocusMaster(rows []int) *FocusMaster {
+	fm := &FocusMaster{
+		slaves:  make([][]focusSlave, len(rows)),
+		yield:   make(chan Direction),
+		focused: image.Point{0, 0},
 	}
-	for i := range f.slaves {
-		f.slaves[i] = make([]chan bool, rows[i])
-		for j := range f.slaves[i] {
-			f.slaves[i][j] = make(chan bool)
+	for y := range fm.slaves {
+		fm.slaves[y] = make([]focusSlave, rows[y])
+		for x := range fm.slaves[y] {
+			fm.slaves[y][x] = focusSlave{make(chan bool), make(chan Direction)}
 		}
 	}
-	return f
+
+	go func() {
+		fm.slaves[0][0].gain <- true
+
+		for dir := range fm.yield {
+			fm.focused = fm.neighborPos(fm.focused, dir)
+			fm.slaves[fm.focused.Y][fm.focused.X].gain <- true
+		}
+	}()
+
+	return fm
 }
 
-func (f *FocusMaster) Slave(y, x int) FocusSlave {
-	return FocusSlave{f.slaves[y][x], &f.mu}
+func (fm FocusMaster) Slave(y, x int) FocusSlave {
+	return FocusSlave{
+		gain:  fm.slaves[y][x].gain,
+		lose:  fm.slaves[y][x].lose,
+		yield: fm.yield,
+	}
 }
 
-func (f *FocusMaster) Close() {
-	for i := range f.slaves {
-		for j := range f.slaves[i] {
-			close(f.slaves[i][j])
+func (fm FocusMaster) Close() {
+	for y := range fm.slaves {
+		for x := range fm.slaves[y] {
+			fm.slaves[y][x].close()
 		}
 	}
+	close(fm.yield)
 }
 
-func (f *FocusMaster) Focus(focus bool) {
-	f.slaves[f.p.Y][f.p.X] <- focus
+func (fm FocusMaster) Shift(dir Direction) {
+	fm.slaves[fm.focused.Y][fm.focused.X].lose <- dir
 }
 
-func (f *FocusMaster) TryLeft() {
-	if !f.mu.TryLock() {
-		return
+func (fm FocusMaster) neighborPos(pos image.Point, dir Direction) image.Point {
+	switch dir {
+	case UP:
+		return fm.upNeighborPos(pos)
+	case DOWN:
+		return fm.downNeighborPos(pos)
+	case LEFT:
+		return fm.leftNeighborPos(pos)
+	case RIGHT:
+		return fm.rightNeighborPos(pos)
+	default:
+		panic(fmt.Sprintf("invalid Direction: %v", dir))
 	}
-	defer f.mu.Unlock()
-	f.Focus(false)
-	if f.p.X <= 0 {
-		f.p.X = len(f.slaves[f.p.Y]) - 1
+}
+
+func (fm FocusMaster) upNeighborPos(pos image.Point) image.Point {
+	if pos.Y <= 0 {
+		pos.Y = len(fm.slaves) - 1
 	} else {
-		f.p.X--
+		pos.Y--
 	}
-	f.Focus(true)
+	pos.X = min(pos.X, len(fm.slaves[pos.Y])-1)
+	return pos
 }
 
-func (f *FocusMaster) TryRight() {
-	if !f.mu.TryLock() {
-		return
-	}
-	defer f.mu.Unlock()
-	f.Focus(false)
-	f.p.X = (f.p.X + 1) % len(f.slaves[f.p.Y])
-	f.Focus(true)
-}
-
-func (f *FocusMaster) TryUp() {
-	if !f.mu.TryLock() {
-		return
-	}
-	defer f.mu.Unlock()
-	f.Focus(false)
-	if f.p.Y <= 0 {
-		f.p.Y = len(f.slaves) - 1
+func (fm FocusMaster) downNeighborPos(pos image.Point) image.Point {
+	if pos.Y >= len(fm.slaves)-1 {
+		pos.Y = 0
 	} else {
-		f.p.Y--
+		pos.Y++
 	}
-	f.p.X = min(f.p.X, len(f.slaves[f.p.Y])-1)
-	f.Focus(true)
+	pos.X = min(pos.X, len(fm.slaves[pos.Y])-1)
+	return pos
 }
 
-func (f *FocusMaster) TryDown() {
-	if !f.mu.TryLock() {
-		return
+func (fm FocusMaster) leftNeighborPos(pos image.Point) image.Point {
+	if pos.X <= 0 {
+		pos.X = len(fm.slaves[pos.Y]) - 1
+	} else {
+		pos.X--
 	}
-	defer f.mu.Unlock()
-	f.Focus(false)
-	f.p.Y = (f.p.Y + 1) % len(f.slaves)
-	f.p.X = min(f.p.X, len(f.slaves[f.p.Y])-1)
-	f.Focus(true)
+	return pos
+}
+
+func (fm FocusMaster) rightNeighborPos(pos image.Point) image.Point {
+	if pos.X >= len(fm.slaves[pos.Y])-1 {
+		pos.X = 0
+	} else {
+		pos.X++
+	}
+	return pos
 }

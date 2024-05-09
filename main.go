@@ -58,7 +58,7 @@ func run() {
 		displacementChan,
 		rpmChan, veChan, imapChan, actChan,
 		flowChan,
-		&focus,
+		focus,
 		mux,
 		wg,
 	)
@@ -83,8 +83,7 @@ func run() {
 		)
 	}
 
-	focus.Focus(true)
-	eventLoop(env, &focus)
+	eventLoop(env, focus)
 }
 
 func eventLoop(env gui.Env, focus *widget.FocusMaster) {
@@ -97,13 +96,13 @@ func eventLoop(env gui.Env, focus *widget.FocusMaster) {
 			case 'q':
 				return
 			case 'h':
-				focus.TryLeft()
+				focus.Shift(widget.LEFT)
 			case 'j':
-				focus.TryDown()
+				focus.Shift(widget.DOWN)
 			case 'k':
-				focus.TryUp()
+				focus.Shift(widget.UP)
 			case 'l':
-				focus.TryRight()
+				focus.Shift(widget.RIGHT)
 			}
 		}
 	}
