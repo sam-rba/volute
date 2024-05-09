@@ -1,4 +1,4 @@
-package widget
+package text
 
 import (
 	"log"
@@ -38,12 +38,12 @@ func init() {
 	face = &concurrentFace{sync.Mutex{}, fce}
 }
 
-func TextSize(text string) image.Point {
+func Size(text string) image.Point {
 	bounds := textBounds([]byte(text), font.Drawer{Face: face})
 	return image.Point{bounds.Max.X - bounds.Min.X + 2*PAD, bounds.Max.Y - bounds.Min.Y + 2*PAD}
 }
 
-func drawText(text []byte, dst draw.Image, r image.Rectangle, fg, bg color.Color) {
+func Draw(text []byte, dst draw.Image, r image.Rectangle, fg, bg color.Color) {
 	drawer := font.Drawer{
 		Src:  &image.Uniform{fg},
 		Face: face,

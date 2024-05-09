@@ -7,6 +7,7 @@ import (
 
 	"volute/gui"
 	"volute/gui/layout"
+	"volute/gui/text"
 	"volute/gui/widget"
 )
 
@@ -23,7 +24,7 @@ func spawnWidgets(
 		Background:  color.Gray{255},
 		Gap:         1,
 		Split:       split,
-		SplitRows:   splitRows,
+		SplitRows:   layout.TextRowSplit,
 		Margin:      0,
 		Border:      0,
 		BorderColor: color.Gray{16},
@@ -96,21 +97,11 @@ func spawnWidgets(
 func split(elements int, space int) []int {
 	bounds := make([]int, elements)
 	widths := []int{
-		widget.TextSize(WIDEST_LABEL).X,
-		widget.TextSize("123456").X,
+		text.Size(WIDEST_LABEL).X,
+		text.Size("123456").X,
 	}
 	for i := 0; i < elements && space > 0; i++ {
 		bounds[i] = min(widths[min(i, len(widths)-1)], space)
-		space -= bounds[i]
-	}
-	return bounds
-}
-
-func splitRows(elements int, space int) []int {
-	bounds := make([]int, elements)
-	height := widget.TextSize("1").Y
-	for i := 0; i < elements && space > 0; i++ {
-		bounds[i] = min(height, space)
 		space -= bounds[i]
 	}
 	return bounds

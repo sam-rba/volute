@@ -1,6 +1,10 @@
 package layout
 
-import "fmt"
+import (
+	"fmt"
+
+	"volute/gui/text"
+)
 
 // SplitFunc represents a way to split a space among a number of elements.
 // The length of the returned slice must be equal to the number of elements.
@@ -23,4 +27,14 @@ func EvenSplit(elements int, width int) []int {
 		ret[elements] = v
 	}
 	return ret
+}
+
+func TextRowSplit(elements int, space int) []int {
+	bounds := make([]int, elements)
+	height := text.Size("1").Y
+	for i := 0; i < elements && space > 0; i++ {
+		bounds[i] = min(height, space)
+		space -= bounds[i]
+	}
+	return bounds
 }

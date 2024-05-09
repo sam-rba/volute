@@ -2,12 +2,16 @@ package main
 
 import (
 	"fmt"
-	"image"
 	"os"
 	"sync"
 
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
+
 	"github.com/faiface/mainthread"
 	"volute/gui"
+	"volute/gui/text"
 	"volute/gui/widget"
 	"volute/gui/win"
 )
@@ -28,7 +32,7 @@ func run() {
 	wg := new(sync.WaitGroup)
 	defer wg.Wait()
 
-	focus := widget.NewFocusMaster([]int{1, POINTS, POINTS, POINTS, POINTS})
+	focus := widget.NewFocusMaster([]int{1, POINTS, POINTS, POINTS, POINTS, 1})
 	defer focus.Close()
 
 	displacementChan := make(chan uint)
@@ -63,15 +67,89 @@ func run() {
 		wg,
 	)
 
+	compressors := []widget.Node[string]{
+		{
+			Label: "BorgWarner",
+			Value: "bw",
+			Children: []widget.Node[string]{
+				{
+					Label: "EFR",
+					Value: "efr",
+					Children: []widget.Node[string]{
+						{
+							Label:    "6258",
+							Value:    "6258",
+							Children: nil,
+						}, {
+							Label:    "7064",
+							Value:    "7064",
+							Children: nil,
+						},
+					},
+				}, {
+					Label: "K",
+					Value: "k",
+					Children: []widget.Node[string]{
+						{
+							Label:    "03",
+							Value:    "03",
+							Children: nil,
+						}, {
+							Label:    "04",
+							Value:    "04",
+							Children: nil,
+						},
+					},
+				},
+			},
+		}, {
+			Label: "Garrett",
+			Value: "garrett",
+			Children: []widget.Node[string]{
+				{
+					Label: "G",
+					Value: "g",
+					Children: []widget.Node[string]{
+						{
+							Label:    "25-550",
+							Value:    "25-550",
+							Children: nil,
+						},
+					},
+				},
+			},
+		},
+	}
+	wg.Add(1)
+	go widget.Tree(
+		compressors,
+		image.Rect(text.PAD, 125, 250, HEIGHT-text.PAD),
+		focus.Slave(5, 0),
+		mux,
+		wg,
+	)
+
 	imChan := make(chan image.Image)
 	defer close(imChan)
 	wg.Add(1)
 	go widget.Image(
 		imChan,
-		image.Rect(0, 200, 100, 300),
+		image.Rect(250+text.PAD, 125, WIDTH-text.PAD, HEIGHT-text.PAD),
 		mux.MakeEnv(),
 		wg,
 	)
+	f, err := os.Open("compressor_maps/borgwarner/efr/8374.jpg")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	im, _, err := image.Decode(f)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	f.Close()
+	imChan <- im
 
 	for i := 0; i < POINTS; i++ {
 		wg.Add(1)
