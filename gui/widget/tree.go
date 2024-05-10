@@ -1,10 +1,9 @@
 package widget
 
 import (
-	"sync"
-
 	"image"
 	"image/color"
+	"sync"
 
 	"volute/gui"
 	"volute/gui/layout"

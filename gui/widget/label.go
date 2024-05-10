@@ -1,9 +1,9 @@
 package widget
 
 import (
-	"sync"
 	"image"
 	"image/draw"
+	"sync"
 
 	"volute/gui"
 	"volute/gui/text"

@@ -1,11 +1,10 @@
 package widget
 
 import (
-	"sync"
-
 	xdraw "golang.org/x/image/draw"
 	"image"
 	"image/draw"
+	"sync"
 
 	"volute/gui"
 	"volute/gui/win"

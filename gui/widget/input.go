@@ -2,10 +2,9 @@ package widget
 
 import (
 	"fmt"
-	"sync"
-
 	"image"
 	"image/draw"
+	"sync"
 
 	"volute/gui"
 	"volute/gui/text"
