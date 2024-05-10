@@ -2,24 +2,12 @@ package widget
 
 import (
 	"sync"
-
-	xdraw "golang.org/x/image/draw"
 	"image"
-	"image/color"
 	"image/draw"
 
 	"volute/gui"
 	"volute/gui/text"
 	"volute/gui/win"
-)
-
-var (
-	FOCUS_COLOR = color.RGBA{179, 217, 255, 255}
-	GREEN       = color.RGBA{51, 102, 0, 255}
-	BLACK       = color.Gray{0}
-	WHITE       = color.Gray{255}
-
-	interpolator = xdraw.ApproxBiLinear
 )
 
 func Label(str string, r image.Rectangle, env gui.Env, wg *sync.WaitGroup) {

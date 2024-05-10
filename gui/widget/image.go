@@ -3,12 +3,15 @@ package widget
 import (
 	"sync"
 
+	xdraw "golang.org/x/image/draw"
 	"image"
 	"image/draw"
 
 	"volute/gui"
 	"volute/gui/win"
 )
+
+var interpolator = xdraw.ApproxBiLinear
 
 func Image(imChan <-chan image.Image, r image.Rectangle, env gui.Env, wg *sync.WaitGroup) {
 	defer wg.Done()
