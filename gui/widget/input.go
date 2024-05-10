@@ -1,7 +1,6 @@
 package widget
 
 import (
-	"fmt"
 	"image"
 	"image/draw"
 	"sync"
@@ -16,7 +15,7 @@ func Input(val chan<- uint, r image.Rectangle, focus FocusSlave, env gui.Env, wg
 	defer close(env.Draw())
 	defer close(val)
 
-	text := []byte{'0'}
+	text := "0"
 	focused := false
 	env.Draw() <- inputDraw(text, focused, r)
 Loop:
@@ -46,7 +45,7 @@ Loop:
 				}
 			case win.KbType:
 				if focused && isDigit(event.Rune) {
-					text = fmt.Appendf(text, "%c", event.Rune)
+					text = text + string(event.Rune)
 					env.Draw() <- inputDraw(text, focused, r)
 					val <- atoi(text)
 				}
@@ -61,7 +60,7 @@ Loop:
 	}
 }
 
-func inputDraw(str []byte, focused bool, r image.Rectangle) func(draw.Image) image.Rectangle {
+func inputDraw(str string, focused bool, r image.Rectangle) func(draw.Image) image.Rectangle {
 	return func(drw draw.Image) image.Rectangle {
 		if focused {
 			text.Draw(str, drw, r, GREEN, FOCUS_COLOR, text.ALIGN_RIGHT)
@@ -76,7 +75,7 @@ func isDigit(r rune) bool {
 	return '0' <= r && r <= '9'
 }
 
-func atoi(s []byte) uint {
+func atoi(s string) uint {
 	var n uint = 0
 	for _, d := range s {
 		n = n*10 + uint(d-'0')

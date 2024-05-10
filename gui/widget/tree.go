@@ -9,6 +9,8 @@ import (
 	"volute/gui/layout"
 )
 
+const INDENT = 2
+
 type Node[T any] struct {
 	Label    string
 	Value    T
@@ -50,7 +52,9 @@ func Tree[T any](trees []Node[T], r image.Rectangle, focus FocusSlave, mux *gui.
 }
 
 func flatten[T any](root Node[T], depth int) []string {
-	indent := string(populate(make([]byte, 2*depth), ' '))
+	indent := string(populate(
+		make([]rune, INDENT*depth),
+		'─'))
 	nodes := []string{indent + root.Label}
 	root.expanded = true // TODO: remove me
 	if root.expanded {

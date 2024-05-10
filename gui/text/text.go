@@ -46,11 +46,11 @@ const (
 )
 
 func Size(text string) image.Point {
-	bounds := textBounds([]byte(text), font.Drawer{Face: face})
+	bounds := textBounds(text, font.Drawer{Face: face})
 	return image.Point{bounds.Max.X - bounds.Min.X + 2*PAD, bounds.Max.Y - bounds.Min.Y + 2*PAD}
 }
 
-func Draw(text []byte, dst draw.Image, r image.Rectangle, fg, bg color.Color, align Align) {
+func Draw(text string, dst draw.Image, r image.Rectangle, fg, bg color.Color, align Align) {
 	drawer := font.Drawer{
 		Src:  &image.Uniform{fg},
 		Face: face,
@@ -65,7 +65,7 @@ func Draw(text []byte, dst draw.Image, r image.Rectangle, fg, bg color.Color, al
 	textImg := image.NewRGBA(bounds)
 	draw.Draw(textImg, bounds, &image.Uniform{bg}, image.ZP, draw.Src)
 	drawer.Dst = textImg
-	drawer.DrawBytes(text)
+	drawer.DrawString(text)
 
 	leftCentre := image.Pt(bounds.Min.X, (bounds.Min.Y+bounds.Max.Y)/2)
 	var target image.Point
@@ -79,8 +79,8 @@ func Draw(text []byte, dst draw.Image, r image.Rectangle, fg, bg color.Color, al
 	draw.Draw(dst, bounds.Add(delta).Intersect(r), textImg, bounds.Min, draw.Src)
 }
 
-func textBounds(text []byte, drawer font.Drawer) image.Rectangle {
-	b, _ := drawer.BoundBytes(text)
+func textBounds(text string, drawer font.Drawer) image.Rectangle {
+	b, _ := drawer.BoundString(text)
 	return image.Rect(
 		b.Min.X.Floor(),
 		b.Min.Y.Floor(),
