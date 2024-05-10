@@ -1,7 +1,6 @@
 package widget
 
 import (
-	"cmp"
 	"fmt"
 	"sync"
 
@@ -71,13 +70,4 @@ func outputDraw(v float64, r image.Rectangle) func(draw.Image) image.Rectangle {
 		text.Draw([]byte(fmt.Sprintf("%.3f", v)), drw, r, BLACK, WHITE)
 		return r
 	}
-}
-
-func contains[T cmp.Ordered](slc []T, v T) bool {
-	for i := range slc {
-		if slc[i] == v {
-			return true
-		}
-	}
-	return false
 }
