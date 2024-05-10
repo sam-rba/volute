@@ -72,3 +72,15 @@ func inputDraw(str []byte, focused bool, r image.Rectangle) func(draw.Image) ima
 		return r
 	}
 }
+
+func isDigit(r rune) bool {
+	return '0' <= r && r <= '9'
+}
+
+func atoi(s []byte) uint {
+	var n uint = 0
+	for _, d := range s {
+		n = n*10 + uint(d-'0')
+	}
+	return n
+}

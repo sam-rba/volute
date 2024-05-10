@@ -73,10 +73,6 @@ func outputDraw(v float64, r image.Rectangle) func(draw.Image) image.Rectangle {
 	}
 }
 
-func isDigit(r rune) bool {
-	return '0' <= r && r <= '9'
-}
-
 func contains[T cmp.Ordered](slc []T, v T) bool {
 	for i := range slc {
 		if slc[i] == v {
@@ -84,12 +80,4 @@ func contains[T cmp.Ordered](slc []T, v T) bool {
 		}
 	}
 	return false
-}
-
-func atoi(s []byte) uint {
-	var n uint = 0
-	for _, d := range s {
-		n = n*10 + uint(d-'0')
-	}
-	return n
 }
