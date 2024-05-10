@@ -35,7 +35,7 @@ Loop:
 
 func outputDraw(v float64, r image.Rectangle) func(draw.Image) image.Rectangle {
 	return func(drw draw.Image) image.Rectangle {
-		text.Draw([]byte(fmt.Sprintf("%.3f", v)), drw, r, BLACK, WHITE)
+		text.Draw([]byte(fmt.Sprintf("%.3f", v)), drw, r, BLACK, WHITE, text.ALIGN_RIGHT)
 		return r
 	}
 }

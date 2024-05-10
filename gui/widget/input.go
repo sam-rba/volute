@@ -64,9 +64,9 @@ Loop:
 func inputDraw(str []byte, focused bool, r image.Rectangle) func(draw.Image) image.Rectangle {
 	return func(drw draw.Image) image.Rectangle {
 		if focused {
-			text.Draw(str, drw, r, GREEN, FOCUS_COLOR)
+			text.Draw(str, drw, r, GREEN, FOCUS_COLOR, text.ALIGN_RIGHT)
 		} else {
-			text.Draw(str, drw, r, GREEN, WHITE)
+			text.Draw(str, drw, r, GREEN, WHITE, text.ALIGN_RIGHT)
 		}
 		return r
 	}

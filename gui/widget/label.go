@@ -15,7 +15,7 @@ func Label(str string, r image.Rectangle, env gui.Env, wg *sync.WaitGroup) {
 	defer close(env.Draw())
 
 	redraw := func(drw draw.Image) image.Rectangle {
-		text.Draw([]byte(str), drw, r, BLACK, WHITE)
+		text.Draw([]byte(str), drw, r, BLACK, WHITE, text.ALIGN_LEFT)
 		return r
 	}
 
