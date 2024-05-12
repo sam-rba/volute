@@ -54,7 +54,6 @@ func flatten[T any](root Node[T], depth int) []string {
 		make([]rune, depth),
 		'─'))
 	nodes := []string{indent + root.Label}
-	root.expanded = true // TODO: remove me
 	if root.expanded {
 		for _, c := range root.Children {
 			nodes = append(nodes, flatten(c, depth+1)...)
