@@ -10,9 +10,10 @@ import (
 	"volute/gui/win"
 )
 
+// Sends signal over tx when Enter is pressed while focused.
 func Button[T any](
-	signal chan<- T,
-	val T,
+	tx chan<- T,
+	signal T,
 	label string,
 	r image.Rectangle,
 	focus FocusSlave,
@@ -20,7 +21,7 @@ func Button[T any](
 	wg *sync.WaitGroup,
 ) {
 	defer wg.Done()
-	defer close(signal)
+	defer close(tx)
 
 	focused := false
 	env.Draw() <- buttonDraw(label, focused, r)
@@ -44,7 +45,7 @@ func Button[T any](
 				return
 			}
 			if event, ok := event.(win.KbDown); ok && focused && event.Key == win.KeyEnter {
-				signal <- val
+				tx <- signal
 			}
 		}
 	}
