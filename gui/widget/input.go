@@ -18,25 +18,24 @@ func Input(val chan<- uint, r image.Rectangle, focus FocusSlave, env gui.Env, wg
 	text := "0"
 	focused := false
 	env.Draw() <- inputDraw(text, focused, r)
-Loop:
 	for {
 		select {
 		case _, ok := <-focus.gain:
 			if !ok {
-				break Loop
+				return
 			}
 			focused = true
 			env.Draw() <- inputDraw(text, focused, r)
 		case dir, ok := <-focus.lose:
 			if !ok {
-				break Loop
+				return
 			}
 			focus.yield <- dir
 			focused = false
 			env.Draw() <- inputDraw(text, focused, r)
 		case event, ok := <-env.Events():
 			if !ok {
-				break Loop
+				return
 			}
 			switch event := event.(type) {
 			case win.WiFocus:

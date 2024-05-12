@@ -17,14 +17,13 @@ func Output(val <-chan float64, r image.Rectangle, env gui.Env, wg *sync.WaitGro
 
 	var v float64 = 0.0
 	env.Draw() <- outputDraw(v, r)
-Loop:
 	for {
 		select {
 		case v = <-val:
 			env.Draw() <- outputDraw(v, r)
 		case event, ok := <-env.Events():
-			if !ok { // channel closed
-				break Loop
+			if !ok {
+				return
 			}
 			if event, ok := event.(win.WiFocus); ok && event.Focused {
 				env.Draw() <- outputDraw(v, r)
