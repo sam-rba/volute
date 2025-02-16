@@ -14,19 +14,19 @@
 static const char TITLE[] = "volute";
 
 static const char button_map[256] = {
-	[ SDL_BUTTON_LEFT  & 0xff ] = MU_MOUSE_LEFT,
+	[ SDL_BUTTON_LEFT & 0xff ] = MU_MOUSE_LEFT,
 	[ SDL_BUTTON_RIGHT & 0xff ] = MU_MOUSE_RIGHT,
 	[ SDL_BUTTON_MIDDLE & 0xff ] = MU_MOUSE_MIDDLE,
 };
 
 static const char key_map[256] = {
-	[ SDLK_LSHIFT  & 0xff ] = MU_KEY_SHIFT,
-	[ SDLK_RSHIFT  & 0xff ] = MU_KEY_SHIFT,
+	[ SDLK_LSHIFT & 0xff ] = MU_KEY_SHIFT,
+	[ SDLK_RSHIFT & 0xff ] = MU_KEY_SHIFT,
 	[ SDLK_LCTRL & 0xff ] = MU_KEY_CTRL,
 	[ SDLK_RCTRL & 0xff ] = MU_KEY_CTRL,
-	[ SDLK_LALT  & 0xff ] = MU_KEY_ALT,
-	[ SDLK_RALT  & 0xff ] = MU_KEY_ALT,
-	[ SDLK_RETURN  & 0xff ] = MU_KEY_RETURN,
+	[ SDLK_LALT & 0xff ] = MU_KEY_ALT,
+	[ SDLK_RALT & 0xff ] = MU_KEY_ALT,
+	[ SDLK_RETURN & 0xff ] = MU_KEY_RETURN,
 	[ SDLK_BACKSPACE & 0xff ] = MU_KEY_BACKSPACE,
 };
 
@@ -40,7 +40,7 @@ static void handle_events(mu_Context *ctx);
 static void handle_event(SDL_Event e, mu_Context *ctx);
 static void process_frame(mu_Context *ctx, UI *ui);
 static void main_window(mu_Context *ctx, UI *ui);
-static  void render(mu_Context *ctx);
+static void render(mu_Context *ctx);
 static void render_command(mu_Command *cmd);
 
 
@@ -168,7 +168,7 @@ main_window(mu_Context *ctx, UI *ui) {
 	mu_end_window(ctx);
 }
 
-static  void
+static void
 render(mu_Context *ctx) {
 	r_clear(mu_color(bg[0], bg[1], bg[2], 255));
 	mu_Command *cmd = NULL;
