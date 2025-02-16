@@ -5,6 +5,8 @@
 #include <SDL2/SDL.h>
 #include "renderer.h"
 #include "microui.h"
+#include "widget.h"
+#include "ui.h"
 
 
 /* Constants. */
@@ -33,11 +35,11 @@ static const char key_map[256] = {
 
 static int text_width(mu_Font font, const char *text, int len);
 static int text_height(mu_Font font);
-static void main_loop(mu_Context *ctx);
+static void main_loop(mu_Context *ctx, UI *ui);
 static void handle_events(mu_Context *ctx);
 static void handle_event(SDL_Event e, mu_Context *ctx);
-static void process_frame(mu_Context *ctx);
-static void main_window(mu_Context *ctx);
+static void process_frame(mu_Context *ctx, UI *ui);
+static void main_window(mu_Context *ctx, UI *ui);
 static  void render(mu_Context *ctx);
 static void render_command(mu_Command *cmd);
 
@@ -63,7 +65,11 @@ main(void) {
 	ctx.text_width = text_width;
 	ctx.text_height = text_height;
 
-	main_loop(&ctx);
+	/* Init data structures. */
+	static UI ui;
+	init_ui(&ui);
+
+	main_loop(&ctx, &ui);
 
 	return 0;
 }
@@ -82,10 +88,10 @@ text_height(mu_Font font) {
 }
 
 static void
-main_loop(mu_Context *ctx) {
+main_loop(mu_Context *ctx, UI *ui) {
 	for (;;) {
 		handle_events(ctx);
-		process_frame(ctx);
+		process_frame(ctx, ui);
 		render(ctx);
 	}
 }
@@ -135,14 +141,14 @@ handle_event(SDL_Event e, mu_Context *ctx) {
 }
 
 static void
-process_frame(mu_Context *ctx) {
+process_frame(mu_Context *ctx, UI *ui) {
 	mu_begin(ctx);
-	main_window(ctx);
+	main_window(ctx, ui);
 	mu_end(ctx);
 }
 
 static void
-main_window(mu_Context *ctx) {
+main_window(mu_Context *ctx, UI *ui) {
 	int w, h;
 	r_get_window_size(&w, &h);
 
@@ -151,8 +157,14 @@ main_window(mu_Context *ctx) {
 	}
 	/* TODO */
 	mu_layout_row(ctx, 2, (int[]) {0, 0}, 0);
-	mu_label(ctx, "foo");
-	mu_label(ctx, "bar");
+	static double value = 0.0;
+	if (field(ctx, &ui->displacement) & MU_RES_CHANGE) {
+		/* TODO */
+		value = ui->displacement.value;
+	}
+	static char buf[64];
+	snprintf(buf, sizeof(buf), "%lf", value);
+	mu_label(ctx, buf);
 	mu_end_window(ctx);
 }
 

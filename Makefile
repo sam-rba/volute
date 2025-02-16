@@ -14,7 +14,7 @@ else
 endif
 LDFLAGS += $(GLFLAG)
 
-SRC = main.c microui.c renderer.c
+SRC = main.c microui.c renderer.c widget.c ui.c
 OBJ = ${SRC:.c=.o}
 
 all: volute
@@ -28,4 +28,4 @@ volute: ${OBJ}
 %.o: %.c
 	${CC} -c ${CFLAGS} $<
 
-${SRC}: microui.h renderer.h atlas.inl
+${SRC}: microui.h renderer.h atlas.inl widget.h ui.h
