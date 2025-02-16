@@ -147,7 +147,7 @@ main_window(mu_Context *ctx) {
 	r_get_window_size(&w, &h);
 
 	if (!mu_begin_window(ctx, TITLE, mu_rect(0, 0, w, h))) {
-		return;
+		exit(EXIT_SUCCESS);
 	}
 	/* TODO */
 	mu_layout_row(ctx, 2, (int[]) {0, 0}, 0);
