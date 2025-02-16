@@ -1,4 +1,4 @@
-CFLAGS = -ansi -Wall -Wextra -pedantic -Wno-deprecated-declarations
+CFLAGS = -std=c99 -Wall -Wextra -pedantic -Wno-deprecated-declarations
 LDFLAGS = $(shell sdl2-config --libs)
 
 # Link OpenGL.
@@ -14,7 +14,7 @@ else
 endif
 LDFLAGS += $(GLFLAG)
 
-SRC = main.c microui.c
+SRC = main.c microui.c renderer.c
 OBJ = ${SRC:.c=.o}
 
 all: volute
@@ -28,4 +28,4 @@ volute: ${OBJ}
 %.o: %.c
 	${CC} -c ${CFLAGS} $<
 
-${SRC}: microui.h
+${SRC}: microui.h renderer.h atlas.inl
