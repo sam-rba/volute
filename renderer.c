@@ -166,6 +166,11 @@ int r_get_text_height(void) {
 }
 
 
+void r_get_window_size(int *w, int *h) {
+  SDL_GetWindowSize(window, w, h);
+}
+
+
 void r_set_clip_rect(mu_Rect rect) {
   flush();
   glScissor(rect.x, height - (rect.y + rect.h), rect.w, rect.h);
