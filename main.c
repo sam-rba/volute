@@ -13,6 +13,25 @@
 
 static const char TITLE[] = "volute";
 
+static const mu_Color BLACK = {0, 0, 0, 255};
+static const mu_Color WHITE = {255, 255, 255, 255};
+static const mu_Color LIGHT_GRAY = {222, 222, 222, 255};
+
+static const mu_Color COLOR_TEXT = BLACK;
+static const mu_Color COLOR_BORDER = BLACK;
+static const mu_Color COLOR_WINDOWBG = WHITE;
+static const mu_Color COLOR_TITLEBG = LIGHT_GRAY;
+static const mu_Color COLOR_TITLETEXT = COLOR_TEXT;
+static const mu_Color COLOR_PANELBG = COLOR_WINDOWBG;
+static const mu_Color COLOR_BUTTON = LIGHT_GRAY;
+static const mu_Color COLOR_BUTTONHOVER = COLOR_BUTTON;
+static const mu_Color COLOR_BUTTONFOCUS = COLOR_BUTTON;
+static const mu_Color COLOR_BASE = WHITE;
+static const mu_Color COLOR_BASEHOVER = COLOR_BASE;
+static const mu_Color COLOR_BASEFOCUS = COLOR_BASE;
+static const mu_Color COLOR_SCROLLBASE = WHITE;
+static const mu_Color COLOR_SCROLLTHUMB = WHITE;
+
 static const char button_map[256] = {
 	[ SDL_BUTTON_LEFT & 0xff ] = MU_MOUSE_LEFT,
 	[ SDL_BUTTON_RIGHT & 0xff ] = MU_MOUSE_RIGHT,
@@ -33,6 +52,7 @@ static const char key_map[256] = {
 
 /* Function declarations. */
 
+static void set_style(mu_Context *ctx);
 static int text_width(mu_Font font, const char *text, int len);
 static int text_height(mu_Font font);
 static void main_loop(mu_Context *ctx, UI *ui);
@@ -64,6 +84,7 @@ main(void) {
 	mu_init(&ctx);
 	ctx.text_width = text_width;
 	ctx.text_height = text_height;
+	set_style(&ctx);
 
 	/* Init data structures. */
 	static UI ui;
@@ -72,6 +93,24 @@ main(void) {
 	main_loop(&ctx, &ui);
 
 	return 0;
+}
+
+static void
+set_style(mu_Context *ctx) {
+	ctx->style->colors[MU_COLOR_TEXT] = COLOR_TEXT;
+	ctx->style->colors[MU_COLOR_BORDER] = COLOR_BORDER;
+	ctx->style->colors[MU_COLOR_WINDOWBG] = COLOR_WINDOWBG;
+	ctx->style->colors[MU_COLOR_TITLEBG] = COLOR_TITLEBG;
+	ctx->style->colors[MU_COLOR_TITLETEXT] = COLOR_TITLETEXT;
+	ctx->style->colors[MU_COLOR_PANELBG] = COLOR_PANELBG;
+	ctx->style->colors[MU_COLOR_BUTTON] = COLOR_BUTTON;
+	ctx->style->colors[MU_COLOR_BUTTONHOVER] = COLOR_BUTTONHOVER;
+	ctx->style->colors[MU_COLOR_BUTTONFOCUS] = COLOR_BUTTONFOCUS;
+	ctx->style->colors[MU_COLOR_BASE] = COLOR_BASE;
+	ctx->style->colors[MU_COLOR_BASEHOVER] = COLOR_BASEHOVER;
+	ctx->style->colors[MU_COLOR_BASEFOCUS] = COLOR_BASEFOCUS;
+	ctx->style->colors[MU_COLOR_SCROLLBASE] = COLOR_SCROLLBASE;
+	ctx->style->colors[MU_COLOR_SCROLLTHUMB] = COLOR_SCROLLTHUMB;
 }
 
 static int
