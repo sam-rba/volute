@@ -42,81 +42,6 @@ static int buf_idx;
 static SDL_Window *window;
 
 
-void r_init(void) {
-  /* init SDL window */
-  SDL_Init(SDL_INIT_EVERYTHING);
-  window = SDL_CreateWindow(
-    NULL, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-    WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
-  SDL_GL_CreateContext(window);
-
-  /* init gl */
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glDisable(GL_CULL_FACE);
-  glDisable(GL_DEPTH_TEST);
-  glEnable(GL_SCISSOR_TEST);
-  glEnable(GL_TEXTURE_2D);
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  glEnableClientState(GL_COLOR_ARRAY);
-
-  /* init texture */
-  GLuint id;
-  glGenTextures(1, &id);
-  glBindTexture(GL_TEXTURE_2D, id);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, ATLAS_WIDTH, ATLAS_HEIGHT, 0,
-    GL_ALPHA, GL_UNSIGNED_BYTE, atlas_texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  assert(glGetError() == 0);
-}
-
-
-static void handle_event(SDL_Event e, mu_Context *ctx) {
-  switch (e.type) {
-    case SDL_QUIT: {
-      exit(EXIT_SUCCESS);
-    }
-    break; case SDL_MOUSEMOTION: {
-      mu_input_mousemove(ctx, e.motion.x, e.motion.y);
-    }
-    break; case SDL_MOUSEWHEEL: {
-      mu_input_scroll(ctx, 0, e.wheel.y * -30);
-    }
-    break; case SDL_TEXTINPUT: {
-      mu_input_text(ctx, e.text.text);
-    }
-    break; case SDL_MOUSEBUTTONDOWN: case SDL_MOUSEBUTTONUP: {
-      int b = button_map[e.button.button & 0xff];
-      if (b && e.type == SDL_MOUSEBUTTONDOWN) {
-        mu_input_mousedown(ctx, e.button.x, e.button.y, b);
-      }
-      if (b && e.type == SDL_MOUSEBUTTONUP) {
-        mu_input_mouseup(ctx, e.button.x, e.button.y, b);
-      }
-    }
-    break; case SDL_KEYDOWN: case SDL_KEYUP: {
-      int c = key_map[e.key.keysym.sym & 0xff];
-      if (c && e.type == SDL_KEYDOWN) {
-        mu_input_keydown(ctx, c);
-      }
-      if (c && e.type == SDL_KEYUP) {
-        mu_input_keyup(ctx, c);
-      }
-    }
-  }
-}
-
-
-void r_handle_input(mu_Context *ctx) {
-  SDL_Event e;
-  while (SDL_PollEvent(&e)) {
-    handle_event(e, ctx);
-  }
-}
-
-
 static void flush(void) {
   if (buf_idx == 0) { return; }
 
@@ -192,8 +117,46 @@ static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color) {
 }
 
 
-static void draw_rect(mu_Rect rect, mu_Color color) {
-  push_quad(rect, atlas[ATLAS_WHITE], color);
+static void handle_event(SDL_Event e, mu_Context *ctx) {
+  switch (e.type) {
+    case SDL_QUIT: {
+      exit(EXIT_SUCCESS);
+    }
+    break; case SDL_MOUSEMOTION: {
+      mu_input_mousemove(ctx, e.motion.x, e.motion.y);
+    }
+    break; case SDL_MOUSEWHEEL: {
+      mu_input_scroll(ctx, 0, e.wheel.y * -30);
+    }
+    break; case SDL_TEXTINPUT: {
+      mu_input_text(ctx, e.text.text);
+    }
+    break; case SDL_MOUSEBUTTONDOWN: case SDL_MOUSEBUTTONUP: {
+      int b = button_map[e.button.button & 0xff];
+      if (b && e.type == SDL_MOUSEBUTTONDOWN) {
+        mu_input_mousedown(ctx, e.button.x, e.button.y, b);
+      }
+      if (b && e.type == SDL_MOUSEBUTTONUP) {
+        mu_input_mouseup(ctx, e.button.x, e.button.y, b);
+      }
+    }
+    break; case SDL_KEYDOWN: case SDL_KEYUP: {
+      int c = key_map[e.key.keysym.sym & 0xff];
+      if (c && e.type == SDL_KEYDOWN) {
+        mu_input_keydown(ctx, c);
+      }
+      if (c && e.type == SDL_KEYUP) {
+        mu_input_keyup(ctx, c);
+      }
+    }
+  }
+}
+
+
+static void clear(mu_Color clr) {
+  flush();
+  glClearColor(clr.r / 255., clr.g / 255., clr.b / 255., clr.a / 255.);
+  glClear(GL_COLOR_BUFFER_BIT);
 }
 
 
@@ -211,17 +174,22 @@ static void draw_text(const char *text, mu_Vec2 pos, mu_Color color) {
 }
 
 
-static void draw_icon(int id, mu_Rect rect, mu_Color color) {
-  mu_Rect src = atlas[id];
-  int x = rect.x + (rect.w - src.w) / 2;
-  int y = rect.y + (rect.h - src.h) / 2;
-  push_quad(mu_rect(x, y, src.w, src.h), src, color);
+static void draw_rect(mu_Rect rect, mu_Color color) {
+  push_quad(rect, atlas[ATLAS_WHITE], color);
 }
 
 
 static void set_clip_rect(mu_Rect rect) {
   flush();
   glScissor(rect.x, HEIGHT - (rect.y + rect.h), rect.w, rect.h);
+}
+
+
+static void draw_icon(int id, mu_Rect rect, mu_Color color) {
+  mu_Rect src = atlas[id];
+  int x = rect.x + (rect.w - src.w) / 2;
+  int y = rect.y + (rect.h - src.h) / 2;
+  push_quad(mu_rect(x, y, src.w, src.h), src, color);
 }
 
 
@@ -243,10 +211,42 @@ static void render_command(mu_Command *cmd) {
 }
 
 
-static void clear(mu_Color clr) {
-  flush();
-  glClearColor(clr.r / 255., clr.g / 255., clr.b / 255., clr.a / 255.);
-  glClear(GL_COLOR_BUFFER_BIT);
+void r_init(void) {
+  /* init SDL window */
+  SDL_Init(SDL_INIT_EVERYTHING);
+  window = SDL_CreateWindow(
+    NULL, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+    WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
+  SDL_GL_CreateContext(window);
+
+  /* init gl */
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_SCISSOR_TEST);
+  glEnable(GL_TEXTURE_2D);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
+
+  /* init texture */
+  GLuint id;
+  glGenTextures(1, &id);
+  glBindTexture(GL_TEXTURE_2D, id);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, ATLAS_WIDTH, ATLAS_HEIGHT, 0,
+    GL_ALPHA, GL_UNSIGNED_BYTE, atlas_texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  assert(glGetError() == 0);
+}
+
+
+void r_handle_input(mu_Context *ctx) {
+  SDL_Event e;
+  while (SDL_PollEvent(&e)) {
+    handle_event(e, ctx);
+  }
 }
 
 
@@ -257,6 +257,12 @@ void r_render(mu_Context *ctx) {
     render_command(cmd);
   }
   r_present();
+}
+
+
+void r_present(void) {
+  flush();
+  SDL_GL_SwapWindow(window);
 }
 
 
@@ -278,10 +284,4 @@ int r_get_text_height(void) {
 
 void r_get_window_size(int *w, int *h) {
   SDL_GetWindowSize(window, w, h);
-}
-
-
-void r_present(void) {
-  flush();
-  SDL_GL_SwapWindow(window);
 }
