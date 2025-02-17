@@ -68,8 +68,7 @@ static void render_command(mu_Command *cmd);
 
 int
 main(void) {
-	/* Init SDL and renderer. */
-	SDL_Init(SDL_INIT_EVERYTHING);
+	/* Init renderer. */
 	r_init();
 
 	/* Init microui. */

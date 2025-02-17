@@ -20,6 +20,7 @@ static SDL_Window *window;
 
 void r_init(void) {
   /* init SDL window */
+  SDL_Init(SDL_INIT_EVERYTHING);
   window = SDL_CreateWindow(
     NULL, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
     width, height, SDL_WINDOW_OPENGL);
