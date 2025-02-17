@@ -28,4 +28,4 @@ volute: ${OBJ}
 %.o: %.c
 	${CC} -c ${CFLAGS} $<
 
-${SRC}: microui.h renderer.h atlas.inl widget.h ui.h
+${OBJ}: microui.h renderer.h atlas.inl widget.h ui.h

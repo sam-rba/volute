@@ -7,8 +7,6 @@ void r_init(mu_Context *ctx);
 void r_handle_input(mu_Context *ctx);
 void r_render(mu_Context *ctx);
 void r_present(void);
-int r_get_text_width(const char *text, int len);
-int r_get_text_height(void);
 void r_get_window_size(int *w, int *h);
 
 #endif
