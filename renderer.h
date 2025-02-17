@@ -5,6 +5,7 @@
 
 void r_init(void);
 void r_handle_input(mu_Context *ctx);
+void r_render(mu_Context *ctx);
 void r_draw_rect(mu_Rect rect, mu_Color color);
 void r_draw_text(const char *text, mu_Vec2 pos, mu_Color color);
 void r_draw_icon(int id, mu_Rect rect, mu_Color color);

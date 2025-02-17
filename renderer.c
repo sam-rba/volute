@@ -6,6 +6,8 @@
 
 #define BUFFER_SIZE 16384
 
+static const mu_Color COLOR_BG = {0, 0, 0, 255};
+
 static GLfloat   tex_buf[BUFFER_SIZE *  8];
 static GLfloat  vert_buf[BUFFER_SIZE *  8];
 static GLubyte color_buf[BUFFER_SIZE * 16];
@@ -109,6 +111,36 @@ r_handle_input(mu_Context *ctx) {
 	while (SDL_PollEvent(&e)) {
 		handle_event(e, ctx);
 	}
+}
+
+
+static void
+render_command(mu_Command *cmd) {
+	switch (cmd->type) {
+		case MU_COMMAND_TEXT: {
+			r_draw_text(cmd->text.str, cmd->text.pos, cmd->text.color);
+		}
+		break; case MU_COMMAND_RECT: {
+			r_draw_rect(cmd->rect.rect, cmd->rect.color);
+		}
+		break; case MU_COMMAND_ICON: {
+			r_draw_icon(cmd->icon.id, cmd->icon.rect, cmd->icon.color);
+		}
+		break; case MU_COMMAND_CLIP: {
+			r_set_clip_rect(cmd->clip.rect);
+		}
+	}
+}
+
+
+void
+r_render(mu_Context *ctx) {
+	r_clear(COLOR_BG);
+	mu_Command *cmd = NULL;
+	while (mu_next_command(ctx, &cmd)) {
+		render_command(cmd);
+	}
+	r_present();
 }
 
 

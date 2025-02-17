@@ -41,8 +41,6 @@ static int text_height(mu_Font font);
 static void main_loop(mu_Context *ctx, UI *ui);
 static void process_frame(mu_Context *ctx, UI *ui);
 static void main_window(mu_Context *ctx, UI *ui);
-static void render(mu_Context *ctx);
-static void render_command(mu_Command *cmd);
 
 
 /* Function Definitions. */
@@ -104,7 +102,7 @@ main_loop(mu_Context *ctx, UI *ui) {
 	for (;;) {
 		r_handle_input(ctx);
 		process_frame(ctx, ui);
-		render(ctx);
+		r_render(ctx);
 	}
 }
 
@@ -134,32 +132,4 @@ main_window(mu_Context *ctx, UI *ui) {
 	snprintf(buf, sizeof(buf), "%lf", value);
 	mu_label(ctx, buf);
 	mu_end_window(ctx);
-}
-
-static void
-render(mu_Context *ctx) {
-	r_clear(COLOR_WINDOWBG);
-	mu_Command *cmd = NULL;
-	while (mu_next_command(ctx, &cmd)) {
-		render_command(cmd);
-	}
-	r_present();
-}
-
-static void
-render_command(mu_Command *cmd) {
-	switch (cmd->type) {
-		case MU_COMMAND_TEXT: {
-			r_draw_text(cmd->text.str, cmd->text.pos, cmd->text.color);
-		}
-		break; case MU_COMMAND_RECT: {
-			r_draw_rect(cmd->rect.rect, cmd->rect.color);
-		}
-		break; case MU_COMMAND_ICON: {
-			r_draw_icon(cmd->icon.id, cmd->icon.rect, cmd->icon.color);
-		}
-		break; case MU_COMMAND_CLIP: {
-			r_set_clip_rect(cmd->clip.rect);
-		}
-	}
 }
