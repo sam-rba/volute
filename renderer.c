@@ -6,18 +6,13 @@
 
 #define BUFFER_SIZE 16384
 
+
+enum window {
+	WIDTH = 800,
+	HEIGHT = 600,
+};
+
 static const mu_Color COLOR_BG = {0, 0, 0, 255};
-
-static GLfloat   tex_buf[BUFFER_SIZE *  8];
-static GLfloat  vert_buf[BUFFER_SIZE *  8];
-static GLubyte color_buf[BUFFER_SIZE * 16];
-static GLuint  index_buf[BUFFER_SIZE *  6];
-
-static int width  = 800;
-static int height = 600;
-static int buf_idx;
-
-static SDL_Window *window;
 
 static const char button_map[256] = {
 	[ SDL_BUTTON_LEFT & 0xff ] = MU_MOUSE_LEFT,
@@ -37,12 +32,22 @@ static const char key_map[256] = {
 };
 
 
+static GLfloat   tex_buf[BUFFER_SIZE *  8];
+static GLfloat  vert_buf[BUFFER_SIZE *  8];
+static GLubyte color_buf[BUFFER_SIZE * 16];
+static GLuint  index_buf[BUFFER_SIZE *  6];
+
+static int buf_idx;
+
+static SDL_Window *window;
+
+
 void r_init(void) {
   /* init SDL window */
   SDL_Init(SDL_INIT_EVERYTHING);
   window = SDL_CreateWindow(
     NULL, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-    width, height, SDL_WINDOW_OPENGL);
+    WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
   SDL_GL_CreateContext(window);
 
   /* init gl */
@@ -117,11 +122,11 @@ r_handle_input(mu_Context *ctx) {
 static void flush(void) {
   if (buf_idx == 0) { return; }
 
-  glViewport(0, 0, width, height);
+  glViewport(0, 0, WIDTH, HEIGHT);
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  glOrtho(0.0f, width, height, 0.0f, -1.0f, +1.0f);
+  glOrtho(0.0f, WIDTH, HEIGHT, 0.0f, -1.0f, +1.0f);
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glLoadIdentity();
@@ -218,7 +223,7 @@ static void draw_icon(int id, mu_Rect rect, mu_Color color) {
 
 static void set_clip_rect(mu_Rect rect) {
   flush();
-  glScissor(rect.x, height - (rect.y + rect.h), rect.w, rect.h);
+  glScissor(rect.x, HEIGHT - (rect.y + rect.h), rect.w, rect.h);
 }
 
 
