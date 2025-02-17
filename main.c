@@ -36,8 +36,6 @@ static const mu_Color COLOR_SCROLLTHUMB = WHITE;
 /* Function declarations. */
 
 static void set_style(mu_Context *ctx);
-static int text_width(mu_Font font, const char *text, int len);
-static int text_height(mu_Font font);
 static void main_loop(mu_Context *ctx, UI *ui);
 static void process_frame(mu_Context *ctx, UI *ui);
 static void main_window(mu_Context *ctx, UI *ui);
@@ -47,14 +45,10 @@ static void main_window(mu_Context *ctx, UI *ui);
 
 int
 main(void) {
-	/* Init renderer. */
-	r_init();
-
 	/* Init microui. */
 	static mu_Context ctx;
 	mu_init(&ctx);
-	ctx.text_width = text_width;
-	ctx.text_height = text_height;
+	r_init(&ctx);
 	set_style(&ctx);
 
 	/* Init data structures. */
@@ -82,19 +76,6 @@ set_style(mu_Context *ctx) {
 	ctx->style->colors[MU_COLOR_BASEFOCUS] = COLOR_BASEFOCUS;
 	ctx->style->colors[MU_COLOR_SCROLLBASE] = COLOR_SCROLLBASE;
 	ctx->style->colors[MU_COLOR_SCROLLTHUMB] = COLOR_SCROLLTHUMB;
-}
-
-static int
-text_width(mu_Font font, const char *text, int len) {
-	if (len < 0) {
-		len = strlen(text);
-	}
-	return r_get_text_width(text, len);
-}
-
-static int
-text_height(mu_Font font) {
-	return r_get_text_height();
 }
 
 static void

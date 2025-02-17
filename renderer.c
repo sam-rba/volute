@@ -12,6 +12,10 @@ enum window {
   HEIGHT = 600,
 };
 
+enum text {
+	TEXT_HEIGHT = 18,
+};
+
 static const mu_Color COLOR_BG = {0, 0, 0, 255};
 
 static const char button_map[256] = {
@@ -40,6 +44,27 @@ static GLuint  index_buf[BUFFER_SIZE *  6];
 static int buf_idx;
 
 static SDL_Window *window;
+
+
+static int text_width(mu_Font font, const char *text, int len) {
+  if (len < 0) {
+    len = strlen(text);
+  }
+
+  int res = 0;
+  for (const char *p = text; *p && len--; p++) {
+    if ((*p & 0xc0) == 0x80) { continue; }
+    int chr = mu_min((unsigned char) *p, 127);
+    res += atlas[ATLAS_FONT + chr].w;
+  }
+  return res;
+}
+
+
+static int
+text_height(mu_Font font) {
+  return TEXT_HEIGHT;
+}
 
 
 static void flush(void) {
@@ -211,7 +236,7 @@ static void render_command(mu_Command *cmd) {
 }
 
 
-void r_init(void) {
+void r_init(mu_Context *ctx) {
   /* init SDL window */
   SDL_Init(SDL_INIT_EVERYTHING);
   window = SDL_CreateWindow(
@@ -239,6 +264,10 @@ void r_init(void) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   assert(glGetError() == 0);
+
+  /* init microui */
+  ctx->text_width = text_width;
+  ctx->text_height = text_height;
 }
 
 
@@ -263,22 +292,6 @@ void r_render(mu_Context *ctx) {
 void r_present(void) {
   flush();
   SDL_GL_SwapWindow(window);
-}
-
-
-int r_get_text_width(const char *text, int len) {
-  int res = 0;
-  for (const char *p = text; *p && len--; p++) {
-    if ((*p & 0xc0) == 0x80) { continue; }
-    int chr = mu_min((unsigned char) *p, 127);
-    res += atlas[ATLAS_FONT + chr].w;
-  }
-  return res;
-}
-
-
-int r_get_text_height(void) {
-  return 18;
 }
 
 
