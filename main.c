@@ -64,13 +64,6 @@ static void render(mu_Context *ctx);
 static void render_command(mu_Command *cmd);
 
 
-/* Global variables. */
-
-static char logbuf[64000];
-static int logbuf_updated = 0;
-static float bg[3] = {90, 95, 100};
-
-
 /* Function Definitions. */
 
 int
@@ -209,7 +202,7 @@ main_window(mu_Context *ctx, UI *ui) {
 
 static void
 render(mu_Context *ctx) {
-	r_clear(mu_color(bg[0], bg[1], bg[2], 255));
+	r_clear(COLOR_WINDOWBG);
 	mu_Command *cmd = NULL;
 	while (mu_next_command(ctx, &cmd)) {
 		render_command(cmd);
