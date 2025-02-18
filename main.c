@@ -99,8 +99,8 @@ main_window(mu_Context *ctx, UI *ui) {
 	int w, h;
 	r_get_window_size(&w, &h);
 
-	if (!mu_begin_window(ctx, TITLE, mu_rect(0, 0, w, h))) {
-		exit(EXIT_SUCCESS);
+	if (!mu_begin_window_ex(ctx, TITLE, mu_rect(0, 0, w, h), MU_OPT_NOINTERACT | MU_OPT_NOTITLE)) {
+		exit(EXIT_FAILURE);
 	}
 	/* TODO */
 	mu_layout_row(ctx, 2, (int[]) {0, 0}, 0);
