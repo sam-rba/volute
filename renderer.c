@@ -1,22 +1,23 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <assert.h>
-#include "renderer.h"
-#include "atlas.inl"
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#define BUFFER_SIZE 16384
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include "microui.h"
+#include "renderer.h"
 
 
 enum window {
-  WIDTH = 800,
-  HEIGHT = 600,
+	WIDTH = 640,
+	HEIGHT = 480,
+	WINFLAGS = SDL_WINDOW_RESIZABLE,
 };
 
-enum text {
-	TEXT_HEIGHT = 18,
-};
+static const char FONT[] = "font/charter-regular.ttf";
+enum font { FONTSIZE = 14, };
 
-static const mu_Color COLOR_BG = {0, 0, 0, 255};
+static const mu_Color bg = {255, 255, 255, 255};
 
 static const char button_map[256] = {
   [ SDL_BUTTON_LEFT & 0xff ] = MU_MOUSE_LEFT,
@@ -35,266 +36,224 @@ static const char key_map[256] = {
   [ SDLK_BACKSPACE & 0xff ] = MU_KEY_BACKSPACE,
 };
 
+static void print_info(void);
+static int text_width(mu_Font mufont, const char *str, int len);
+static int text_height(mu_Font mufont);
+static void handle_event(SDL_Event e, mu_Context *ctx);
+static void clear(void);
+static void render_command(mu_Context *ctx, mu_Command *cmd);
+static void clip(mu_Rect rect);
+static void draw_rect(mu_Rect rect, mu_Color color);
+static void draw_text(mu_Context *ctx, mu_Vec2 pos, mu_Color color, const char *str);
 
-static GLfloat   tex_buf[BUFFER_SIZE *  8];
-static GLfloat  vert_buf[BUFFER_SIZE *  8];
-static GLubyte color_buf[BUFFER_SIZE * 16];
-static GLuint  index_buf[BUFFER_SIZE *  6];
 
-static int buf_idx;
-
-static SDL_Window *window;
+static SDL_Window *window = NULL;
+static SDL_Renderer *renderer = NULL;
+static TTF_Font *font = NULL;
 
 
-static int text_width(mu_Font font, const char *text, int len) {
-  if (len < 0) {
-    len = strlen(text);
-  }
+/* Initialize the window and renderer. Returns non-zero on error. */
+int
+r_init(mu_Context *ctx) {
+	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return 1;
+	}
+	if (SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, WINFLAGS, &window, &renderer) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return 1;
+	}
 
-  int res = 0;
-  for (const char *p = text; *p && len--; p++) {
-    if ((*p & 0xc0) == 0x80) { continue; }
-    int chr = mu_min((unsigned char) *p, 127);
-    res += atlas[ATLAS_FONT + chr].w;
-  }
-  return res;
+	if (TTF_Init() != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return 1;
+	}
+	font = TTF_OpenFont(FONT, FONTSIZE);
+	if (!font) {
+		fprintf(stderr, "Failed to open font %s\n", FONT);
+		return 1;
+	}
+
+	print_info();
+
+	ctx->text_width = text_width;
+	ctx->text_height = text_height;
+
+	return 0;
 }
 
+static void
+print_info(void) {
+	SDL_RendererInfo info;
+	if (SDL_GetRendererInfo(renderer, &info) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return;
+	}
+	printf("Using renderer %s\n", info.name);
+	fflush(stdout);
+}
 
 static int
-text_height(mu_Font font) {
-  return TEXT_HEIGHT;
+text_width(mu_Font mufont, const char *str, int len) {
+	if (!str || !*str || len < 1) { return 0; }
+
+	char *buf = malloc((len+1) * sizeof(char));
+	if (!buf) {
+		return 0;
+	}
+	strncpy(buf, str, len);
+
+	int w = 0;
+	int c = 0;
+	if (TTF_MeasureText(font, buf, INT_MAX, &w, &c) != 0) {
+		w = 0;
+	}
+	free(buf);
+	return w;
 }
 
-
-static void flush(void) {
-  if (buf_idx == 0) { return; }
-
-  glViewport(0, 0, WIDTH, HEIGHT);
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity();
-  glOrtho(0.0f, WIDTH, HEIGHT, 0.0f, -1.0f, +1.0f);
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
-
-  glTexCoordPointer(2, GL_FLOAT, 0, tex_buf);
-  glVertexPointer(2, GL_FLOAT, 0, vert_buf);
-  glColorPointer(4, GL_UNSIGNED_BYTE, 0, color_buf);
-  glDrawElements(GL_TRIANGLES, buf_idx * 6, GL_UNSIGNED_INT, index_buf);
-
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-
-  buf_idx = 0;
+static int
+text_height(mu_Font mufont) {
+	return TTF_FontHeight(font);
 }
 
-
-static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color) {
-  if (buf_idx == BUFFER_SIZE) { flush(); }
-
-  int texvert_idx = buf_idx *  8;
-  int   color_idx = buf_idx * 16;
-  int element_idx = buf_idx *  4;
-  int   index_idx = buf_idx *  6;
-  buf_idx++;
-
-  /* update texture buffer */
-  float x = src.x / (float) ATLAS_WIDTH;
-  float y = src.y / (float) ATLAS_HEIGHT;
-  float w = src.w / (float) ATLAS_WIDTH;
-  float h = src.h / (float) ATLAS_HEIGHT;
-  tex_buf[texvert_idx + 0] = x;
-  tex_buf[texvert_idx + 1] = y;
-  tex_buf[texvert_idx + 2] = x + w;
-  tex_buf[texvert_idx + 3] = y;
-  tex_buf[texvert_idx + 4] = x;
-  tex_buf[texvert_idx + 5] = y + h;
-  tex_buf[texvert_idx + 6] = x + w;
-  tex_buf[texvert_idx + 7] = y + h;
-
-  /* update vertex buffer */
-  vert_buf[texvert_idx + 0] = dst.x;
-  vert_buf[texvert_idx + 1] = dst.y;
-  vert_buf[texvert_idx + 2] = dst.x + dst.w;
-  vert_buf[texvert_idx + 3] = dst.y;
-  vert_buf[texvert_idx + 4] = dst.x;
-  vert_buf[texvert_idx + 5] = dst.y + dst.h;
-  vert_buf[texvert_idx + 6] = dst.x + dst.w;
-  vert_buf[texvert_idx + 7] = dst.y + dst.h;
-
-  /* update color buffer */
-  memcpy(color_buf + color_idx +  0, &color, 4);
-  memcpy(color_buf + color_idx +  4, &color, 4);
-  memcpy(color_buf + color_idx +  8, &color, 4);
-  memcpy(color_buf + color_idx + 12, &color, 4);
-
-  /* update index buffer */
-  index_buf[index_idx + 0] = element_idx + 0;
-  index_buf[index_idx + 1] = element_idx + 1;
-  index_buf[index_idx + 2] = element_idx + 2;
-  index_buf[index_idx + 3] = element_idx + 2;
-  index_buf[index_idx + 4] = element_idx + 3;
-  index_buf[index_idx + 5] = element_idx + 1;
+void
+r_input(mu_Context *ctx) {
+	SDL_Event e;
+	while (SDL_PollEvent(&e)) {
+		handle_event(e, ctx);
+	}
 }
 
-
-static void handle_event(SDL_Event e, mu_Context *ctx) {
-  switch (e.type) {
-    case SDL_QUIT: {
-      exit(EXIT_SUCCESS);
-    }
-    break; case SDL_MOUSEMOTION: {
-      mu_input_mousemove(ctx, e.motion.x, e.motion.y);
-    }
-    break; case SDL_MOUSEWHEEL: {
-      mu_input_scroll(ctx, 0, e.wheel.y * -30);
-    }
-    break; case SDL_TEXTINPUT: {
-      mu_input_text(ctx, e.text.text);
-    }
-    break; case SDL_MOUSEBUTTONDOWN: case SDL_MOUSEBUTTONUP: {
-      int b = button_map[e.button.button & 0xff];
-      if (b && e.type == SDL_MOUSEBUTTONDOWN) {
-        mu_input_mousedown(ctx, e.button.x, e.button.y, b);
-      }
-      if (b && e.type == SDL_MOUSEBUTTONUP) {
-        mu_input_mouseup(ctx, e.button.x, e.button.y, b);
-      }
-    }
-    break; case SDL_KEYDOWN: case SDL_KEYUP: {
-      int c = key_map[e.key.keysym.sym & 0xff];
-      if (c && e.type == SDL_KEYDOWN) {
-        mu_input_keydown(ctx, c);
-      }
-      if (c && e.type == SDL_KEYUP) {
-        mu_input_keyup(ctx, c);
-      }
-    }
-  }
+static void
+handle_event(SDL_Event e, mu_Context *ctx) {
+	switch (e.type) {
+		case SDL_QUIT: {
+			SDL_Quit();
+			exit(EXIT_SUCCESS);
+		}
+		break; case SDL_MOUSEMOTION: {
+			mu_input_mousemove(ctx, e.motion.x, e.motion.y);
+		}
+		break; case SDL_MOUSEBUTTONDOWN: case SDL_MOUSEBUTTONUP: {
+			int b = button_map[e.button.button & 0xff];
+			if (b && e.type == SDL_MOUSEBUTTONDOWN) {
+				mu_input_mousedown(ctx, e.button.x, e.button.y, b);
+			}
+			if (b && e.type == SDL_MOUSEBUTTONUP) {
+				mu_input_mouseup(ctx, e.button.x, e.button.y, b);
+			}
+		}
+		break; case SDL_MOUSEWHEEL: {
+			mu_input_scroll(ctx, 0, e.wheel.y * -30);
+		}
+		break; case SDL_KEYDOWN: case SDL_KEYUP: {
+			int c = key_map[e.key.keysym.sym & 0xff];
+			if (c && e.type == SDL_KEYDOWN) {
+				mu_input_keydown(ctx, c);
+			}
+			if (c && e.type == SDL_KEYUP) {
+				mu_input_keyup(ctx, c);
+			}
+		}
+		break; case SDL_TEXTINPUT: {
+			mu_input_text(ctx, e.text.text);
+		}
+	}
 }
 
+void
+r_render(mu_Context *ctx) {
+	clear();
 
-static void clear(mu_Color clr) {
-  flush();
-  glClearColor(clr.r / 255., clr.g / 255., clr.b / 255., clr.a / 255.);
-  glClear(GL_COLOR_BUFFER_BIT);
+	mu_Command *cmd = NULL;
+	while (mu_next_command(ctx, &cmd)) {
+		render_command(ctx, cmd);
+	}
+
+	SDL_RenderPresent(renderer);
 }
 
-
-static void draw_text(const char *text, mu_Vec2 pos, mu_Color color) {
-  mu_Rect dst = { pos.x, pos.y, 0, 0 };
-  for (const char *p = text; *p; p++) {
-    if ((*p & 0xc0) == 0x80) { continue; }
-    int chr = mu_min((unsigned char) *p, 127);
-    mu_Rect src = atlas[ATLAS_FONT + chr];
-    dst.w = src.w;
-    dst.h = src.h;
-    push_quad(dst, src, color);
-    dst.x += dst.w;
-  }
+static void
+clear(void) {
+	if (SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, bg.a) != 0) {
+		fprintf(stderr, "%s", SDL_GetError());
+	}
+	if (SDL_RenderClear(renderer) != 0) {
+		fprintf(stderr, "%s", SDL_GetError());
+	}
 }
 
-
-static void draw_rect(mu_Rect rect, mu_Color color) {
-  push_quad(rect, atlas[ATLAS_WHITE], color);
+static void
+render_command(mu_Context *ctx, mu_Command *cmd) {
+	switch (cmd->type) {
+		case MU_COMMAND_CLIP: {
+			clip(cmd->clip.rect);
+		}
+		break; case MU_COMMAND_RECT: {
+			draw_rect(cmd->rect.rect, cmd->rect.color);
+		}
+		break; case MU_COMMAND_TEXT: {
+			draw_text(ctx, cmd->text.pos, cmd->text.color, cmd->text.str);
+		}
+	}
 }
 
-
-static void set_clip_rect(mu_Rect rect) {
-  flush();
-  glScissor(rect.x, HEIGHT - (rect.y + rect.h), rect.w, rect.h);
+static void
+clip(mu_Rect rect) {
+	SDL_Rect r = {rect.x, rect.y, rect.w, rect.h};
+	if (SDL_RenderSetClipRect(renderer, &r) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+	}
 }
 
-
-static void draw_icon(int id, mu_Rect rect, mu_Color color) {
-  mu_Rect src = atlas[id];
-  int x = rect.x + (rect.w - src.w) / 2;
-  int y = rect.y + (rect.h - src.h) / 2;
-  push_quad(mu_rect(x, y, src.w, src.h), src, color);
+static void
+draw_rect(mu_Rect rect, mu_Color color) {
+	if (SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+	}
+	SDL_Rect r = {rect.x, rect.y, rect.w, rect.h};
+	if (SDL_RenderFillRect(renderer, &r) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+	}
 }
 
+static void
+draw_text(mu_Context *ctx, mu_Vec2 pos, mu_Color color, const char *str) {
+	if (!str || !*str) { return; }
 
-static void render_command(mu_Command *cmd) {
-  switch (cmd->type) {
-    case MU_COMMAND_TEXT: {
-      draw_text(cmd->text.str, cmd->text.pos, cmd->text.color);
-    }
-    break; case MU_COMMAND_RECT: {
-      draw_rect(cmd->rect.rect, cmd->rect.color);
-    }
-    break; case MU_COMMAND_ICON: {
-      draw_icon(cmd->icon.id, cmd->icon.rect, cmd->icon.color);
-    }
-    break; case MU_COMMAND_CLIP: {
-      set_clip_rect(cmd->clip.rect);
-    }
-  }
+	mu_Color bg = ctx->style->colors[MU_COLOR_WINDOWBG];
+	SDL_Color fg_color = {color.r, color.g, color.b, color.a};
+	SDL_Color bg_color = {bg.r, bg.g, bg.b, bg.a};
+
+	SDL_Surface *surface = TTF_RenderText_LCD(font, str, fg_color, bg_color);
+	if (!surface) {
+		fprintf(stderr, "%s\n", TTF_GetError());
+		return;
+	}
+	SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+	if (!texture) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		SDL_FreeSurface(surface);
+		return;
+	}
+
+	int descent = TTF_FontDescent(font);
+	if (descent > 0) { /* v-align fonts with positive descent. */
+		pos.y -= descent;
+	}
+	SDL_Rect dst = {pos.x, pos.y, surface->w, surface->h};
+	if (SDL_RenderCopy(renderer, texture, NULL, &dst) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+	}
+
+	SDL_DestroyTexture(texture);
+	SDL_FreeSurface(surface);
 }
 
-
-void r_init(mu_Context *ctx) {
-  /* init SDL window */
-  SDL_Init(SDL_INIT_EVERYTHING);
-  window = SDL_CreateWindow(
-    NULL, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-    WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
-  SDL_GL_CreateContext(window);
-
-  /* init gl */
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glDisable(GL_CULL_FACE);
-  glDisable(GL_DEPTH_TEST);
-  glEnable(GL_SCISSOR_TEST);
-  glEnable(GL_TEXTURE_2D);
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  glEnableClientState(GL_COLOR_ARRAY);
-
-  /* init texture */
-  GLuint id;
-  glGenTextures(1, &id);
-  glBindTexture(GL_TEXTURE_2D, id);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, ATLAS_WIDTH, ATLAS_HEIGHT, 0,
-    GL_ALPHA, GL_UNSIGNED_BYTE, atlas_texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  assert(glGetError() == 0);
-
-  /* init microui */
-  ctx->text_width = text_width;
-  ctx->text_height = text_height;
-}
-
-
-void r_handle_input(mu_Context *ctx) {
-  SDL_Event e;
-  while (SDL_PollEvent(&e)) {
-    handle_event(e, ctx);
-  }
-}
-
-
-void r_render(mu_Context *ctx) {
-  clear(COLOR_BG);
-  mu_Command *cmd = NULL;
-  while (mu_next_command(ctx, &cmd)) {
-    render_command(cmd);
-  }
-  r_present();
-}
-
-
-void r_present(void) {
-  flush();
-  SDL_GL_SwapWindow(window);
-}
-
-
-void r_get_window_size(int *w, int *h) {
-  SDL_GetWindowSize(window, w, h);
+void
+r_get_window_size(int *w, int*h) {
+	if (SDL_GetRendererOutputSize(renderer, w, h) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+	}
 }

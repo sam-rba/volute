@@ -1,18 +1,5 @@
 CFLAGS = -std=c99 -Wall -Wextra -pedantic -Wno-deprecated-declarations
-LDFLAGS = $(shell sdl2-config --libs)
-
-# Link OpenGL.
-ifeq ($(OS),Windows_NT)
-	GLFLAG := -lopengl32
-else
-	UNAME := `uname -o 2>/dev/null || uname -s`
-	ifeq ($(UNAME),"Darwin")
-		GLFLAG := -framework OpenGL
-	else
-		GLFLAG := -lGL
-	endif
-endif
-LDFLAGS += $(GLFLAG)
+LDFLAGS = -lSDL2 -lSDL2_ttf
 
 SRC = main.c microui.c renderer.c widget.c ui.c
 OBJ = ${SRC:.c=.o}

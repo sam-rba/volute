@@ -1,10 +1,10 @@
 /* Headers. */
 
 #include <stdio.h>
+#include <stdlib.h>
 
-#include <SDL2/SDL.h>
-#include "renderer.h"
 #include "microui.h"
+#include "renderer.h"
 #include "widget.h"
 #include "ui.h"
 
@@ -12,6 +12,9 @@
 /* Constants. */
 
 static const char TITLE[] = "volute";
+enum window {
+	WIN_OPTS = MU_OPT_NOINTERACT | MU_OPT_NOTITLE | MU_OPT_AUTOSIZE | MU_OPT_NOFRAME,
+};
 
 static const mu_Color BLACK = {0, 0, 0, 255};
 static const mu_Color WHITE = {255, 255, 255, 255};
@@ -81,7 +84,7 @@ set_style(mu_Context *ctx) {
 static void
 main_loop(mu_Context *ctx, UI *ui) {
 	for (;;) {
-		r_handle_input(ctx);
+		r_input(ctx);
 		process_frame(ctx, ui);
 		r_render(ctx);
 	}
@@ -99,7 +102,7 @@ main_window(mu_Context *ctx, UI *ui) {
 	int w, h;
 	r_get_window_size(&w, &h);
 
-	if (!mu_begin_window_ex(ctx, TITLE, mu_rect(0, 0, w, h), MU_OPT_NOINTERACT | MU_OPT_NOTITLE)) {
+	if (!mu_begin_window_ex(ctx, TITLE, mu_rect(0, 0, w, h), WIN_OPTS)) {
 		exit(EXIT_FAILURE);
 	}
 	/* TODO */
