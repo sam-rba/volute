@@ -44,13 +44,11 @@ static void clear(void);
 static void render_command(mu_Command *cmd);
 static void clip(mu_Rect rect);
 static void draw_rect(mu_Rect rect, mu_Color color);
-static void draw_text(mu_Vec2 pos, mu_Color color, const char *str);
+static void draw_text(mu_Font font, mu_Vec2 pos, mu_Color color, const char *str);
 
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
-static TTF_Font *font = NULL;
-
 
 /* Initialize the window and renderer. Returns non-zero on error. */
 int
@@ -68,11 +66,12 @@ r_init(mu_Context *ctx) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 		return 1;
 	}
-	font = TTF_OpenFont(FONT, FONTSIZE);
+	TTF_Font *font = TTF_OpenFont(FONT, FONTSIZE);
 	if (!font) {
 		fprintf(stderr, "Failed to open font %s\n", FONT);
 		return 1;
 	}
+	ctx->style->font = font;
 
 	print_info();
 
@@ -94,7 +93,7 @@ print_info(void) {
 }
 
 static int
-text_width(mu_Font mufont, const char *str, int len) {
+text_width(mu_Font font, const char *str, int len) {
 	if (!str || !*str) { return 0; }
 
 	int w = 0;
@@ -106,7 +105,7 @@ text_width(mu_Font mufont, const char *str, int len) {
 }
 
 static int
-text_height(mu_Font mufont) {
+text_height(mu_Font font) {
 	return TTF_FontHeight(font);
 }
 
@@ -187,7 +186,7 @@ render_command(mu_Command *cmd) {
 			draw_rect(cmd->rect.rect, cmd->rect.color);
 		}
 		break; case MU_COMMAND_TEXT: {
-			draw_text(cmd->text.pos, cmd->text.color, cmd->text.str);
+			draw_text(cmd->text.font, cmd->text.pos, cmd->text.color, cmd->text.str);
 		}
 	}
 }
@@ -212,7 +211,7 @@ draw_rect(mu_Rect rect, mu_Color color) {
 }
 
 static void
-draw_text(mu_Vec2 pos, mu_Color color, const char *str) {
+draw_text(mu_Font font, mu_Vec2 pos, mu_Color color, const char *str) {
 	if (!str || !*str) { return; }
 
 	SDL_Color sdl_color = {color.r, color.g, color.b, color.a};
