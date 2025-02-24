@@ -12,6 +12,7 @@ enum window {
 	WIDTH = 640,
 	HEIGHT = 480,
 	WINFLAGS = SDL_WINDOW_RESIZABLE,
+	RENDERFLAGS = 0,
 };
 
 static const char FONT[] = "font/charter-regular.ttf";
@@ -52,12 +53,21 @@ static SDL_Renderer *renderer = NULL;
 
 /* Initialize the window and renderer. Returns non-zero on error. */
 int
-r_init(mu_Context *ctx) {
+r_init(mu_Context *ctx, const char *title) {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 		return 1;
 	}
-	if (SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, WINFLAGS, &window, &renderer) != 0) {
+	window = SDL_CreateWindow(title,
+		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+		WIDTH, HEIGHT,
+		WINFLAGS);
+	if (!window) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return 1;
+	}
+	renderer = SDL_CreateRenderer(window, -1, RENDERFLAGS);
+	if (!renderer) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 		return 1;
 	}

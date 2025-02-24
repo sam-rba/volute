@@ -51,7 +51,7 @@ main(void) {
 	/* Init microui. */
 	static mu_Context ctx;
 	mu_init(&ctx);
-	r_init(&ctx);
+	r_init(&ctx, TITLE);
 	set_style(&ctx);
 
 	/* Init data structures. */
@@ -115,5 +115,6 @@ main_window(mu_Context *ctx, UI *ui) {
 	static char buf[64];
 	snprintf(buf, sizeof(buf), "%lf", value);
 	mu_label(ctx, buf);
+	mu_label(ctx, "abcdefghijklmnopqrstuvwxyz0123456789");
 	mu_end_window(ctx);
 }
