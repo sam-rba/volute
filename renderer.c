@@ -41,10 +41,10 @@ static int text_width(mu_Font mufont, const char *str, int len);
 static int text_height(mu_Font mufont);
 static void handle_event(SDL_Event e, mu_Context *ctx);
 static void clear(void);
-static void render_command(mu_Context *ctx, mu_Command *cmd);
+static void render_command(mu_Command *cmd);
 static void clip(mu_Rect rect);
 static void draw_rect(mu_Rect rect, mu_Color color);
-static void draw_text(mu_Context *ctx, mu_Vec2 pos, mu_Color color, const char *str);
+static void draw_text(mu_Vec2 pos, mu_Color color, const char *str);
 
 
 static SDL_Window *window = NULL;
@@ -95,20 +95,13 @@ print_info(void) {
 
 static int
 text_width(mu_Font mufont, const char *str, int len) {
-	if (!str || !*str || len < 1) { return 0; }
-
-	char *buf = malloc((len+1) * sizeof(char));
-	if (!buf) {
-		return 0;
-	}
-	strncpy(buf, str, len);
+	if (!str || !*str) { return 0; }
 
 	int w = 0;
 	int c = 0;
-	if (TTF_MeasureText(font, buf, INT_MAX, &w, &c) != 0) {
+	if (TTF_MeasureUTF8(font, str, INT_MAX, &w, &c) != 0) {
 		w = 0;
 	}
-	free(buf);
 	return w;
 }
 
@@ -168,7 +161,7 @@ r_render(mu_Context *ctx) {
 
 	mu_Command *cmd = NULL;
 	while (mu_next_command(ctx, &cmd)) {
-		render_command(ctx, cmd);
+		render_command(cmd);
 	}
 
 	SDL_RenderPresent(renderer);
@@ -185,7 +178,7 @@ clear(void) {
 }
 
 static void
-render_command(mu_Context *ctx, mu_Command *cmd) {
+render_command(mu_Command *cmd) {
 	switch (cmd->type) {
 		case MU_COMMAND_CLIP: {
 			clip(cmd->clip.rect);
@@ -194,7 +187,7 @@ render_command(mu_Context *ctx, mu_Command *cmd) {
 			draw_rect(cmd->rect.rect, cmd->rect.color);
 		}
 		break; case MU_COMMAND_TEXT: {
-			draw_text(ctx, cmd->text.pos, cmd->text.color, cmd->text.str);
+			draw_text(cmd->text.pos, cmd->text.color, cmd->text.str);
 		}
 	}
 }
@@ -219,11 +212,11 @@ draw_rect(mu_Rect rect, mu_Color color) {
 }
 
 static void
-draw_text(mu_Context *ctx, mu_Vec2 pos, mu_Color color, const char *str) {
+draw_text(mu_Vec2 pos, mu_Color color, const char *str) {
 	if (!str || !*str) { return; }
 
 	SDL_Color sdl_color = {color.r, color.g, color.b, color.a};
-	SDL_Surface *surface = TTF_RenderText_Blended(font, str, sdl_color);
+	SDL_Surface *surface = TTF_RenderUTF8_Blended(font, str, sdl_color);
 	if (!surface) {
 		fprintf(stderr, "%s\n", TTF_GetError());
 		return;
