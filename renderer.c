@@ -222,11 +222,8 @@ static void
 draw_text(mu_Context *ctx, mu_Vec2 pos, mu_Color color, const char *str) {
 	if (!str || !*str) { return; }
 
-	mu_Color bg = ctx->style->colors[MU_COLOR_WINDOWBG];
-	SDL_Color fg_color = {color.r, color.g, color.b, color.a};
-	SDL_Color bg_color = {bg.r, bg.g, bg.b, bg.a};
-
-	SDL_Surface *surface = TTF_RenderText_LCD(font, str, fg_color, bg_color);
+	SDL_Color sdl_color = {color.r, color.g, color.b, color.a};
+	SDL_Surface *surface = TTF_RenderText_Blended(font, str, sdl_color);
 	if (!surface) {
 		fprintf(stderr, "%s\n", TTF_GetError());
 		return;
