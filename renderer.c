@@ -121,6 +121,8 @@ static void
 handle_event(SDL_Event e, mu_Context *ctx) {
 	switch (e.type) {
 		case SDL_QUIT: {
+			TTF_CloseFont(ctx->style->font);
+			TTF_Quit();
 			SDL_Quit();
 			exit(EXIT_SUCCESS);
 		}
