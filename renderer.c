@@ -12,7 +12,7 @@ enum window {
 	WIDTH = 640,
 	HEIGHT = 480,
 	WINFLAGS = SDL_WINDOW_RESIZABLE,
-	RENDERFLAGS = 0,
+	RENDERFLAGS = SDL_RENDERER_PRESENTVSYNC,
 };
 
 static const char FONT[] = "font/charter-regular.ttf";
