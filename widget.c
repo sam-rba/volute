@@ -44,9 +44,11 @@ int
 w_select(mu_Context *ctx, w_Select *select) {
 	mu_Id id;
 	mu_Rect r;
-	int color, res, i;
+	int width, res, i;
 
 	mu_layout_begin_column(ctx);
+	width = -1;
+	mu_layout_row(ctx, 1, &width, 0);
 
 	id = mu_get_id(ctx, &select, sizeof(select));
 	r = mu_layout_next(ctx);
@@ -54,11 +56,7 @@ w_select(mu_Context *ctx, w_Select *select) {
 
 	select->active ^= (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == id);
 
-	color = MU_COLOR_BUTTON;
-	if (ctx->hover == id) {
-		color = MU_COLOR_BUTTONHOVER;
-	}
-	ctx->draw_frame(ctx, r, color);
+	mu_draw_control_frame(ctx, id, r, MU_COLOR_BUTTON, 0);
 	const char *label = select->opts[select->idx];
 	mu_draw_control_text(ctx, label, r, MU_COLOR_TEXT, 0);
 

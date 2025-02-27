@@ -109,7 +109,7 @@ main_window(mu_Context *ctx, UI *ui) {
 	/* TODO */
 
 
-	mu_layout_row(ctx, 3, (int[]) {128, 15, 128}, 0);
+	mu_layout_row(ctx, 3, (int[]) {128, 30, 20}, 0);
 
 	static double value = 0.0;
 	if (w_field(ctx, &ui->displacement) & MU_RES_CHANGE) {
