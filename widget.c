@@ -1,10 +1,15 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "microui.h"
 #include "widget.h"
 
+
+#define nelem(arr) (sizeof(arr)/sizeof(arr[0]))
+
+
 void
-init_field(Field *f) {
+w_init_field(w_Field *f) {
 	f->buf[0] = '\0';
 	f->value = 0.0;
 }
@@ -12,7 +17,7 @@ init_field(Field *f) {
 /* field draws a Field widget and updates its value.
  * It returns MU_RES_CHANGE if the value has changed. */
 int
-field(mu_Context *ctx, Field *f) {
+w_field(mu_Context *ctx, w_Field *f) {
 	double value;
 	int changed = 0;
 	if (mu_textbox(ctx, f->buf, sizeof(f->buf)) & MU_RES_CHANGE) {
@@ -25,4 +30,51 @@ field(mu_Context *ctx, Field *f) {
 		}
 	}
 	return changed ? MU_RES_CHANGE : 0;
+}
+
+void
+w_init_select(w_Select *select, int nopts, const char *const opts[]) {
+	select->nopts = nopts;
+	select->opts = opts;
+	select->idx = 0;
+	select ->active = 0;
+}
+
+int
+w_select(mu_Context *ctx, w_Select *select) {
+	mu_Id id;
+	mu_Rect r;
+	int color, res, i;
+
+	mu_layout_begin_column(ctx);
+
+	id = mu_get_id(ctx, &select, sizeof(select));
+	r = mu_layout_next(ctx);
+	mu_update_control(ctx, id, r, 0);
+
+	select->active ^= (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == id);
+
+	color = MU_COLOR_BUTTON;
+	if (ctx->hover == id) {
+		color = MU_COLOR_BUTTONHOVER;
+	}
+	ctx->draw_frame(ctx, r, color);
+	const char *label = select->opts[select->idx];
+	mu_draw_control_text(ctx, label, r, MU_COLOR_TEXT, 0);
+
+	res = 0;
+	if (select->active) {
+		res = MU_RES_ACTIVE;
+		for (i = 0; i < select->nopts; i++) {
+			if (mu_button(ctx, select->opts[i])) {
+				select->idx = i;
+				res |= MU_RES_CHANGE;
+				select->active = 0;
+			}
+		}
+	}
+
+	mu_layout_end_column(ctx);
+
+	return res;
 }

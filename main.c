@@ -19,6 +19,7 @@ enum window {
 static const mu_Color BLACK = {0, 0, 0, 255};
 static const mu_Color WHITE = {255, 255, 255, 255};
 static const mu_Color LIGHT_GRAY = {222, 222, 222, 255};
+static const mu_Color DARK_GRAY = {128, 128, 128, 255};
 
 static const mu_Color COLOR_TEXT = BLACK;
 static const mu_Color COLOR_BORDER = BLACK;
@@ -26,9 +27,9 @@ static const mu_Color COLOR_WINDOWBG = WHITE;
 static const mu_Color COLOR_TITLEBG = LIGHT_GRAY;
 static const mu_Color COLOR_TITLETEXT = COLOR_TEXT;
 static const mu_Color COLOR_PANELBG = COLOR_WINDOWBG;
-static const mu_Color COLOR_BUTTON = LIGHT_GRAY;
-static const mu_Color COLOR_BUTTONHOVER = COLOR_BUTTON;
-static const mu_Color COLOR_BUTTONFOCUS = COLOR_BUTTON;
+static const mu_Color COLOR_BUTTON = WHITE;
+static const mu_Color COLOR_BUTTONHOVER = LIGHT_GRAY;
+static const mu_Color COLOR_BUTTONFOCUS = DARK_GRAY;
 static const mu_Color COLOR_BASE = WHITE;
 static const mu_Color COLOR_BASEHOVER = COLOR_BASE;
 static const mu_Color COLOR_BASEFOCUS = COLOR_BASE;
@@ -101,20 +102,28 @@ static void
 main_window(mu_Context *ctx, UI *ui) {
 	int w, h;
 	r_get_window_size(&w, &h);
-
 	if (!mu_begin_window_ex(ctx, TITLE, mu_rect(0, 0, w, h), WIN_OPTS)) {
 		exit(EXIT_FAILURE);
 	}
+
 	/* TODO */
-	mu_layout_row(ctx, 2, (int[]) {0, 0}, 0);
+
+
+	mu_layout_row(ctx, 3, (int[]) {128, 15, 128}, 0);
+
 	static double value = 0.0;
-	if (field(ctx, &ui->displacement) & MU_RES_CHANGE) {
+	if (w_field(ctx, &ui->displacement) & MU_RES_CHANGE) {
 		/* TODO */
 		value = ui->displacement.value;
 	}
-	static char buf[64];
-	snprintf(buf, sizeof(buf), "%lf", value);
-	mu_label(ctx, buf);
-	mu_label(ctx, "abcdefghijklmnopqrstuvwxyz0123456789");
+
+	if (w_select(ctx, &ui->displacement_unit) & MU_RES_CHANGE) {
+		/* TODO */
+	}
+
+	mu_layout_begin_column(ctx);
+	mu_button(ctx, "foo bar");
+	mu_layout_end_column(ctx);
+
 	mu_end_window(ctx);
 }
