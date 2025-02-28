@@ -61,6 +61,8 @@ static void rpm_row(mu_Context *ctx, UI *ui);
 static void map_row(mu_Context *ctx, UI *ui);
 static void ve_row(mu_Context *ctx, UI *ui);
 static void dup_del_row(mu_Context *ctx, UI *ui);
+static void hpad(mu_Context *ctx, int w);
+static void vpad(mu_Context *ctx, int h);
 
 
 /* Function Definitions. */
@@ -127,8 +129,7 @@ main_window(mu_Context *ctx, UI *ui) {
 
 	displacement_row(ctx, ui);
 
-	mu_layout_row(ctx, 0, NULL, 0);
-	mu_label(ctx, "");
+	vpad(ctx, 0);
 
 	rpm_row(ctx, ui);
 	map_row(ctx, ui);
@@ -160,8 +161,7 @@ rpm_row(mu_Context *ctx, UI *ui) {
 	mu_layout_row(ctx, 0, NULL, 0);
 	mu_layout_width(ctx, LABEL_WIDTH);
 	mu_label(ctx, "rpm:");
-	mu_layout_width(ctx, UNIT_WIDTH);
-	mu_label(ctx, "");
+	hpad(ctx, UNIT_WIDTH);
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->rpm[i])) {
@@ -209,10 +209,8 @@ dup_del_row(mu_Context *ctx, UI *ui) {
 	int i;
 
 	mu_layout_row(ctx, 0, NULL, 0);
-	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "");
-	mu_layout_width(ctx, UNIT_WIDTH);
-	mu_label(ctx, "");
+	hpad(ctx, LABEL_WIDTH);
+	hpad(ctx, UNIT_WIDTH);
 	mu_layout_width(ctx, (FIELD_WIDTH - ctx->style->spacing)/2);
 	for (i = 0; i < ui->npoints; i++) {
 		mu_push_id(ctx, &i, sizeof(i));
@@ -224,4 +222,16 @@ dup_del_row(mu_Context *ctx, UI *ui) {
 		}
 		mu_pop_id(ctx);
 	}
+}
+
+static void
+hpad(mu_Context *ctx, int w) {
+	mu_layout_width(ctx, w);
+	mu_label(ctx, "");
+}
+
+static void
+vpad(mu_Context *ctx, int h) {
+	mu_layout_row(ctx, 0, NULL, h);
+	mu_label(ctx, "");
 }
