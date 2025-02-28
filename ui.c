@@ -19,7 +19,7 @@ init_ui(UI *ui) {
 	w_init_field(&ui->displacement);
 	w_init_select(&ui->displacement_unit, nelem(displacement_units), displacement_units);
 	
-ui->npoints = 1;
+	ui->npoints = 1;
 
 	w_init_field(&ui->rpm[0]);
 
