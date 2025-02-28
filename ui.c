@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <string.h>
 
 #include "microui.h"
@@ -11,6 +12,10 @@
 
 
 static const char *const displacement_units[] = {"cc", "l", "ci"};
+static Volume (*displacement_converters[nelem(displacement_units)])(double) = {
+	cubic_centimetre, litre, cubic_inch,
+};
+
 static const char *const map_units[] = {"mbar", "kPa", "bar", "psi"};
 
 
@@ -29,6 +34,22 @@ init_ui(UI *ui) {
 	w_init_field(&ui->ve[0]);
 
 	init_engine(&ui->points[0]);
+}
+
+void
+set_displacement(UI *ui) {
+	int idx, i;
+	Volume (*convert)(double), disp;
+
+	idx = ui->displacement_unit.idx;
+	assert(idx >= 0 && (long unsigned int) idx < nelem(displacement_units));
+
+	convert = displacement_converters[idx];
+	disp = convert(ui->displacement.value);
+
+	for (i = 0; i < ui->npoints; i++) {
+		ui->points[i].displacement = disp;
+	}
 }
 
 void

@@ -149,7 +149,7 @@ displacement_row(mu_Context *ctx, UI *ui) {
 	mu_layout_row(ctx, nelem(widths), widths, 0);
 	mu_label(ctx, "Displacement:");
 	if (w_field(ctx, &ui->displacement) & MU_RES_CHANGE) {
-		/* TODO */
+		set_displacement(ui);
 	}
 	w_select(ctx, &ui->displacement_unit);
 }

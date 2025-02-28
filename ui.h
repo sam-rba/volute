@@ -17,5 +17,6 @@ typedef struct {
 } UI;
 
 void init_ui(UI *ui);
+void set_displacement(UI *ui);
 void insert_point(UI *ui, int idx);
 void remove_point(UI *ui, int idx);
