@@ -44,6 +44,48 @@ test_as_rpm(void) {
 	test(as_rpm(rpm(123.456)), 123.456);
 }
 
+
+void
+test_cubic_centimetre(void) {
+	assert(0);
+}
+
+void
+test_litre(void) {
+	assert(0);
+}
+
+void
+test_cubic_metre(void) {
+	assert(0);
+}
+
+void
+test_cubic_inch(void) {
+	assert(0);
+}
+
+void
+test_as_cubic_centimetre(void) {
+	assert(0);
+}
+
+void
+test_as_litre(void) {
+	assert(0);
+}
+
+void
+test_as_cubic_metre(void) {
+	assert(0);
+}
+
+void
+test_as_cubic_inch(void) {
+	assert(0);
+}
+
+
 int
 main(void) {
 	test_rad_per_sec();
@@ -52,4 +94,13 @@ main(void) {
 	test_as_rad_per_sec();
 	test_as_deg_per_sec();
 	test_as_rpm();
+
+	test_cubic_centimetre();
+	test_litre();
+	test_cubic_metre();
+	test_cubic_inch();
+	test_as_cubic_centimetre();
+	test_as_litre();
+	test_as_cubic_metre();
+	test_as_cubic_inch();
 }
