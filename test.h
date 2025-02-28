@@ -15,6 +15,17 @@ void test_as_rad_per_sec(void);
 void test_as_deg_per_sec(void);
 void test_as_rpm(void);
 
+void test_pascal(void);
+void test_millibar(void);
+void test_kilopascal(void);
+void test_bar(void);
+void test_psi(void);
+void test_as_pascal(void);
+void test_as_millibar(void);
+void test_as_kilopascal(void);
+void test_as_bar(void);
+void test_as_psi(void);
+
 void test_cubic_centimetre(void);
 void test_litre(void);
 void test_cubic_metre(void);
