@@ -4,3 +4,5 @@ typedef struct {
 	Pressure map;
 	Fraction ve;
 } Engine;
+
+void init_engine(Engine *e);
