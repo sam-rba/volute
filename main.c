@@ -6,6 +6,8 @@
 #include "microui.h"
 #include "renderer.h"
 #include "widget.h"
+#include "unit.h"
+#include "engine.h"
 #include "ui.h"
 
 
@@ -22,9 +24,9 @@ enum window {
 };
 
 enum layout {
-	LABEL_WIDTH = 50,
-	UNIT_WIDTH = 45,
-	FIELD_WIDTH = 65,
+	LABEL_WIDTH = 48,
+	UNIT_WIDTH = 48,
+	FIELD_WIDTH = 64,
 };
 
 static const mu_Color BLACK = {0, 0, 0, 255};
@@ -58,6 +60,7 @@ static void displacement_row(mu_Context *ctx, UI *ui);
 static void rpm_row(mu_Context *ctx, UI *ui);
 static void map_row(mu_Context *ctx, UI *ui);
 static void ve_row(mu_Context *ctx, UI *ui);
+static void dup_del_row(mu_Context *ctx, UI *ui);
 
 
 /* Function Definitions. */
@@ -130,6 +133,7 @@ main_window(mu_Context *ctx, UI *ui) {
 	rpm_row(ctx, ui);
 	map_row(ctx, ui);
 	ve_row(ctx, ui);
+	dup_del_row(ctx, ui);
 
 	mu_end_window(ctx);
 }
@@ -197,5 +201,27 @@ ve_row(mu_Context *ctx, UI *ui) {
 		if (w_field(ctx, &ui->ve[i])) {
 			/* TODO */
 		}
+	}
+}
+
+static void
+dup_del_row(mu_Context *ctx, UI *ui) {
+	int i;
+
+	mu_layout_row(ctx, 0, NULL, 0);
+	mu_layout_width(ctx, LABEL_WIDTH);
+	mu_label(ctx, "");
+	mu_layout_width(ctx, UNIT_WIDTH);
+	mu_label(ctx, "");
+	mu_layout_width(ctx, (FIELD_WIDTH - ctx->style->spacing)/2);
+	for (i = 0; i < ui->npoints; i++) {
+		mu_push_id(ctx, &i, sizeof(i));
+		if (mu_button(ctx, "Dup")) {
+			insert_point(ui, i);
+		}
+		if (mu_button(ctx, "Del")) {
+			remove_point(ui, i);
+		}
+		mu_pop_id(ctx);
 	}
 }

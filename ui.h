@@ -4,6 +4,8 @@ typedef struct {
 	w_Field displacement;
 	w_Select displacement_unit;
 
+	int npoints;
+
 	w_Field rpm[MAX_POINTS];
 
 	w_Field map[MAX_POINTS];
@@ -11,7 +13,9 @@ typedef struct {
 
 	w_Field ve[MAX_POINTS];
 
-	int npoints;
+	Engine points[MAX_POINTS];
 } UI;
 
 void init_ui(UI *ui);
+void insert_point(UI *ui, int idx);
+void remove_point(UI *ui, int idx);
