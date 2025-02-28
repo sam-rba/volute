@@ -6,40 +6,40 @@
 
 void
 test_cubic_centimetre(void) {
-	assert(0);
+	test(cubic_centimetre(123.456), 0.000123456);
 }
 
 void
 test_litre(void) {
-	assert(0);
+	test(litre(123.456), 0.123456);
 }
 
 void
 test_cubic_metre(void) {
-	assert(0);
+	test(cubic_metre(123.456), 123.456);
 }
 
 void
 test_cubic_inch(void) {
-	assert(0);
+	test(cubic_inch(123.456), 0.0020230814);
 }
 
 void
 test_as_cubic_centimetre(void) {
-	assert(0);
+	test(as_cubic_centimetre(cubic_centimetre(123.456)), 123.456);
 }
 
 void
 test_as_litre(void) {
-	assert(0);
+	test(as_litre(litre(123.456)), 123.456);
 }
 
 void
 test_as_cubic_metre(void) {
-	assert(0);
+	test(as_cubic_metre(cubic_metre(123.456)), 123.456);
 }
 
 void
 test_as_cubic_inch(void) {
-	assert(0);
+	test(as_cubic_inch(cubic_inch(123.456)), 123.456);
 }

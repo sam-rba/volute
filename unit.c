@@ -45,11 +45,42 @@ double as_bar(Pressure x);
 double as_psi(Pressure x);
 
 
-Volume cubic_centimetre(double x);
-Volume litre(double x);
-Volume cubic_metre(double x);
-Volume cubic_inch(double x);
-double as_cubic_centimetre(Volume x);
-double as_litre(Volume x);
-double as_cubic_metre(double x);
-double as_cubic_inch(double x);
+Volume
+cubic_centimetre(double x) {
+	return x * 1e-6;
+}
+
+Volume
+litre(double x) {
+	return x * 1e-3;
+}
+
+Volume
+cubic_metre(double x) {
+	return x;
+}
+
+Volume
+cubic_inch(double x) {
+	return x * 1.6387064e-5;
+}
+
+double
+as_cubic_centimetre(Volume x) {
+	return x * 1e6;
+}
+
+double
+as_litre(Volume x) {
+	return x * 1e3;
+}
+
+double
+as_cubic_metre(double x) {
+	return x;
+}
+
+double
+as_cubic_inch(double x) {
+	return x / 1.6387064e-5;
+}
