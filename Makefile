@@ -3,24 +3,23 @@ LDFLAGS = -lSDL2 -lSDL2_ttf
 
 SRC = main.c microui.c renderer.c widget.c ui.c unit.c engine.c
 OBJ = ${SRC:.c=.o}
+HDR = microui.h renderer.h widget.h ui.h unit.h engine.h
 
-all: volute
-
-clean:
-	rm -f volute *.o
-
-test: test_unit
-	for t in $^; do \
-		./$$t; \
-	done
-
-test_unit: test_unit.o unit.o
-	${CC} -o $@ $^ ${LDFLAGS}
+TEST_SRC = test.c test_angular_speed.c test_volume.c unit.c
+TEST_OBJ = ${TEST_SRC:.c=.o}
 
 volute: ${OBJ}
 	${CC} -o $@ $^ ${LDFLAGS}
 
+test: ${TEST_OBJ}
+	${CC} -o $@ $^ ${LDFLAGS}
+	./$@
+
+clean:
+	rm -f volute test *.o
+
 %.o: %.c
 	${CC} -c ${CFLAGS} $<
 
-${OBJ}: microui.h renderer.h widget.h ui.h unit.h engine.h
+${OBJ}: ${HDR}
+${TEST_OBJ}: ${HDR} test.h
