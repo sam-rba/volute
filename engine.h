@@ -6,3 +6,4 @@ typedef struct {
 } Engine;
 
 void init_engine(Engine *e);
+VolumeFlowRate volume_flow_rate(const Engine *e);
