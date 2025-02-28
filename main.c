@@ -182,7 +182,7 @@ map_row(mu_Context *ctx, UI *ui) {
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i <ui->npoints; i++) {
 		if (w_field(ctx, &ui->map[i])) {
-			/* TODO */
+			set_map(ui, i);
 		}
 	}
 }
