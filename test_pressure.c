@@ -2,53 +2,54 @@
 #include <stdio.h>
 
 #include "test.h"
+#include "unit.h"
 
 void
 test_pascal(void) {
-	assert(0);
+	test(pascal(123.456), 123.456);
 }
 
 void
 test_millibar(void) {
-	assert(0);
+	test(millibar(123.456), 12345.6);
 }
 
 void
 test_kilopascal(void) {
-	assert(0);
+	test(kilopascal(123.456), 123456.0);
 }
 
 void
 test_bar(void) {
-	assert(0);
+	test(bar(123.456), 12345600.0);
 }
 
 void
 test_psi(void) {
-	assert(0);
+	test(psi(123.456), 851199.15638539323);
 }
 
 void
 test_as_pascal(void) {
-	assert(0);
+	test(as_pascal(pascal(123.456)), 123.456);
 }
 
 void
 test_as_millibar(void) {
-	assert(0);
+	test(as_millibar(millibar(123.456)), 123.456);
 }
 
 void
 test_as_kilopascal(void) {
-	assert(0);
+	test(as_kilopascal(kilopascal(123.456)), 123.456);
 }
 
 void
 test_as_bar(void) {
-	assert(0);
+	test(as_bar(bar(123.456)), 123.456);
 }
 
 void
 test_as_psi(void) {
-
+	test(as_psi(psi(123.456)), 123.456);
 }

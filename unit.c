@@ -3,6 +3,16 @@
 #include "unit.h"
 
 
+/* Kilograms per pound. */
+#define KG_PER_LB 0.45359237
+
+/* Acceleration of gravity [m/(s*s)]. */
+#define G 9.80665
+
+/* Metres per inch. */
+#define M_PER_IN 0.0254
+
+
 AngularSpeed
 rad_per_sec(double x) {
 	return x;
@@ -33,16 +43,55 @@ Fraction percent(double x);
 double as_percent(Fraction x);
 
 
-Pressure pascal(double x);
-Pressure millibar(double x);
-Pressure kilopascal(double x);
-Pressure bar(double x);
-Pressure psi(double x);
-double as_pascal(Pressure x);
-double as_millibar(Pressure x);
-double as_kilopascal(Pressure x);
-double as_bar(Pressure x);
-double as_psi(Pressure x);
+Pressure
+pascal(double x) {
+	return x;
+}
+
+Pressure
+millibar(double x) {
+	return x * 100.0;
+}
+
+Pressure
+kilopascal(double x) {
+	return x * 1e3;
+}
+
+Pressure
+bar(double x) {
+	return x * 1e5;
+}
+
+Pressure
+psi(double x) {
+	return x * KG_PER_LB * G / pow(M_PER_IN, 2);
+}
+
+double
+as_pascal(Pressure x) {
+	return x;
+}
+
+double
+as_millibar(Pressure x) {
+	return x / 100.0;
+}
+
+double
+as_kilopascal(Pressure x) {
+	return x * 1e-3;
+}
+
+double
+as_bar(Pressure x) {
+	return x * 1e-5;
+}
+
+double
+as_psi(Pressure x) {
+	return x * pow(M_PER_IN, 2) / (KG_PER_LB * G);
+}
 
 
 Volume
