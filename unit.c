@@ -12,6 +12,12 @@
 /* Metres per inch. */
 #define M_PER_IN 0.0254
 
+/* Metres per foot. */
+#define M_PER_FT 0.3048
+
+/* Seconds per minute. */
+#define SEC_PER_MIN 60.0
+
 
 AngularSpeed
 rad_per_sec(double x) {
@@ -132,4 +138,35 @@ as_cubic_metre(double x) {
 double
 as_cubic_inch(double x) {
 	return x / 1.6387064e-5;
+}
+
+
+VolumeFlowRate
+cubic_metre_per_sec(double x) {
+	return x;
+}
+
+VolumeFlowRate
+cubic_metre_per_min(double x) {
+	return x / SEC_PER_MIN;
+}
+
+VolumeFlowRate
+cubic_foot_per_min(double x) {
+	return x * pow(M_PER_FT, 3) / SEC_PER_MIN;
+}
+
+double
+as_cubic_metre_per_sec(VolumeFlowRate x) {
+	return x;
+}
+
+double
+as_cubic_metre_per_min(VolumeFlowRate x) {
+	return x * SEC_PER_MIN;
+}
+
+double
+as_cubic_foot_per_min(VolumeFlowRate x) {
+	return x * SEC_PER_MIN / pow(M_PER_FT, 3);
 }

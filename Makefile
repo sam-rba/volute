@@ -5,7 +5,7 @@ SRC = main.c microui.c renderer.c widget.c ui.c unit.c engine.c
 OBJ = ${SRC:.c=.o}
 HDR = microui.h renderer.h widget.h ui.h unit.h engine.h
 
-TEST_SRC = test.c test_angular_speed.c test_pressure.c test_volume.c unit.c
+TEST_SRC = test.c test_angular_speed.c test_pressure.c test_volume.c test_volume_flow_rate.c unit.c
 TEST_OBJ = ${TEST_SRC:.c=.o}
 
 volute: ${OBJ}
