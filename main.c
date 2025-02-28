@@ -9,11 +9,22 @@
 #include "ui.h"
 
 
+/* Macros. */
+
+#define nelem(arr) (sizeof(arr)/sizeof(arr[0]))
+
+
 /* Constants. */
 
 static const char TITLE[] = "volute";
 enum window {
 	WIN_OPTS = MU_OPT_NOINTERACT | MU_OPT_NOTITLE | MU_OPT_AUTOSIZE | MU_OPT_NOFRAME,
+};
+
+enum layout {
+	LABEL_WIDTH = 50,
+	UNIT_WIDTH = 45,
+	FIELD_WIDTH = 65,
 };
 
 static const mu_Color BLACK = {0, 0, 0, 255};
@@ -43,6 +54,10 @@ static void set_style(mu_Context *ctx);
 static void main_loop(mu_Context *ctx, UI *ui);
 static void process_frame(mu_Context *ctx, UI *ui);
 static void main_window(mu_Context *ctx, UI *ui);
+static void displacement_row(mu_Context *ctx, UI *ui);
+static void rpm_row(mu_Context *ctx, UI *ui);
+static void map_row(mu_Context *ctx, UI *ui);
+static void ve_row(mu_Context *ctx, UI *ui);
 
 
 /* Function Definitions. */
@@ -101,29 +116,86 @@ process_frame(mu_Context *ctx, UI *ui) {
 static void
 main_window(mu_Context *ctx, UI *ui) {
 	int w, h;
+
 	r_get_window_size(&w, &h);
 	if (!mu_begin_window_ex(ctx, TITLE, mu_rect(0, 0, w, h), WIN_OPTS)) {
 		exit(EXIT_FAILURE);
 	}
 
-	/* TODO */
+	displacement_row(ctx, ui);
 
+	mu_layout_row(ctx, 0, NULL, 0);
+	mu_label(ctx, "");
 
-	mu_layout_row(ctx, 3, (int[]) {128, 30, 20}, 0);
-
-	static double value = 0.0;
-	if (w_field(ctx, &ui->displacement) & MU_RES_CHANGE) {
-		/* TODO */
-		value = ui->displacement.value;
-	}
-
-	if (w_select(ctx, &ui->displacement_unit) & MU_RES_CHANGE) {
-		/* TODO */
-	}
-
-	mu_layout_begin_column(ctx);
-	mu_button(ctx, "foo bar");
-	mu_layout_end_column(ctx);
+	rpm_row(ctx, ui);
+	map_row(ctx, ui);
+	ve_row(ctx, ui);
 
 	mu_end_window(ctx);
+}
+
+static void
+displacement_row(mu_Context *ctx, UI *ui) {
+	int widths[] = {
+		LABEL_WIDTH+UNIT_WIDTH+ctx->style->spacing,
+		FIELD_WIDTH,
+		UNIT_WIDTH
+	};
+	mu_layout_row(ctx, nelem(widths), widths, 0);
+	mu_label(ctx, "Displacement:");
+	if (w_field(ctx, &ui->displacement) & MU_RES_CHANGE) {
+		/* TODO */
+	}
+	w_select(ctx, &ui->displacement_unit);
+}
+
+static void
+rpm_row(mu_Context *ctx, UI *ui) {
+	int i;
+
+	mu_layout_row(ctx, 0, NULL, 0);
+	mu_layout_width(ctx, LABEL_WIDTH);
+	mu_label(ctx, "rpm:");
+	mu_layout_width(ctx, UNIT_WIDTH);
+	mu_label(ctx, "");
+	mu_layout_width(ctx, FIELD_WIDTH);
+	for (i = 0; i < ui->npoints; i++) {
+		if (w_field(ctx, &ui->rpm[i])) {
+			/* TODO */
+		}
+	}
+}
+
+static void
+map_row(mu_Context *ctx, UI *ui) {
+	int i;
+
+	mu_layout_row(ctx, 0, NULL, 0);
+	mu_layout_width(ctx, LABEL_WIDTH);
+	mu_label(ctx, "map:");
+	mu_layout_width(ctx, UNIT_WIDTH);
+	w_select(ctx, &ui->map_unit);
+	mu_layout_width(ctx, FIELD_WIDTH);
+	for (i = 0; i <ui->npoints; i++) {
+		if (w_field(ctx, &ui->map[i])) {
+			/* TODO */
+		}
+	}
+}
+
+static void
+ve_row(mu_Context *ctx, UI *ui) {
+	int i;
+
+	mu_layout_row(ctx, 0, NULL, 0);
+	mu_layout_width(ctx, LABEL_WIDTH);
+	mu_label(ctx, "ve:");
+	mu_layout_width(ctx, UNIT_WIDTH);
+	mu_label(ctx, "(%)");
+	mu_layout_width(ctx, FIELD_WIDTH);
+	for (i = 0; i < ui->npoints; i++) {
+		if (w_field(ctx, &ui->ve[i])) {
+			/* TODO */
+		}
+	}
 }
