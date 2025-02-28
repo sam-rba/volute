@@ -34,3 +34,10 @@ void test_as_cubic_centimetre(void);
 void test_as_litre(void);
 void test_as_cubic_metre(void);
 void test_as_cubic_inch(void);
+
+void test_cubic_metre_per_sec(void);
+void test_cubic_metre_per_min(void);
+void test_cubic_foot_per_min(void);
+void test_as_cubic_metre_per_sec(void);
+void test_as_cubic_metre_per_min(void);
+void test_as_cubic_foot_per_min(void);

@@ -28,4 +28,11 @@ main(void) {
 	test_as_litre();
 	test_as_cubic_metre();
 	test_as_cubic_inch();
+
+	test_cubic_metre_per_sec();
+	test_cubic_metre_per_min();
+	test_cubic_foot_per_min();
+	test_as_cubic_metre_per_sec();
+	test_as_cubic_metre_per_min();
+	test_as_cubic_foot_per_min();
 }

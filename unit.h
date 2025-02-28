@@ -38,3 +38,13 @@ double as_cubic_centimetre(Volume x);
 double as_litre(Volume x);
 double as_cubic_metre(double x);
 double as_cubic_inch(double x);
+
+
+typedef double VolumeFlowRate;
+
+VolumeFlowRate cubic_metre_per_sec(double x);
+VolumeFlowRate cubic_metre_per_min(double x);
+VolumeFlowRate cubic_foot_per_min(double x);
+double as_cubic_metre_per_sec(VolumeFlowRate x);
+double as_cubic_metre_per_min(VolumeFlowRate x);
+double as_cubic_foot_per_min(VolumeFlowRate x);
