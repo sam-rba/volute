@@ -10,6 +10,16 @@
 
 #define nelem(arr) (sizeof(arr)/sizeof(arr[0]))
 
+#define DEFAULT_DISPLACEMENT (litre(1.5))
+#define DEFAULT_AMBIENT_TEMPERATURE (celsius(20))
+#define DEFAULT_AMBIENT_PRESSURE (millibar(1013))
+#define DEFAULT_RPM (rpm(2000))
+#define DEFAULT_MAP (millibar(1013))
+#define DEFAULT_VE (percent(90))
+#define DEFAULT_COMPRESSOR_EFFICIENCY (percent(70))
+#define DEFAULT_INTERCOOLER_EFFICIENCY (percent(90))
+#define DEFAULT_INTERCOOLER_DELTAP (psi(0.2))
+
 
 static const char *const volume_units[] = {"cc", "l", "ci"};
 static const VolumeMaker volume_makers[nelem(volume_units)] = {
@@ -41,40 +51,145 @@ static const VolumeFlowRateReader volume_flow_rate_readers[nelem(volume_flow_rat
 };
 
 
+static void init_displacement(UI *ui);
+static void init_ambient_temperature(UI *ui);
+static void init_ambient_pressure(UI *ui);
+static void init_rpm(UI *ui);
+static void init_map(UI *ui);
+static void init_ve(UI *ui);
+static void init_comp_efficiency(UI *ui);
+static void init_intercooler_efficiency(UI *ui);
+static void init_intercooler_deltap(UI *ui);
+static void init_volume_flow_rate(UI *ui);
+
+
 void
 init_ui(UI *ui) {
 	ui->npoints = 1;
 	init_engine(&ui->points[0]);
 
+	init_displacement(ui);
+	init_ambient_temperature(ui);
+	init_ambient_pressure(ui);
+
+	init_rpm(ui);
+	init_map(ui);
+	init_ve(ui);
+	init_comp_efficiency(ui);
+	init_intercooler_efficiency(ui);
+	init_intercooler_deltap(ui);
+
+	init_volume_flow_rate(ui);
+}
+
+static void
+init_displacement(UI *ui) {
+	int i;
+	double v;
+
 	w_init_field(&ui->displacement);
 	w_init_select(&ui->displacement_unit, nelem(volume_units), volume_units);
+	i = ui->displacement_unit.idx;
+	v = volume_readers[i](DEFAULT_DISPLACEMENT);
+	w_set_field(&ui->displacement, v);
+
+	set_displacement(ui);
+}
+
+static void
+init_ambient_temperature(UI *ui) {
+	int i;
+	double v;
 
 	w_init_field(&ui->ambient_temperature);
 	w_init_select(&ui->ambient_temperature_unit, nelem(temperature_units), temperature_units);
+	i = ui->ambient_temperature_unit.idx;
+	v = temperature_readers[i](DEFAULT_AMBIENT_TEMPERATURE);
+	w_set_field(&ui->ambient_temperature, v);
+
+	set_ambient_temperature(ui);
+}
+
+static void
+init_ambient_pressure(UI *ui) {
+	int i;
+	double v;
 
 	w_init_field(&ui->ambient_pressure);
 	w_init_select(&ui->ambient_pressure_unit, nelem(pressure_units), pressure_units);
+	i = ui->ambient_pressure_unit.idx;
+	v = pressure_readers[i](DEFAULT_AMBIENT_PRESSURE);
+	w_set_field(&ui->ambient_pressure, v);
 
+	set_ambient_pressure(ui);
+}
+
+static void
+init_rpm(UI *ui) {
 	w_init_field(&ui->rpm[0]);
 	w_set_field(&ui->rpm[0], as_rpm(DEFAULT_RPM));
 
+	set_rpm(ui, 0);
+}
+
+static void
+init_map(UI *ui) {
+	int i;
+	double v;
+
 	w_init_field(&ui->map[0]);
 	w_init_select(&ui->map_unit, nelem(pressure_units), pressure_units);
+	i = ui->map_unit.idx;
+	v = pressure_readers[i](DEFAULT_MAP);
+	w_set_field(&ui->map[0], v);
 
+	set_map(ui, 0);
+}
+
+static void
+init_ve(UI *ui) {
 	w_init_field(&ui->ve[0]);
 	w_set_field(&ui->ve[0], as_percent(DEFAULT_VE));
 
+	set_ve(ui, 0);
+}
+
+static void
+init_comp_efficiency(UI *ui) {
 	w_init_field(&ui->comp_efficiency[0]);
 	w_set_field(&ui->comp_efficiency[0], as_percent(DEFAULT_COMPRESSOR_EFFICIENCY));
 
+	set_comp_efficiency(ui, 0);
+}
+
+static void
+init_intercooler_efficiency(UI *ui) {
 	w_init_field(&ui->intercooler_efficiency[0]);
 	w_set_field(&ui->intercooler_efficiency[0], as_percent(DEFAULT_INTERCOOLER_EFFICIENCY));
 
+	set_intercooler_efficiency(ui, 0);
+}
+
+static void
+init_intercooler_deltap(UI *ui) {
+	int i;
+	double v;
+
 	w_init_field(&ui->intercooler_deltap[0]);
 	w_init_select(&ui->intercooler_deltap_unit, nelem(pressure_units), pressure_units);
+	i = ui->intercooler_deltap_unit.idx;
+	v = pressure_readers[i](DEFAULT_INTERCOOLER_DELTAP);
+	w_set_field(&ui->intercooler_deltap[0], v);
 
+	set_intercooler_deltap(ui, 0);
+}
+
+static void
+init_volume_flow_rate(UI *ui) {
 	w_init_select(&ui->volume_flow_rate_unit, nelem(volume_flow_rate_units), volume_flow_rate_units);
 	w_init_number(ui->volume_flow_rate[0]);
+
+	set_volume_flow_rate(ui, 0);
 }
 
 void
