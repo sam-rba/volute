@@ -21,6 +21,8 @@ typedef struct {
 
 	w_Field comp_efficiency[MAX_POINTS];
 
+	w_Field intercooler_efficiency[MAX_POINTS];
+
 	Engine points[MAX_POINTS];
 
 	w_Select volume_flow_rate_unit;
@@ -38,6 +40,7 @@ void set_map(UI *ui, int idx);
 void set_map_unit(UI *ui);
 void set_ve(UI *ui, int idx);
 void set_comp_efficiency(UI *ui, int idx);
+void set_intercooler_efficiency(UI *ui, int idx);
 void set_volume_flow_rate(UI *ui, int idx);
 void set_all_volume_flow_rate(UI *ui);
 void insert_point(UI *ui, int idx);

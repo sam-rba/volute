@@ -194,6 +194,11 @@ set_comp_efficiency(UI *ui, int idx) {
 }
 
 void
+set_intercooler_efficiency(UI *ui, int idx) {
+	ui->points[idx].intercooler_efficiency = percent(ui->intercooler_efficiency[idx].value);
+}
+
+void
 set_volume_flow_rate(UI *ui, int idx) {
 	int unit_idx;
 	VolumeFlowRateReader convert;

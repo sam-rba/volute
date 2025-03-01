@@ -6,6 +6,7 @@ typedef struct {
 	Pressure map;
 	Fraction ve;
 	Fraction comp_efficiency;
+	Fraction intercooler_efficiency;
 } Engine;
 
 void init_engine(Engine *e);
