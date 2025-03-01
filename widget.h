@@ -1,9 +1,12 @@
-enum { LABEL_SIZE = 128 };
+enum {
+	FIELD_SIZE = 64,
+	LABEL_SIZE = 128,
+};
 
 
 /* Field is a floating point number input field. */
 typedef struct {
-	char buf[64];
+	char buf[FIELD_SIZE];
 	double value;
 	int invalid;
 } w_Field;
