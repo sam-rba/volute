@@ -24,7 +24,7 @@ enum window {
 };
 
 enum layout {
-	LABEL_WIDTH = 128,
+	LABEL_WIDTH = 144,
 	UNIT_WIDTH = 48,
 	FIELD_WIDTH = 64,
 };
