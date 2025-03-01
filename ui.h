@@ -4,6 +4,9 @@ typedef struct {
 	w_Field displacement;
 	w_Select displacement_unit;
 
+	w_Field ambient_temperature;
+	w_Select ambient_temperature_unit;
+
 	int npoints;
 
 	w_Field rpm[MAX_POINTS];
@@ -22,6 +25,8 @@ typedef struct {
 void init_ui(UI *ui);
 void set_displacement(UI *ui);
 void set_displacement_unit(UI* ui);
+void set_ambient_temperature(UI *ui);
+void set_ambient_temperature_unit(UI *ui);
 void set_map(UI *ui, int idx);
 void set_map_unit(UI *ui);
 void set_ve(UI *ui, int idx);

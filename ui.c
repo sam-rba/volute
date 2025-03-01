@@ -19,6 +19,14 @@ static const VolumeReader volume_readers[nelem(volume_units)] = {
 	as_cubic_centimetre, as_litre, as_cubic_inch,
 };
 
+static const char *const temperature_units[] = {"°C", "K", "°F", "°R"};
+static const TemperatureMaker temperature_makers[nelem(temperature_units)] = {
+	celsius, kelvin, fahrenheit, rankine,
+};
+static const TemperatureReader temperature_readers[nelem(temperature_units)] = {
+	as_celsius, as_kelvin, as_fahrenheit, as_rankine,
+};
+
 static const char *const pressure_units[] = {"mbar", "kPa", "bar", "psi"};
 static const PressureMaker pressure_makers[nelem(pressure_units)] = {
 	millibar, kilopascal, bar, psi,
@@ -37,6 +45,9 @@ void
 init_ui(UI *ui) {
 	w_init_field(&ui->displacement);
 	w_init_select(&ui->displacement_unit, nelem(volume_units), volume_units);
+
+	w_init_field(&ui->ambient_temperature);
+	w_init_select(&ui->ambient_temperature_unit, nelem(temperature_units), temperature_units);
 	
 	ui->npoints = 1;
 
@@ -80,6 +91,35 @@ set_displacement_unit(UI *ui) {
 	disp = maker(ui->displacement.value);
 	reader = volume_readers[ui->displacement_unit.idx];
 	w_set_field(&ui->displacement, reader(disp));
+}
+
+void
+set_ambient_temperature(UI *ui) {
+	int idx, i;
+	TemperatureMaker convert;
+	Temperature t;
+
+	idx = ui->ambient_temperature_unit.idx;
+	assert(idx >= 0 && (long unsigned int) idx < nelem(temperature_units));
+
+	convert = temperature_makers[idx];
+	t = convert(ui->ambient_temperature.value);
+
+	for (i = 0; i < ui->npoints; i++) {
+		ui->points[i].ambient_temperature = t;
+	}
+}
+
+void
+set_ambient_temperature_unit(UI *ui) {
+	TemperatureMaker maker;
+	Temperature t;
+	TemperatureReader reader;
+
+	maker = temperature_makers[ui->ambient_temperature_unit.oldidx];
+	t = maker(ui->ambient_temperature.value);
+	reader = temperature_readers[ui->ambient_temperature_unit.idx];
+	w_set_field(&ui->ambient_temperature, reader(t));
 }
 
 void

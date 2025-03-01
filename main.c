@@ -57,6 +57,7 @@ static void main_loop(mu_Context *ctx, UI *ui);
 static void process_frame(mu_Context *ctx, UI *ui);
 static void main_window(mu_Context *ctx, UI *ui);
 static void displacement_row(mu_Context *ctx, UI *ui);
+static void ambient_temperature_row(mu_Context *ctx, UI *ui);
 static void rpm_row(mu_Context *ctx, UI *ui);
 static void map_row(mu_Context *ctx, UI *ui);
 static void ve_row(mu_Context *ctx, UI *ui);
@@ -146,12 +147,7 @@ main_window(mu_Context *ctx, UI *ui) {
 
 static void
 displacement_row(mu_Context *ctx, UI *ui) {
-	int widths[] = {
-		LABEL_WIDTH+UNIT_WIDTH+ctx->style->spacing,
-		FIELD_WIDTH,
-		UNIT_WIDTH
-	};
-	mu_layout_row(ctx, nelem(widths), widths, 0);
+	mu_layout_row(ctx, 3, (int[]) {LABEL_WIDTH, FIELD_WIDTH, UNIT_WIDTH}, 0);
 	mu_label(ctx, "Displacement:");
 	if (w_field(ctx, &ui->displacement) & MU_RES_CHANGE) {
 		set_displacement(ui);
@@ -159,6 +155,19 @@ displacement_row(mu_Context *ctx, UI *ui) {
 	}
 	if (w_select(ctx, &ui->displacement_unit) & MU_RES_CHANGE) {
 		set_displacement_unit(ui);
+	}
+}
+
+static void
+ambient_temperature_row(mu_Context *ctx, UI *ui) {
+	mu_layout_row(ctx, 3, (int[]) {LABEL_WIDTH, FIELD_WIDTH, UNIT_WIDTH}, 0);
+	mu_label(ctx, "Ambient temperature:");
+	if (w_field(ctx, &ui->ambient_temperature) & MU_RES_CHANGE) {
+		set_ambient_temperature(ui);
+		set_all_volume_flow_rate(ui);
+	}
+	if (w_select(ctx, &ui->ambient_temperature_unit) & MU_RES_CHANGE) {
+		set_ambient_temperature_unit(ui);
 	}
 }
 
