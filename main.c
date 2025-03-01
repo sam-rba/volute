@@ -245,7 +245,9 @@ volume_flow_rate_row(mu_Context *ctx, UI *ui) {
 	mu_layout_width(ctx, LABEL_WIDTH);
 	mu_label(ctx, "volume flow rate");
 	mu_layout_width(ctx, UNIT_WIDTH);
-	w_select(ctx, &ui->volume_flow_rate_unit);
+	if (w_select(ctx, &ui->volume_flow_rate_unit) & MU_RES_CHANGE) {
+		set_all_volume_flow_rate(ui);
+	}
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {
 		w_label(ctx, ui->volume_flow_rate[i]);
