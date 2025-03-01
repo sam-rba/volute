@@ -15,7 +15,7 @@ enum window {
 	RENDERFLAGS = SDL_RENDERER_PRESENTVSYNC,
 };
 
-static const char FONT[] = "font/charter-regular.ttf";
+static const char FONT[] = "font/P052-Roman.ttf";
 enum font { FONTSIZE = 14, };
 
 static const mu_Color bg = {255, 255, 255, 255};

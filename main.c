@@ -24,7 +24,7 @@ enum window {
 };
 
 enum layout {
-	LABEL_WIDTH = 144,
+	LABEL_WIDTH = 128,
 	UNIT_WIDTH = 48,
 	FIELD_WIDTH = 64,
 };
@@ -168,7 +168,7 @@ displacement_row(mu_Context *ctx, UI *ui) {
 static void
 ambient_temperature_row(mu_Context *ctx, UI *ui) {
 	mu_layout_row(ctx, 3, (int[]) {LABEL_WIDTH, FIELD_WIDTH, UNIT_WIDTH}, 0);
-	mu_label(ctx, "Ambient temperature:");
+	mu_label(ctx, "Ambient T:");
 	if (w_field(ctx, &ui->ambient_temperature) & MU_RES_CHANGE) {
 		set_ambient_temperature(ui);
 		set_all_volume_flow_rate(ui);
@@ -181,7 +181,7 @@ ambient_temperature_row(mu_Context *ctx, UI *ui) {
 static void
 ambient_pressure_row(mu_Context *ctx, UI *ui) {
 	mu_layout_row(ctx, 3, (int[]) {LABEL_WIDTH, FIELD_WIDTH, UNIT_WIDTH}, 0);
-	mu_label(ctx, "Ambient pressure:");
+	mu_label(ctx, "Ambient P:");
 	if (w_field(ctx, &ui->ambient_pressure) & MU_RES_CHANGE) {
 		set_ambient_pressure(ui);
 		set_all_volume_flow_rate(ui);
@@ -197,8 +197,9 @@ rpm_row(mu_Context *ctx, UI *ui) {
 
 	mu_layout_row(ctx, 0, NULL, 0);
 	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "rpm:");
-	hpad(ctx, UNIT_WIDTH);
+	mu_label(ctx, "Speed:");
+	mu_layout_width(ctx, UNIT_WIDTH);
+	mu_label(ctx, "(rpm)");
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->rpm[i])) {
@@ -214,7 +215,7 @@ map_row(mu_Context *ctx, UI *ui) {
 
 	mu_layout_row(ctx, 0, NULL, 0);
 	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "map:");
+	mu_label(ctx, "Manifold P:");
 	mu_layout_width(ctx, UNIT_WIDTH);
 	if (w_select(ctx, &ui->map_unit) & MU_RES_CHANGE) {
 		set_map_unit(ui);
@@ -234,7 +235,7 @@ ve_row(mu_Context *ctx, UI *ui) {
 
 	mu_layout_row(ctx, 0, NULL, 0);
 	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "ve:");
+	mu_label(ctx, "Volumetric η:");
 	mu_layout_width(ctx, UNIT_WIDTH);
 	mu_label(ctx, "(%)");
 	mu_layout_width(ctx, FIELD_WIDTH);
@@ -252,7 +253,7 @@ comp_efficiency_row(mu_Context *ctx, UI *ui) {
 
 	mu_layout_row(ctx, 0, NULL, 0);
 	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Compressor efficiency:");
+	mu_label(ctx, "Compressor η:");
 	mu_layout_width(ctx, UNIT_WIDTH);
 	mu_label(ctx, "(%)");
 	mu_layout_width(ctx, FIELD_WIDTH);
@@ -270,7 +271,7 @@ intercooler_efficiency_row(mu_Context *ctx, UI *ui) {
 
 	mu_layout_row(ctx, 0, NULL, 0);
 	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Intercooler efficiency:");
+	mu_label(ctx, "Intercooler η:");
 	mu_layout_width(ctx, UNIT_WIDTH);
 	mu_label(ctx, "(%)");
 	mu_layout_width(ctx, FIELD_WIDTH);
