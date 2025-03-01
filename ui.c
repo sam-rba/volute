@@ -49,6 +49,9 @@ init_ui(UI *ui) {
 	w_init_field(&ui->ambient_temperature);
 	w_init_select(&ui->ambient_temperature_unit, nelem(temperature_units), temperature_units);
 	
+	w_init_field(&ui->ambient_pressure);
+	w_init_select(&ui->ambient_pressure_unit, nelem(pressure_units), pressure_units);
+
 	ui->npoints = 1;
 
 	w_init_field(&ui->rpm[0]);
@@ -120,6 +123,35 @@ set_ambient_temperature_unit(UI *ui) {
 	t = maker(ui->ambient_temperature.value);
 	reader = temperature_readers[ui->ambient_temperature_unit.idx];
 	w_set_field(&ui->ambient_temperature, reader(t));
+}
+
+void
+set_ambient_pressure(UI *ui) {
+	int idx, i;
+	PressureMaker convert;
+	Pressure p;
+
+	idx = ui->ambient_pressure_unit.idx;
+	assert(idx >= 0 && (long unsigned int) idx < nelem(pressure_units));
+
+	convert = pressure_makers[idx];
+	p = convert(ui->ambient_pressure.value);
+
+	for (i = 0; i < ui->npoints; i++) {
+		ui->points[i].ambient_pressure = p;
+	}
+}
+
+void
+set_ambient_pressure_unit(UI *ui) {
+	PressureMaker maker;
+	Pressure p;
+	PressureReader reader;
+
+	maker = pressure_makers[ui->ambient_pressure_unit.oldidx];
+	p = maker(ui->ambient_pressure.value);
+	reader = pressure_readers[ui->ambient_pressure_unit.idx];
+	w_set_field(&ui->ambient_pressure, reader(p));
 }
 
 void

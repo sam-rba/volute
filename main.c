@@ -58,6 +58,7 @@ static void process_frame(mu_Context *ctx, UI *ui);
 static void main_window(mu_Context *ctx, UI *ui);
 static void displacement_row(mu_Context *ctx, UI *ui);
 static void ambient_temperature_row(mu_Context *ctx, UI *ui);
+static void ambient_pressure_row(mu_Context *ctx, UI *ui);
 static void rpm_row(mu_Context *ctx, UI *ui);
 static void map_row(mu_Context *ctx, UI *ui);
 static void ve_row(mu_Context *ctx, UI *ui);
@@ -130,6 +131,8 @@ main_window(mu_Context *ctx, UI *ui) {
 	}
 
 	displacement_row(ctx, ui);
+	ambient_temperature_row(ctx, ui);
+	ambient_pressure_row(ctx, ui);
 
 	vpad(ctx, 0);
 
@@ -168,6 +171,19 @@ ambient_temperature_row(mu_Context *ctx, UI *ui) {
 	}
 	if (w_select(ctx, &ui->ambient_temperature_unit) & MU_RES_CHANGE) {
 		set_ambient_temperature_unit(ui);
+	}
+}
+
+static void
+ambient_pressure_row(mu_Context *ctx, UI *ui) {
+	mu_layout_row(ctx, 3, (int[]) {LABEL_WIDTH, FIELD_WIDTH, UNIT_WIDTH}, 0);
+	mu_label(ctx, "Ambient pressure:");
+	if (w_field(ctx, &ui->ambient_pressure) & MU_RES_CHANGE) {
+		set_ambient_pressure(ui);
+		set_all_volume_flow_rate(ui);
+	}
+	if (w_select(ctx, &ui->ambient_pressure_unit) & MU_RES_CHANGE) {
+		set_ambient_pressure_unit(ui);
 	}
 }
 

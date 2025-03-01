@@ -1,5 +1,7 @@
 typedef struct {
 	Volume displacement;
+	Temperature ambient_temperature;
+	Pressure ambient_pressure;
 	AngularSpeed rpm;
 	Pressure map;
 	Fraction ve;
