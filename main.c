@@ -160,7 +160,7 @@ displacement_row(mu_Context *ctx, UI *ui) {
 	mu_label(ctx, "Displacement:");
 	if (w_field(ctx, &ui->displacement) & MU_RES_CHANGE) {
 		set_displacement(ui);
-		set_all_volume_flow_rate(ui);
+		compute_all(ui);
 	}
 	if (w_select(ctx, &ui->displacement_unit) & MU_RES_CHANGE) {
 		set_displacement_unit(ui);
@@ -173,7 +173,7 @@ ambient_temperature_row(mu_Context *ctx, UI *ui) {
 	mu_label(ctx, "Ambient T:");
 	if (w_field(ctx, &ui->ambient_temperature) & MU_RES_CHANGE) {
 		set_ambient_temperature(ui);
-		set_all_volume_flow_rate(ui);
+		compute_all(ui);
 	}
 	if (w_select(ctx, &ui->ambient_temperature_unit) & MU_RES_CHANGE) {
 		set_ambient_temperature_unit(ui);
@@ -186,7 +186,7 @@ ambient_pressure_row(mu_Context *ctx, UI *ui) {
 	mu_label(ctx, "Ambient P:");
 	if (w_field(ctx, &ui->ambient_pressure) & MU_RES_CHANGE) {
 		set_ambient_pressure(ui);
-		set_all_volume_flow_rate(ui);
+		compute_all(ui);
 	}
 	if (w_select(ctx, &ui->ambient_pressure_unit) & MU_RES_CHANGE) {
 		set_ambient_pressure_unit(ui);
@@ -206,7 +206,7 @@ rpm_row(mu_Context *ctx, UI *ui) {
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->rpm[i])) {
 			set_rpm(ui, i);
-			set_volume_flow_rate(ui, i);
+			compute(ui, i);
 		}
 	}
 }
@@ -226,7 +226,7 @@ map_row(mu_Context *ctx, UI *ui) {
 	for (i = 0; i <ui->npoints; i++) {
 		if (w_field(ctx, &ui->map[i])) {
 			set_map(ui, i);
-			set_volume_flow_rate(ui, i);
+			compute(ui, i);
 		}
 	}
 }
@@ -244,7 +244,7 @@ ve_row(mu_Context *ctx, UI *ui) {
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->ve[i])) {
 			set_ve(ui, i);
-			set_volume_flow_rate(ui, i);
+			compute(ui, i);
 		}
 	}
 }
@@ -262,7 +262,7 @@ comp_efficiency_row(mu_Context *ctx, UI *ui) {
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->comp_efficiency[i])) {
 			set_comp_efficiency(ui, i);
-			set_volume_flow_rate(ui, i);
+			compute(ui, i);
 		}
 	}
 }
@@ -280,7 +280,7 @@ intercooler_efficiency_row(mu_Context *ctx, UI *ui) {
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->intercooler_efficiency[i])) {
 			set_intercooler_efficiency(ui, i);
-			set_volume_flow_rate(ui, i);
+			compute(ui, i);
 		}
 	}
 }
@@ -300,7 +300,7 @@ intercooler_deltap_row(mu_Context *ctx, UI *ui) {
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->intercooler_deltap[i])) {
 			set_intercooler_deltap(ui, i);
-			set_volume_flow_rate(ui, i);
+			compute(ui, i);
 		}
 	}
 }
@@ -334,7 +334,7 @@ volume_flow_rate_row(mu_Context *ctx, UI *ui) {
 	mu_label(ctx, "Volume flow rate:");
 	mu_layout_width(ctx, UNIT_WIDTH);
 	if (w_select(ctx, &ui->volume_flow_rate_unit) & MU_RES_CHANGE) {
-		set_all_volume_flow_rate(ui);
+		compute_all(ui);
 	}
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {

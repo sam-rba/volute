@@ -61,6 +61,7 @@ static void init_comp_efficiency(UI *ui);
 static void init_intercooler_efficiency(UI *ui);
 static void init_intercooler_deltap(UI *ui);
 static void init_volume_flow_rate(UI *ui);
+static void compute_volume_flow_rate(UI *ui, int idx);
 
 
 void
@@ -80,6 +81,8 @@ init_ui(UI *ui) {
 	init_intercooler_deltap(ui);
 
 	init_volume_flow_rate(ui);
+
+	compute(ui, 0);
 }
 
 static void
@@ -188,8 +191,6 @@ static void
 init_volume_flow_rate(UI *ui) {
 	w_init_select(&ui->volume_flow_rate_unit, nelem(volume_flow_rate_units), volume_flow_rate_units);
 	w_init_number(ui->volume_flow_rate[0]);
-
-	set_volume_flow_rate(ui, 0);
 }
 
 void
@@ -358,7 +359,21 @@ set_intercooler_deltap_unit(UI *ui) {
 }
 
 void
-set_volume_flow_rate(UI *ui, int idx) {
+compute(UI *ui, int idx) {
+	compute_volume_flow_rate(ui, idx);
+}
+
+void
+compute_all(UI *ui) {
+	int i;
+
+	for (i = 0; i < ui->npoints; i++) {
+		compute(ui, i);
+	}
+}
+
+static void
+compute_volume_flow_rate(UI *ui, int idx) {
 	int unit_idx;
 	VolumeFlowRateReader convert;
 	VolumeFlowRate v;
@@ -369,15 +384,6 @@ set_volume_flow_rate(UI *ui, int idx) {
 	convert = volume_flow_rate_readers[unit_idx];
 	v = convert(volume_flow_rate(&ui->points[idx]));
 	w_set_number(ui->volume_flow_rate[idx], v);
-}
-
-void
-set_all_volume_flow_rate(UI *ui) {
-	int i;
-
-	for (i = 0; i < ui->npoints; i++) {
-		set_volume_flow_rate(ui, i);
-	}
 }
 
 void
