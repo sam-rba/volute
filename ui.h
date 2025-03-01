@@ -16,7 +16,7 @@ typedef struct {
 	Engine points[MAX_POINTS];
 
 	w_Select volume_flow_rate_unit;
-	w_Label volume_flow_rate[MAX_POINTS];
+	w_Number volume_flow_rate[MAX_POINTS];
 } UI;
 
 void init_ui(UI *ui);

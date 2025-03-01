@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
 
 #include "microui.h"
@@ -51,7 +50,7 @@ init_ui(UI *ui) {
 	init_engine(&ui->points[0]);
 
 	w_init_select(&ui->volume_flow_rate_unit, nelem(volume_flow_rate_units), volume_flow_rate_units);
-	w_init_label(ui->volume_flow_rate[0]);
+	w_init_number(ui->volume_flow_rate[0]);
 }
 
 void
@@ -128,7 +127,7 @@ set_volume_flow_rate(UI *ui, int idx) {
 
 	convert = volume_flow_rate_readers[unit_idx];
 	v = convert(volume_flow_rate(&ui->points[idx]));
-	snprintf(ui->volume_flow_rate[idx], sizeof(ui->volume_flow_rate[idx]), "%f", v);
+	w_set_number(ui->volume_flow_rate[idx], v);
 }
 
 void

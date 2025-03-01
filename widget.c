@@ -7,6 +7,9 @@
 
 #define nelem(arr) (sizeof(arr)/sizeof(arr[0]))
 
+
+#define FORMAT "%.5g"
+
 static const mu_Color RED = {255, 0, 0, 255};
 
 
@@ -55,7 +58,7 @@ w_field(mu_Context *ctx, w_Field *f) {
 void
 w_set_field(w_Field *f, double val) {
 	f->value = val;
-	snprintf(f->buf, sizeof(f->buf), "%.5f", val);
+	snprintf(f->buf, sizeof(f->buf), FORMAT, val);
 }
 
 void
@@ -106,11 +109,16 @@ w_select(mu_Context *ctx, w_Select *select) {
 }
 
 void
-w_init_label(w_Label label) {
-	label[0] = '\0';
+w_init_number(w_Number num) {
+	num[0] = '\0';
 }
 
 void
-w_label(mu_Context *ctx, const w_Label label) {
-	mu_label(ctx, label);
+w_set_number(w_Number num, double val) {
+	snprintf(num, sizeof(w_Number), FORMAT, val);
+}
+
+void
+w_number(mu_Context *ctx, const w_Number num) {
+	mu_label(ctx, num);
 }

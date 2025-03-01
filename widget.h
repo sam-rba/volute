@@ -1,6 +1,6 @@
 enum {
 	FIELD_SIZE = 64,
-	LABEL_SIZE = 128,
+	NUMBER_SIZE = 128,
 };
 
 
@@ -28,7 +28,8 @@ void w_init_select(w_Select *select, int nopts, const char *const opts[]);
 int w_select(mu_Context *ctx, w_Select *select);
 
 
-typedef char w_Label[LABEL_SIZE];
+typedef char w_Number[NUMBER_SIZE];
 
-void w_init_label(w_Label label);
-void w_label(mu_Context *ctx, const w_Label label);
+void w_init_number(w_Number num);
+void w_set_number(w_Number num, double val);
+void w_number(mu_Context *ctx, const w_Number num);
