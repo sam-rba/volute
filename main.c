@@ -203,7 +203,7 @@ rpm_row(mu_Context *ctx, UI *ui) {
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->rpm[i])) {
-			ui->points[i].rpm = rpm(ui->rpm[i].value);
+			set_rpm(ui, i);
 			set_volume_flow_rate(ui, i);
 		}
 	}

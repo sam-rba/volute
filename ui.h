@@ -36,6 +36,7 @@ void set_ambient_temperature(UI *ui);
 void set_ambient_temperature_unit(UI *ui);
 void set_ambient_pressure(UI *ui);
 void set_ambient_pressure_unit(UI *ui);
+void set_rpm(UI *ui, int idx);
 void set_map(UI *ui, int idx);
 void set_map_unit(UI *ui);
 void set_ve(UI *ui, int idx);

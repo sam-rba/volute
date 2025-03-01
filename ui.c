@@ -155,6 +155,11 @@ set_ambient_pressure_unit(UI *ui) {
 }
 
 void
+set_rpm(UI *ui, int idx) {
+	ui->points[idx].rpm = rpm(ui->rpm[idx].value);
+}
+
+void
 set_map(UI *ui, int idx) {
 	int unit_idx;
 	PressureMaker convert;
