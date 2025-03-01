@@ -157,7 +157,11 @@ displacement_row(mu_Context *ctx, UI *ui) {
 		set_displacement(ui);
 		set_all_volume_flow_rate(ui);
 	}
-	w_select(ctx, &ui->displacement_unit);
+	if (w_select(ctx, &ui->displacement_unit) & MU_RES_CHANGE) {
+		printf("displacement unit changed\n");
+		fflush(stdout);
+		set_displacement_unit(ui);
+	}
 }
 
 static void

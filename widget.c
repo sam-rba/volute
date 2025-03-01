@@ -33,10 +33,17 @@ w_field(mu_Context *ctx, w_Field *f) {
 }
 
 void
+w_set_field(w_Field *f, double val) {
+	f->value = val;
+	snprintf(f->buf, sizeof(f->buf), "%lf", val);
+}
+
+void
 w_init_select(w_Select *select, int nopts, const char *const opts[]) {
 	select->nopts = nopts;
 	select->opts = opts;
 	select->idx = 0;
+	select->oldidx = 0;
 	select ->active = 0;
 }
 
@@ -65,6 +72,7 @@ w_select(mu_Context *ctx, w_Select *select) {
 		res = MU_RES_ACTIVE;
 		for (i = 0; i < select->nopts; i++) {
 			if (mu_button(ctx, select->opts[i])) {
+				select->oldidx = select->idx;
 				select->idx = i;
 				res |= MU_RES_CHANGE;
 				select->active = 0;

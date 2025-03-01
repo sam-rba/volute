@@ -16,6 +16,9 @@ static const char *const volume_units[] = {"cc", "l", "ci"};
 static const VolumeMaker volume_makers[nelem(volume_units)] = {
 	cubic_centimetre, litre, cubic_inch,
 };
+static const VolumeReader volume_readers[nelem(volume_units)] = {
+	as_cubic_centimetre, as_litre, as_cubic_inch,
+};
 
 static const char *const pressure_units[] = {"mbar", "kPa", "bar", "psi"};
 static const PressureMaker pressure_makers[nelem(pressure_units)] = {
@@ -63,6 +66,18 @@ set_displacement(UI *ui) {
 	for (i = 0; i < ui->npoints; i++) {
 		ui->points[i].displacement = disp;
 	}
+}
+
+void
+set_displacement_unit(UI *ui) {
+	VolumeMaker maker;
+	Volume disp;
+	VolumeReader reader;
+
+	maker = volume_makers[ui->displacement_unit.oldidx];
+	disp = maker(ui->displacement.value);
+	reader = volume_readers[ui->displacement_unit.idx];
+	w_set_field(&ui->displacement, reader(disp));
 }
 
 void

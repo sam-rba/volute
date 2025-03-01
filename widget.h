@@ -9,12 +9,14 @@ typedef struct {
 
 void w_init_field(w_Field *f);
 int w_field(mu_Context *ctx, w_Field *f);
+void w_set_field(w_Field *f, double v);
 
 
 typedef struct {
 	int nopts;
 	const char *const *opts;
 	int idx; /* index of selected option. */
+	int oldidx; /* index of previously selected option. */
 	int active;
 } w_Select;
 

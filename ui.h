@@ -21,6 +21,7 @@ typedef struct {
 
 void init_ui(UI *ui);
 void set_displacement(UI *ui);
+void set_displacement_unit(UI* ui);
 void set_map(UI *ui, int idx);
 void set_ve(UI *ui, int idx);
 void set_volume_flow_rate(UI *ui, int idx);
