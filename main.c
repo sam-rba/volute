@@ -187,7 +187,9 @@ map_row(mu_Context *ctx, UI *ui) {
 	mu_layout_width(ctx, LABEL_WIDTH);
 	mu_label(ctx, "map:");
 	mu_layout_width(ctx, UNIT_WIDTH);
-	w_select(ctx, &ui->map_unit);
+	if (w_select(ctx, &ui->map_unit) & MU_RES_CHANGE) {
+		set_map_unit(ui);
+	}
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i <ui->npoints; i++) {
 		if (w_field(ctx, &ui->map[i])) {

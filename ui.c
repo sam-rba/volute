@@ -24,6 +24,9 @@ static const char *const pressure_units[] = {"mbar", "kPa", "bar", "psi"};
 static const PressureMaker pressure_makers[nelem(pressure_units)] = {
 	millibar, kilopascal, bar, psi,
 };
+static const PressureReader pressure_readers[nelem(pressure_units)] = {
+	as_millibar, as_kilopascal, as_bar, as_psi,
+};
 
 static const char *const volume_flow_rate_units[] = {"m³/s", "CFM"};
 static VolumeFlowRateReader volume_flow_rate_readers[nelem(volume_flow_rate_units)] = {
@@ -92,6 +95,21 @@ set_map(UI *ui, int idx) {
 	convert = pressure_makers[unit_idx];
 	p = convert(ui->map[idx].value);
 	ui->points[idx].map = p;
+}
+
+void
+set_map_unit(UI *ui) {
+	PressureMaker maker;
+	PressureReader reader;
+	int i;
+	Pressure map;
+
+	maker = pressure_makers[ui->map_unit.oldidx];
+	reader = pressure_readers[ui->map_unit.idx];
+	for (i = 0; i < ui->npoints; i++) {
+		map = maker(ui->map[i].value);
+		w_set_field(&ui->map[i], reader(map));
+	}
 }
 
 void
