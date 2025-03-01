@@ -1,4 +1,6 @@
 typedef double AngularSpeed;
+typedef AngularSpeed (*AngularSpeedMaker)(double);
+typedef double (*AngularSpeedReader)(AngularSpeed);
 
 AngularSpeed rad_per_sec(double x);
 AngularSpeed deg_per_sec(double x);
@@ -9,12 +11,16 @@ double as_rpm(AngularSpeed x);
 
 
 typedef double Fraction;
+typedef Fraction (*FractionMaker)(double);
+typedef double (*FractionReader)(Fraction);
 
 Fraction percent(double x);
 double as_percent(double x);
 
 
 typedef double Pressure;
+typedef Pressure (*PressureMaker)(double);
+typedef double (*PressureReader)(Pressure);
 
 Pressure pascal(double x);
 Pressure millibar(double x);
@@ -29,6 +35,8 @@ double as_psi(Pressure x);
 
 
 typedef double Volume;
+typedef Volume (*VolumeMaker)(double);
+typedef double (*VolumeReader)(Volume);
 
 Volume cubic_centimetre(double x);
 Volume litre(double x);
@@ -41,6 +49,8 @@ double as_cubic_inch(double x);
 
 
 typedef double VolumeFlowRate;
+typedef VolumeFlowRate (*VolumeFlowRateMaker)(double);
+typedef double (*VolumeFlowRateReader)(VolumeFlowRate);
 
 VolumeFlowRate cubic_metre_per_sec(double x);
 VolumeFlowRate cubic_metre_per_min(double x);

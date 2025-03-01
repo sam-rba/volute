@@ -13,17 +13,17 @@
 
 
 static const char *const volume_units[] = {"cc", "l", "ci"};
-static Volume (*volume_converters[nelem(volume_units)])(double) = {
+static const VolumeMaker volume_makers[nelem(volume_units)] = {
 	cubic_centimetre, litre, cubic_inch,
 };
 
 static const char *const pressure_units[] = {"mbar", "kPa", "bar", "psi"};
-static Pressure (*pressure_converters[nelem(pressure_units)])(double) = {
+static const PressureMaker pressure_makers[nelem(pressure_units)] = {
 	millibar, kilopascal, bar, psi,
 };
 
 static const char *const volume_flow_rate_units[] = {"m³/s", "CFM"};
-static double (*volume_flow_rate_converters[nelem(volume_flow_rate_units)])(VolumeFlowRate) = {
+static VolumeFlowRateReader volume_flow_rate_readers[nelem(volume_flow_rate_units)] = {
 	as_cubic_metre_per_sec, as_cubic_foot_per_min,
 };
 
@@ -51,12 +51,13 @@ init_ui(UI *ui) {
 void
 set_displacement(UI *ui) {
 	int idx, i;
-	Volume (*convert)(double), disp;
+	VolumeMaker convert;
+	Volume disp;
 
 	idx = ui->displacement_unit.idx;
 	assert(idx >= 0 && (long unsigned int) idx < nelem(volume_units));
 
-	convert = volume_converters[idx];
+	convert = volume_makers[idx];
 	disp = convert(ui->displacement.value);
 
 	for (i = 0; i < ui->npoints; i++) {
@@ -67,12 +68,13 @@ set_displacement(UI *ui) {
 void
 set_map(UI *ui, int idx) {
 	int unit_idx;
-	Pressure (*convert)(double), p;
+	PressureMaker convert;
+	Pressure p;
 
 	unit_idx = ui->map_unit.idx;
 	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(pressure_units));
 
-	convert = pressure_converters[unit_idx];
+	convert = pressure_makers[unit_idx];
 	p = convert(ui->map[idx].value);
 	ui->points[idx].map = p;
 }
@@ -85,12 +87,13 @@ set_ve(UI *ui, int idx) {
 void
 set_volume_flow_rate(UI *ui, int idx) {
 	int unit_idx;
-	double (*convert)(VolumeFlowRate), v;
+	VolumeFlowRateReader convert;
+	VolumeFlowRate v;
 
 	unit_idx = ui->volume_flow_rate_unit.idx;
 	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(volume_flow_rate_units));
 
-	convert = volume_flow_rate_converters[unit_idx];
+	convert = volume_flow_rate_readers[unit_idx];
 	v = convert(volume_flow_rate(&ui->points[idx]));
 	snprintf(ui->volume_flow_rate[idx], sizeof(ui->volume_flow_rate[idx]), "%lf", v);
 }
