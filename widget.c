@@ -7,35 +7,55 @@
 
 #define nelem(arr) (sizeof(arr)/sizeof(arr[0]))
 
+static const mu_Color RED = {255, 0, 0, 255};
+
 
 void
 w_init_field(w_Field *f) {
 	f->buf[0] = '\0';
 	f->value = 0.0;
+	f->invalid = 0;
 }
 
 /* field draws a Field widget and updates its value.
  * It returns MU_RES_CHANGE if the value has changed. */
 int
 w_field(mu_Context *ctx, w_Field *f) {
+	mu_Rect rect;
+	int changed;
+	char s[2];
 	double value;
-	int changed = 0;
+
+	rect = mu_layout_next(ctx);
+	mu_layout_set_next(ctx, rect, 0);
+
+	changed = 0;
 	if (mu_textbox(ctx, f->buf, sizeof(f->buf)) & MU_RES_CHANGE) {
-		if (sscanf(f->buf, "%lf", &value) == 1) {
+		/* s used to catch erroneous chars at end of field. */
+		if (sscanf(f->buf, "%lf %1s", &value, s) == 1) {
 			f->value = value;
+			f->invalid = 0;
 			changed = 1;
 		} else if (f->buf[0] == '\0') {
 			f->value = 0.0;
+			f->invalid = 0;
 			changed = 1;
+		} else {
+			f->invalid = 1;
 		}
 	}
+
+	if (f->invalid) {
+		mu_draw_box(ctx, rect, RED);
+	}
+
 	return changed ? MU_RES_CHANGE : 0;
 }
 
 void
 w_set_field(w_Field *f, double val) {
 	f->value = val;
-	snprintf(f->buf, sizeof(f->buf), "%f", val);
+	snprintf(f->buf, sizeof(f->buf), "%.5f", val);
 }
 
 void

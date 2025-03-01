@@ -5,6 +5,7 @@ enum { LABEL_SIZE = 128 };
 typedef struct {
 	char buf[64];
 	double value;
+	int invalid;
 } w_Field;
 
 void w_init_field(w_Field *f);
