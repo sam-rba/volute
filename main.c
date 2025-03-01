@@ -64,6 +64,7 @@ static void map_row(mu_Context *ctx, UI *ui);
 static void ve_row(mu_Context *ctx, UI *ui);
 static void comp_efficiency_row(mu_Context *ctx, UI *ui);
 static void intercooler_efficiency_row(mu_Context *ctx, UI *ui);
+static void intercooler_deltap_row(mu_Context *ctx, UI *ui);
 static void dup_del_row(mu_Context *ctx, UI *ui);
 static void volume_flow_rate_row(mu_Context *ctx, UI *ui);
 static void hpad(mu_Context *ctx, int w);
@@ -143,6 +144,7 @@ main_window(mu_Context *ctx, UI *ui) {
 	ve_row(ctx, ui);
 	comp_efficiency_row(ctx, ui);
 	intercooler_efficiency_row(ctx, ui);
+	intercooler_deltap_row(ctx, ui);
 	dup_del_row(ctx, ui);
 
 	vpad(ctx, 0);
@@ -278,6 +280,26 @@ intercooler_efficiency_row(mu_Context *ctx, UI *ui) {
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->intercooler_efficiency[i])) {
 			set_intercooler_efficiency(ui, i);
+			set_volume_flow_rate(ui, i);
+		}
+	}
+}
+
+static void
+intercooler_deltap_row(mu_Context *ctx, UI *ui) {
+	int i;
+
+	mu_layout_row(ctx, 0, NULL, 0);
+	mu_layout_width(ctx, LABEL_WIDTH);
+	mu_label(ctx, "Intercooler ΔP:");
+	mu_layout_width(ctx, UNIT_WIDTH);
+	if (w_select(ctx, &ui->intercooler_deltap_unit) & MU_RES_CHANGE) {
+		set_intercooler_deltap_unit(ui);
+	}
+	mu_layout_width(ctx, FIELD_WIDTH);
+	for (i = 0; i < ui->npoints; i++) {
+		if (w_field(ctx, &ui->intercooler_deltap[i])) {
+			set_intercooler_deltap(ui, i);
 			set_volume_flow_rate(ui, i);
 		}
 	}

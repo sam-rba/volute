@@ -7,6 +7,7 @@ typedef struct {
 	Fraction ve;
 	Fraction comp_efficiency;
 	Fraction intercooler_efficiency;
+	Pressure intercooler_deltap;
 } Engine;
 
 void init_engine(Engine *e);

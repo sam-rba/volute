@@ -43,25 +43,35 @@ static const VolumeFlowRateReader volume_flow_rate_readers[nelem(volume_flow_rat
 
 void
 init_ui(UI *ui) {
+	ui->npoints = 1;
+	init_engine(&ui->points[0]);
+
 	w_init_field(&ui->displacement);
 	w_init_select(&ui->displacement_unit, nelem(volume_units), volume_units);
 
 	w_init_field(&ui->ambient_temperature);
 	w_init_select(&ui->ambient_temperature_unit, nelem(temperature_units), temperature_units);
-	
+
 	w_init_field(&ui->ambient_pressure);
 	w_init_select(&ui->ambient_pressure_unit, nelem(pressure_units), pressure_units);
 
-	ui->npoints = 1;
-
 	w_init_field(&ui->rpm[0]);
+	w_set_field(&ui->rpm[0], as_rpm(DEFAULT_RPM));
 
 	w_init_field(&ui->map[0]);
 	w_init_select(&ui->map_unit, nelem(pressure_units), pressure_units);
 
 	w_init_field(&ui->ve[0]);
+	w_set_field(&ui->ve[0], as_percent(DEFAULT_VE));
 
-	init_engine(&ui->points[0]);
+	w_init_field(&ui->comp_efficiency[0]);
+	w_set_field(&ui->comp_efficiency[0], as_percent(DEFAULT_COMPRESSOR_EFFICIENCY));
+
+	w_init_field(&ui->intercooler_efficiency[0]);
+	w_set_field(&ui->intercooler_efficiency[0], as_percent(DEFAULT_INTERCOOLER_EFFICIENCY));
+
+	w_init_field(&ui->intercooler_deltap[0]);
+	w_init_select(&ui->intercooler_deltap_unit, nelem(pressure_units), pressure_units);
 
 	w_init_select(&ui->volume_flow_rate_unit, nelem(volume_flow_rate_units), volume_flow_rate_units);
 	w_init_number(ui->volume_flow_rate[0]);
@@ -204,6 +214,35 @@ set_intercooler_efficiency(UI *ui, int idx) {
 }
 
 void
+set_intercooler_deltap(UI *ui, int idx) {
+	int unit_idx;
+	PressureMaker convert;
+	Pressure p;
+
+	unit_idx = ui->intercooler_deltap_unit.idx;
+	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(pressure_units));
+
+	convert = pressure_makers[unit_idx];
+	p = convert(ui->intercooler_deltap[idx].value);
+	ui->points[idx].intercooler_deltap = p;
+}
+
+void
+set_intercooler_deltap_unit(UI *ui) {
+	PressureMaker maker;
+	PressureReader reader;
+	int i;
+	Pressure p;
+
+	maker = pressure_makers[ui->intercooler_deltap_unit.oldidx];
+	reader = pressure_readers[ui->intercooler_deltap_unit.idx];
+	for (i = 0; i < ui->npoints; i++) {
+		p = maker(ui->intercooler_deltap[i].value);
+		w_set_field(&ui->intercooler_deltap[i], reader(p));
+	}
+}
+
+void
 set_volume_flow_rate(UI *ui, int idx) {
 	int unit_idx;
 	VolumeFlowRateReader convert;
@@ -235,12 +274,15 @@ insert_point(UI *ui, int idx) {
 	}
 
 	for (i = ui->npoints; i > idx; i--) {
+		memmove(&ui->points[i], &ui->points[i-1], sizeof(ui->points[i-1]));
+
 		memmove(&ui->rpm[i], &ui->rpm[i-1], sizeof(ui->rpm[i-1]));
 		memmove(&ui->map[i], &ui->map[i-1], sizeof(ui->map[i-1]));
 		memmove(&ui->ve[i], &ui->ve[i-1], sizeof(ui->ve[i-1]));
 		memmove(&ui->comp_efficiency[i], &ui->comp_efficiency[i-1], sizeof(ui->comp_efficiency[i-1]));
 		memmove(&ui->intercooler_efficiency[i], &ui->intercooler_efficiency[i-1], sizeof(ui->intercooler_efficiency[i-1]));
-		memmove(&ui->points[i], &ui->points[i-1], sizeof(ui->points[i-1]));
+		memmove(&ui->intercooler_deltap[i], &ui->intercooler_deltap[i-1], sizeof(ui->intercooler_deltap[i-1]));
+
 		memmove(&ui->volume_flow_rate[i], &ui->volume_flow_rate[i-1], sizeof(ui->volume_flow_rate[i-1]));
 	}
 	ui->npoints++;
@@ -253,12 +295,15 @@ remove_point(UI *ui, int idx) {
 	}
 
 	for (; idx < ui->npoints-1; idx++) {
+		memmove(&ui->points[idx], &ui->points[idx+1], sizeof(ui->points[idx]));
+
 		memmove(&ui->rpm[idx], &ui->rpm[idx+1], sizeof(ui->rpm[idx]));
 		memmove(&ui->map[idx], &ui->map[idx+1], sizeof(ui->map[idx]));
 		memmove(&ui->ve[idx], &ui->ve[idx+1], sizeof(ui->ve[idx]));
 		memmove(&ui->comp_efficiency[idx], &ui->comp_efficiency[idx+1], sizeof(ui->comp_efficiency[idx]));
 		memmove(&ui->intercooler_efficiency[idx], &ui->intercooler_efficiency[idx+1], sizeof(ui->intercooler_efficiency[idx]));
-		memmove(&ui->points[idx], &ui->points[idx+1], sizeof(ui->points[idx]));
+		memmove(&ui->intercooler_deltap[idx], &ui->intercooler_deltap[idx+1], sizeof(ui->intercooler_deltap[idx]));
+
 		memmove(&ui->volume_flow_rate[idx], &ui->volume_flow_rate[idx+1], sizeof(ui->volume_flow_rate[idx]));
 	}
 	ui->npoints--;
