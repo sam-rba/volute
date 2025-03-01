@@ -15,6 +15,9 @@ void test_as_rad_per_sec(void);
 void test_as_deg_per_sec(void);
 void test_as_rpm(void);
 
+void test_percent(void);
+void test_as_percent(void);
+
 void test_pascal(void);
 void test_millibar(void);
 void test_kilopascal(void);

@@ -45,8 +45,16 @@ double as_rpm(AngularSpeed x) {
 	return x * 60.0 / (2.0 * M_PI);
 }
 
-Fraction percent(double x);
-double as_percent(Fraction x);
+
+Fraction
+percent(double x) {
+	return x / 100.0;
+}
+
+double
+as_percent(Fraction x) {
+	return x * 100.0;
+}
 
 
 Pressure

@@ -9,6 +9,9 @@ main(void) {
 	test_as_deg_per_sec();
 	test_as_rpm();
 
+	test_percent();
+	test_as_percent();
+
 	test_pascal();
 	test_millibar();
 	test_kilopascal();
