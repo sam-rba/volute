@@ -29,6 +29,15 @@ void test_as_kilopascal(void);
 void test_as_bar(void);
 void test_as_psi(void);
 
+void test_kelvin(void);
+void test_celsius(void);
+void test_fahrenheit(void);
+void test_rankine(void);
+void test_as_kelvin(void);
+void test_as_celsius(void);
+void test_as_fahrenheit(void);
+void test_as_rankine(void);
+
 void test_cubic_centimetre(void);
 void test_litre(void);
 void test_cubic_metre(void);

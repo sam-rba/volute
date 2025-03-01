@@ -18,6 +18,9 @@
 /* Seconds per minute. */
 #define SEC_PER_MIN 60.0
 
+/* Zero Celsius in Kelvin. */
+#define ZERO_C 273.15
+
 
 AngularSpeed
 rad_per_sec(double x) {
@@ -105,6 +108,50 @@ as_bar(Pressure x) {
 double
 as_psi(Pressure x) {
 	return x * pow(M_PER_IN, 2) / (KG_PER_LB * G);
+}
+
+
+Temperature
+kelvin(double x) {
+	return x;
+}
+
+Temperature
+celsius(double x) {
+	return x + ZERO_C;
+}
+
+Temperature
+fahrenheit(double x) {
+	double c;
+
+	c = (x - 32.0) * 5.0 / 9.0;
+	return c + ZERO_C;
+}
+
+Temperature
+rankine(double x) {
+	return x * 5.0 / 9.0;
+}
+
+double
+as_kelvin(Temperature t) {
+	return t;
+}
+
+double
+as_celsius(Temperature t) {
+	return t - ZERO_C;
+}
+
+double
+as_fahrenheit(Temperature t) {
+	return as_celsius(t) * 9.0 / 5.0 + 32.0;
+}
+
+double
+as_rankine(Temperature t) {
+	return t * 9.0 / 5.0;
 }
 
 

@@ -34,6 +34,20 @@ double as_bar(Pressure x);
 double as_psi(Pressure x);
 
 
+typedef double Temperature;
+typedef Temperature (*TemperatureMaker)(double);
+typedef double (*TemperatureReader)(Temperature);
+
+Temperature kelvin(double x);
+Temperature celsius(double x);
+Temperature fahrenheit(double x);
+Temperature rankine(double x);
+double as_kelvin(Temperature t);
+double as_celsius(Temperature t);
+double as_fahrenheit(Temperature t);
+double as_rankine(Temperature t);
+
+
 typedef double Volume;
 typedef Volume (*VolumeMaker)(double);
 typedef double (*VolumeReader)(Volume);

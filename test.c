@@ -23,6 +23,15 @@ main(void) {
 	test_as_bar();
 	test_as_psi();
 
+	test_kelvin();
+	test_celsius();
+	test_fahrenheit();
+	test_rankine();
+	test_as_kelvin();
+	test_as_celsius();
+	test_as_fahrenheit();
+	test_as_rankine();
+
 	test_cubic_centimetre();
 	test_litre();
 	test_cubic_metre();
