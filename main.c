@@ -62,6 +62,7 @@ static void ambient_pressure_row(mu_Context *ctx, UI *ui);
 static void rpm_row(mu_Context *ctx, UI *ui);
 static void map_row(mu_Context *ctx, UI *ui);
 static void ve_row(mu_Context *ctx, UI *ui);
+static void comp_efficiency_row(mu_Context *ctx, UI *ui);
 static void dup_del_row(mu_Context *ctx, UI *ui);
 static void volume_flow_rate_row(mu_Context *ctx, UI *ui);
 static void hpad(mu_Context *ctx, int w);
@@ -139,6 +140,7 @@ main_window(mu_Context *ctx, UI *ui) {
 	rpm_row(ctx, ui);
 	map_row(ctx, ui);
 	ve_row(ctx, ui);
+	comp_efficiency_row(ctx, ui);
 	dup_del_row(ctx, ui);
 
 	vpad(ctx, 0);
@@ -237,6 +239,23 @@ ve_row(mu_Context *ctx, UI *ui) {
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->ve[i])) {
 			set_ve(ui, i);
+			set_volume_flow_rate(ui, i);
+		}
+	}
+}
+static void
+comp_efficiency_row(mu_Context *ctx, UI *ui) {
+	int i;
+
+	mu_layout_row(ctx, 0, NULL, 0);
+	mu_layout_width(ctx, LABEL_WIDTH);
+	mu_label(ctx, "Compressor efficiency:");
+	mu_layout_width(ctx, UNIT_WIDTH);
+	mu_label(ctx, "(%)");
+	mu_layout_width(ctx, FIELD_WIDTH);
+	for (i = 0; i < ui->npoints; i++) {
+		if (w_field(ctx, &ui->comp_efficiency[i])) {
+			set_comp_efficiency(ui, i);
 			set_volume_flow_rate(ui, i);
 		}
 	}

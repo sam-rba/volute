@@ -5,6 +5,7 @@ typedef struct {
 	AngularSpeed rpm;
 	Pressure map;
 	Fraction ve;
+	Fraction comp_efficiency;
 } Engine;
 
 void init_engine(Engine *e);

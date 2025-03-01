@@ -189,6 +189,11 @@ set_ve(UI *ui, int idx) {
 }
 
 void
+set_comp_efficiency(UI *ui, int idx) {
+	ui->points[idx].comp_efficiency = percent(ui->comp_efficiency[idx].value);
+}
+
+void
 set_volume_flow_rate(UI *ui, int idx) {
 	int unit_idx;
 	VolumeFlowRateReader convert;
