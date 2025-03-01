@@ -110,7 +110,7 @@ set_volume_flow_rate(UI *ui, int idx) {
 
 	convert = volume_flow_rate_readers[unit_idx];
 	v = convert(volume_flow_rate(&ui->points[idx]));
-	snprintf(ui->volume_flow_rate[idx], sizeof(ui->volume_flow_rate[idx]), "%lf", v);
+	snprintf(ui->volume_flow_rate[idx], sizeof(ui->volume_flow_rate[idx]), "%f", v);
 }
 
 void

@@ -2,7 +2,7 @@
 
 #define test(got, want) { \
 	if (got < want-EPSILON || got > want+EPSILON) { \
-		fprintf(stderr, "got %lf; want %lf\n", got, want); \
+		fprintf(stderr, "got %f; want %f\n", got, want); \
 		assert(got == want); \
 	} \
 }

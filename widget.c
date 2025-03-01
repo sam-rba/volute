@@ -35,7 +35,7 @@ w_field(mu_Context *ctx, w_Field *f) {
 void
 w_set_field(w_Field *f, double val) {
 	f->value = val;
-	snprintf(f->buf, sizeof(f->buf), "%lf", val);
+	snprintf(f->buf, sizeof(f->buf), "%f", val);
 }
 
 void
