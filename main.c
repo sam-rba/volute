@@ -207,7 +207,8 @@ ve_row(mu_Context *ctx, UI *ui) {
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->ve[i])) {
-			/* TODO */
+			set_ve(ui, i);
+			set_volume_flow_rate(ui, i);
 		}
 	}
 }

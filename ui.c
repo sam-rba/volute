@@ -78,6 +78,11 @@ set_map(UI *ui, int idx) {
 }
 
 void
+set_ve(UI *ui, int idx) {
+	ui->points[idx].ve = percent(ui->ve[idx].value);
+}
+
+void
 set_volume_flow_rate(UI *ui, int idx) {
 	int unit_idx;
 	double (*convert)(VolumeFlowRate), v;
