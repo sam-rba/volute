@@ -233,6 +233,8 @@ insert_point(UI *ui, int idx) {
 		memmove(&ui->rpm[i], &ui->rpm[i-1], sizeof(ui->rpm[i-1]));
 		memmove(&ui->map[i], &ui->map[i-1], sizeof(ui->map[i-1]));
 		memmove(&ui->ve[i], &ui->ve[i-1], sizeof(ui->ve[i-1]));
+		memmove(&ui->comp_efficiency[i], &ui->comp_efficiency[i-1], sizeof(ui->comp_efficiency[i-1]));
+		memmove(&ui->intercooler_efficiency[i], &ui->intercooler_efficiency[i-1], sizeof(ui->intercooler_efficiency[i-1]));
 		memmove(&ui->points[i], &ui->points[i-1], sizeof(ui->points[i-1]));
 		memmove(&ui->volume_flow_rate[i], &ui->volume_flow_rate[i-1], sizeof(ui->volume_flow_rate[i-1]));
 	}
@@ -249,6 +251,8 @@ remove_point(UI *ui, int idx) {
 		memmove(&ui->rpm[idx], &ui->rpm[idx+1], sizeof(ui->rpm[idx]));
 		memmove(&ui->map[idx], &ui->map[idx+1], sizeof(ui->map[idx]));
 		memmove(&ui->ve[idx], &ui->ve[idx+1], sizeof(ui->ve[idx]));
+		memmove(&ui->comp_efficiency[idx], &ui->comp_efficiency[idx+1], sizeof(ui->comp_efficiency[idx]));
+		memmove(&ui->intercooler_efficiency[idx], &ui->intercooler_efficiency[idx+1], sizeof(ui->intercooler_efficiency[idx]));
 		memmove(&ui->points[idx], &ui->points[idx+1], sizeof(ui->points[idx]));
 		memmove(&ui->volume_flow_rate[idx], &ui->volume_flow_rate[idx+1], sizeof(ui->volume_flow_rate[idx]));
 	}
