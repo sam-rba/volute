@@ -29,7 +29,7 @@ static const PressureReader pressure_readers[nelem(pressure_units)] = {
 };
 
 static const char *const volume_flow_rate_units[] = {"m³/s", "CFM"};
-static VolumeFlowRateReader volume_flow_rate_readers[nelem(volume_flow_rate_units)] = {
+static const VolumeFlowRateReader volume_flow_rate_readers[nelem(volume_flow_rate_units)] = {
 	as_cubic_metre_per_sec, as_cubic_foot_per_min,
 };
 
