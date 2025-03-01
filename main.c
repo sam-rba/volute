@@ -24,7 +24,7 @@ enum window {
 };
 
 enum layout {
-	LABEL_WIDTH = 48,
+	LABEL_WIDTH = 128,
 	UNIT_WIDTH = 48,
 	FIELD_WIDTH = 64,
 };
@@ -61,6 +61,7 @@ static void rpm_row(mu_Context *ctx, UI *ui);
 static void map_row(mu_Context *ctx, UI *ui);
 static void ve_row(mu_Context *ctx, UI *ui);
 static void dup_del_row(mu_Context *ctx, UI *ui);
+static void volume_flow_rate_row(mu_Context *ctx, UI *ui);
 static void hpad(mu_Context *ctx, int w);
 static void vpad(mu_Context *ctx, int h);
 
@@ -136,6 +137,10 @@ main_window(mu_Context *ctx, UI *ui) {
 	ve_row(ctx, ui);
 	dup_del_row(ctx, ui);
 
+	vpad(ctx, 0);
+
+	volume_flow_rate_row(ctx, ui);
+
 	mu_end_window(ctx);
 }
 
@@ -150,6 +155,7 @@ displacement_row(mu_Context *ctx, UI *ui) {
 	mu_label(ctx, "Displacement:");
 	if (w_field(ctx, &ui->displacement) & MU_RES_CHANGE) {
 		set_displacement(ui);
+		set_all_volume_flow_rate(ui);
 	}
 	w_select(ctx, &ui->displacement_unit);
 }
@@ -166,6 +172,7 @@ rpm_row(mu_Context *ctx, UI *ui) {
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &ui->rpm[i])) {
 			ui->points[i].rpm = rpm(ui->rpm[i].value);
+			set_volume_flow_rate(ui, i);
 		}
 	}
 }
@@ -183,6 +190,7 @@ map_row(mu_Context *ctx, UI *ui) {
 	for (i = 0; i <ui->npoints; i++) {
 		if (w_field(ctx, &ui->map[i])) {
 			set_map(ui, i);
+			set_volume_flow_rate(ui, i);
 		}
 	}
 }
@@ -223,6 +231,21 @@ dup_del_row(mu_Context *ctx, UI *ui) {
 		mu_pop_id(ctx);
 	}
 }
+
+static void
+volume_flow_rate_row(mu_Context *ctx, UI *ui) {
+	int i;
+
+	mu_layout_row(ctx, 0, NULL, 0);
+	mu_layout_width(ctx, LABEL_WIDTH);
+	mu_label(ctx, "volume flow rate");
+	mu_layout_width(ctx, UNIT_WIDTH);
+	w_select(ctx, &ui->volume_flow_rate_unit);
+	mu_layout_width(ctx, FIELD_WIDTH);
+	for (i = 0; i < ui->npoints; i++) {
+		w_label(ctx, ui->volume_flow_rate[i]);
+	}
+}	
 
 static void
 hpad(mu_Context *ctx, int w) {

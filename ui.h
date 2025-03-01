@@ -14,10 +14,15 @@ typedef struct {
 	w_Field ve[MAX_POINTS];
 
 	Engine points[MAX_POINTS];
+
+	w_Select volume_flow_rate_unit;
+	w_Label volume_flow_rate[MAX_POINTS];
 } UI;
 
 void init_ui(UI *ui);
 void set_displacement(UI *ui);
 void set_map(UI *ui, int idx);
+void set_volume_flow_rate(UI *ui, int idx);
+void set_all_volume_flow_rate(UI *ui);
 void insert_point(UI *ui, int idx);
 void remove_point(UI *ui, int idx);

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "microui.h"
@@ -21,6 +22,11 @@ static Pressure (*pressure_converters[nelem(pressure_units)])(double) = {
 	millibar, kilopascal, bar, psi,
 };
 
+static const char *const volume_flow_rate_units[] = {"m³/s", "CFM"};
+static double (*volume_flow_rate_converters[nelem(volume_flow_rate_units)])(VolumeFlowRate) = {
+	as_cubic_metre_per_sec, as_cubic_foot_per_min,
+};
+
 
 void
 init_ui(UI *ui) {
@@ -37,6 +43,9 @@ init_ui(UI *ui) {
 	w_init_field(&ui->ve[0]);
 
 	init_engine(&ui->points[0]);
+
+	w_init_select(&ui->volume_flow_rate_unit, nelem(volume_flow_rate_units), volume_flow_rate_units);
+	w_init_label(ui->volume_flow_rate[0]);
 }
 
 void
@@ -69,6 +78,28 @@ set_map(UI *ui, int idx) {
 }
 
 void
+set_volume_flow_rate(UI *ui, int idx) {
+	int unit_idx;
+	double (*convert)(VolumeFlowRate), v;
+
+	unit_idx = ui->volume_flow_rate_unit.idx;
+	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(volume_flow_rate_units));
+
+	convert = volume_flow_rate_converters[unit_idx];
+	v = convert(volume_flow_rate(&ui->points[idx]));
+	snprintf(ui->volume_flow_rate[idx], sizeof(ui->volume_flow_rate[idx]), "%lf", v);
+}
+
+void
+set_all_volume_flow_rate(UI *ui) {
+	int i;
+
+	for (i = 0; i < ui->npoints; i++) {
+		set_volume_flow_rate(ui, i);
+	}
+}
+
+void
 insert_point(UI *ui, int idx) {
 	int i;
 
@@ -81,6 +112,7 @@ insert_point(UI *ui, int idx) {
 		memmove(&ui->map[i], &ui->map[i-1], sizeof(ui->map[i-1]));
 		memmove(&ui->ve[i], &ui->ve[i-1], sizeof(ui->ve[i-1]));
 		memmove(&ui->points[i], &ui->points[i-1], sizeof(ui->points[i-1]));
+		memmove(&ui->volume_flow_rate[i], &ui->volume_flow_rate[i-1], sizeof(ui->volume_flow_rate[i-1]));
 	}
 	ui->npoints++;
 }
@@ -96,6 +128,7 @@ remove_point(UI *ui, int idx) {
 		memmove(&ui->map[idx], &ui->map[idx+1], sizeof(ui->map[idx]));
 		memmove(&ui->ve[idx], &ui->ve[idx+1], sizeof(ui->ve[idx]));
 		memmove(&ui->points[idx], &ui->points[idx+1], sizeof(ui->points[idx]));
+		memmove(&ui->volume_flow_rate[idx], &ui->volume_flow_rate[idx+1], sizeof(ui->volume_flow_rate[idx]));
 	}
 	ui->npoints--;
 }

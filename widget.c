@@ -76,3 +76,13 @@ w_select(mu_Context *ctx, w_Select *select) {
 
 	return res;
 }
+
+void
+w_init_label(w_Label label) {
+	label[0] = '\0';
+}
+
+void
+w_label(mu_Context *ctx, const w_Label label) {
+	mu_label(ctx, label);
+}
