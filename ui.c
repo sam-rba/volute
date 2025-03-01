@@ -60,7 +60,9 @@ static void init_ve(UI *ui);
 static void init_comp_efficiency(UI *ui);
 static void init_intercooler_efficiency(UI *ui);
 static void init_intercooler_deltap(UI *ui);
+static void init_pressure_ratio(UI *ui);
 static void init_volume_flow_rate(UI *ui);
+static void compute_pressure_ratio(UI *ui, int idx);
 static void compute_volume_flow_rate(UI *ui, int idx);
 
 
@@ -80,6 +82,7 @@ init_ui(UI *ui) {
 	init_intercooler_efficiency(ui);
 	init_intercooler_deltap(ui);
 
+	init_pressure_ratio(ui);
 	init_volume_flow_rate(ui);
 
 	compute(ui, 0);
@@ -185,6 +188,11 @@ init_intercooler_deltap(UI *ui) {
 	w_set_field(&ui->intercooler_deltap[0], v);
 
 	set_intercooler_deltap(ui, 0);
+}
+
+static void
+init_pressure_ratio(UI *ui) {
+	w_init_number(ui->pressure_ratio[0]);
 }
 
 static void
@@ -360,6 +368,7 @@ set_intercooler_deltap_unit(UI *ui) {
 
 void
 compute(UI *ui, int idx) {
+	compute_pressure_ratio(ui, idx);
 	compute_volume_flow_rate(ui, idx);
 }
 
@@ -370,6 +379,14 @@ compute_all(UI *ui) {
 	for (i = 0; i < ui->npoints; i++) {
 		compute(ui, i);
 	}
+}
+
+static void
+compute_pressure_ratio(UI *ui, int idx) {
+	double pr;
+
+	pr = pressure_ratio(&ui->points[idx]);
+	w_set_number(ui->pressure_ratio[idx], pr);
 }
 
 static void
@@ -404,6 +421,7 @@ insert_point(UI *ui, int idx) {
 		memmove(&ui->intercooler_efficiency[i], &ui->intercooler_efficiency[i-1], sizeof(ui->intercooler_efficiency[i-1]));
 		memmove(&ui->intercooler_deltap[i], &ui->intercooler_deltap[i-1], sizeof(ui->intercooler_deltap[i-1]));
 
+		memmove(&ui->pressure_ratio[i], &ui->pressure_ratio[i-1], sizeof(ui->pressure_ratio[i-1]));
 		memmove(&ui->volume_flow_rate[i], &ui->volume_flow_rate[i-1], sizeof(ui->volume_flow_rate[i-1]));
 	}
 	ui->npoints++;
@@ -425,6 +443,7 @@ remove_point(UI *ui, int idx) {
 		memmove(&ui->intercooler_efficiency[idx], &ui->intercooler_efficiency[idx+1], sizeof(ui->intercooler_efficiency[idx]));
 		memmove(&ui->intercooler_deltap[idx], &ui->intercooler_deltap[idx+1], sizeof(ui->intercooler_deltap[idx]));
 
+		memmove(&ui->pressure_ratio[idx], &ui->pressure_ratio[idx+1], sizeof(ui->pressure_ratio[idx]));
 		memmove(&ui->volume_flow_rate[idx], &ui->volume_flow_rate[idx+1], sizeof(ui->volume_flow_rate[idx]));
 	}
 	ui->npoints--;

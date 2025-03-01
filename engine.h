@@ -11,4 +11,6 @@ typedef struct {
 } Engine;
 
 void init_engine(Engine *e);
+Pressure comp_outlet_pressure(const Engine *e);
+double pressure_ratio(const Engine *e);
 VolumeFlowRate volume_flow_rate(const Engine *e);

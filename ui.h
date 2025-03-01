@@ -27,6 +27,8 @@ typedef struct {
 	w_Field intercooler_deltap[MAX_POINTS];
 	w_Select intercooler_deltap_unit;
 
+	w_Number pressure_ratio[MAX_POINTS];
+
 	w_Select volume_flow_rate_unit;
 	w_Number volume_flow_rate[MAX_POINTS];
 } UI;

@@ -66,6 +66,7 @@ static void comp_efficiency_row(mu_Context *ctx, UI *ui);
 static void intercooler_efficiency_row(mu_Context *ctx, UI *ui);
 static void intercooler_deltap_row(mu_Context *ctx, UI *ui);
 static void dup_del_row(mu_Context *ctx, UI *ui);
+static void pressure_ratio_row(mu_Context *ctx, UI *ui);
 static void volume_flow_rate_row(mu_Context *ctx, UI *ui);
 static void hpad(mu_Context *ctx, int w);
 static void vpad(mu_Context *ctx, int h);
@@ -149,6 +150,7 @@ main_window(mu_Context *ctx, UI *ui) {
 
 	vpad(ctx, 0);
 
+	pressure_ratio_row(ctx, ui);
 	volume_flow_rate_row(ctx, ui);
 
 	mu_end_window(ctx);
@@ -322,6 +324,20 @@ dup_del_row(mu_Context *ctx, UI *ui) {
 			remove_point(ui, i);
 		}
 		mu_pop_id(ctx);
+	}
+}
+
+static void
+pressure_ratio_row(mu_Context *ctx, UI *ui) {
+	int i;
+
+	mu_layout_row(ctx, 0, NULL, 0);
+	mu_layout_width(ctx, LABEL_WIDTH);
+	mu_label(ctx, "Pressure ratio:");
+	hpad(ctx, UNIT_WIDTH);
+	mu_layout_width(ctx, FIELD_WIDTH);
+	for (i = 0; i < ui->npoints; i++) {
+		w_number(ctx, ui->pressure_ratio[i]);
 	}
 }
 

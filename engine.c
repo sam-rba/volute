@@ -13,6 +13,21 @@ init_engine(Engine *e) {
 	memset(e, 0, sizeof(*e));
 }
 
+/* Pressure ratio across the compressor. */
+double
+pressure_ratio(const Engine *e) {
+	Pressure p1, p2;
+
+	p1 = e->ambient_pressure;
+	p2 = comp_outlet_pressure(e);
+	return p2 / p1;
+}
+
+Pressure
+comp_outlet_pressure(const Engine *e) {
+	return e->map + e->intercooler_deltap;
+}
+
 VolumeFlowRate
 volume_flow_rate(const Engine *e) {
 	double n = as_rpm(e->rpm);
