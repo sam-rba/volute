@@ -16,3 +16,4 @@ double pressure_ratio(const Engine *e);
 Temperature comp_outlet_temperature(const Engine *e);
 Temperature manifold_temperature(const Engine *e);
 VolumeFlowRate volume_flow_rate(const Engine *e);
+MassFlowRate mass_flow_rate(const Engine *e);

@@ -72,7 +72,7 @@ void
 test_volume_flow_rate(void) {
 	Pressure p_ambient, p_boost, map;
 
-	p_ambient = millibar(982.052713333343);
+	p_ambient = inch_mercury(30);
 	p_boost = psi(10);
 	map = p_ambient + p_boost;
 	Engine e = {
@@ -84,5 +84,24 @@ test_volume_flow_rate(void) {
 		.ve = percent(80),
 		.comp_efficiency = percent(65),
 	};
-	test(volume_flow_rate(&e), cubic_metre_per_sec(0.1855992));
+	test(volume_flow_rate(&e), cubic_metre_per_sec(0.184086));
+}
+
+void
+test_mass_flow_rate(void) {
+	Pressure p_ambient, p_boost, map;
+
+	p_ambient = inch_mercury(30);
+	p_boost = psi(10);
+	map = p_ambient + p_boost;
+	Engine e = {
+		.displacement = cubic_inch(250),
+		.rpm = rpm(5000),
+		.map = map,
+		.ambient_temperature = fahrenheit(70),
+		.ambient_pressure = p_ambient,
+		.ve = percent(80),
+		.comp_efficiency = percent(65),
+	};
+	test(mass_flow_rate(&e), kilo_per_sec(0.2214056));
 }

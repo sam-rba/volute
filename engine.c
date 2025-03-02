@@ -17,6 +17,9 @@ static const double C_V_AIR = 718.0;
 /* Heat capacity ratio of dry air at T=300K [J/(kg*K)]. */
 static const double GAMMA_AIR = C_P_AIR / C_V_AIR;
 
+/* Gas constant of air [J/(kg*K)]. */
+static const double R_AIR = 287.05;
+
 
 static VolumeFlowRate port_volume_flow_rate(const Engine *e);
 static double density_ratio(const Engine *e);
@@ -99,4 +102,17 @@ density_ratio(const Engine *e) {
 	t1 = e->ambient_temperature;
 	t3 = manifold_temperature(e);
 	return (p3 * t1) / (p1 * t3);
+}
+
+/* Mass flow rate through the engine (corrected to ambient conditions). */
+MassFlowRate
+mass_flow_rate(const Engine *e) {
+	Pressure p;
+	VolumeFlowRate v;
+	Temperature t;
+
+	p = e->ambient_pressure;
+	v = volume_flow_rate(e);
+	t = e->ambient_temperature;
+	return (p * v) / (R_AIR * t);
 }
