@@ -62,9 +62,11 @@ static void init_intercooler_efficiency(UI *ui);
 static void init_intercooler_deltap(UI *ui);
 static void init_pressure_ratio(UI *ui);
 static void init_comp_outlet_temperature(UI *ui);
+static void init_manifold_temperature(UI *ui);
 static void init_volume_flow_rate(UI *ui);
 static void compute_pressure_ratio(UI *ui, int idx);
 static void compute_comp_outlet_temperature(UI *ui, int idx);
+static void compute_manifold_temperature(UI *ui, int idx);
 static void compute_volume_flow_rate(UI *ui, int idx);
 
 
@@ -86,6 +88,7 @@ init_ui(UI *ui) {
 
 	init_pressure_ratio(ui);
 	init_comp_outlet_temperature(ui);
+	init_manifold_temperature(ui);
 	init_volume_flow_rate(ui);
 
 	compute(ui, 0);
@@ -202,6 +205,12 @@ static void
 init_comp_outlet_temperature(UI *ui) {
 	w_init_number(ui->comp_outlet_temperature[0]);
 	w_init_select(&ui->comp_outlet_temperature_unit, nelem(temperature_units), temperature_units);
+}
+
+static void
+init_manifold_temperature(UI *ui) {
+	w_init_number(ui->manifold_temperature[0]);
+	w_init_select(&ui->manifold_temperature_unit, nelem(temperature_units), temperature_units);
 }
 
 static void
@@ -379,6 +388,7 @@ void
 compute(UI *ui, int idx) {
 	compute_pressure_ratio(ui, idx);
 	compute_comp_outlet_temperature(ui, idx);
+	compute_manifold_temperature(ui, idx);
 	compute_volume_flow_rate(ui, idx);
 }
 
@@ -411,6 +421,20 @@ compute_comp_outlet_temperature(UI *ui, int idx) {
 	convert = temperature_readers[unit_idx];
 	v = convert(comp_outlet_temperature(&ui->points[idx]));
 	w_set_number(ui->comp_outlet_temperature[idx], v);
+}
+
+static void
+compute_manifold_temperature(UI *ui, int idx) {
+	int unit_idx;
+	TemperatureReader convert;
+	double v;
+
+	unit_idx = ui->manifold_temperature_unit.idx;
+	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(temperature_units));
+
+	convert = temperature_readers[unit_idx];
+	v = convert(manifold_temperature(&ui->points[idx]));
+	w_set_number(ui->manifold_temperature[idx], v);
 }
 
 static void
