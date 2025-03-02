@@ -70,6 +70,7 @@ static void pressure_ratio_row(mu_Context *ctx, UI *ui);
 static void comp_outlet_temperature_row(mu_Context *ctx, UI *ui);
 static void manifold_temperature_row(mu_Context *ctx, UI *ui);
 static void volume_flow_rate_row(mu_Context *ctx, UI *ui);
+static void output_row(mu_Context *ctx, UI *ui, const char *label, w_Select *unit, w_Number outputs[]);
 static void hpad(mu_Context *ctx, int w);
 static void vpad(mu_Context *ctx, int h);
 
@@ -347,54 +348,44 @@ pressure_ratio_row(mu_Context *ctx, UI *ui) {
 
 static void
 comp_outlet_temperature_row(mu_Context *ctx, UI *ui) {
-	int i;
-
-	mu_layout_row(ctx, 0, NULL, 0);
-	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Compressor T:");
-	mu_layout_width(ctx, UNIT_WIDTH);
-	if (w_select(ctx, &ui->comp_outlet_temperature_unit) & MU_RES_CHANGE) {
-		compute_all(ui);
-	}
-	mu_layout_width(ctx, FIELD_WIDTH);
-	for (i = 0; i < ui->npoints; i++) {
-		w_number(ctx, ui->comp_outlet_temperature[i]);
-	}
+	output_row(ctx, ui,
+		"Compressor T:",
+		&ui->comp_outlet_temperature_unit,
+		ui->comp_outlet_temperature);
 }
 
 static void
 manifold_temperature_row(mu_Context *ctx, UI *ui) {
-	int i;
-
-	mu_layout_row(ctx, 0, NULL, 0);
-	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Manifold T:");
-	mu_layout_width(ctx, UNIT_WIDTH);
-	if (w_select(ctx, &ui->manifold_temperature_unit) & MU_RES_CHANGE) {
-		compute_all(ui);
-	}
-	mu_layout_width(ctx, FIELD_WIDTH);
-	for (i = 0; i < ui->npoints; i++) {
-		w_number(ctx, ui->manifold_temperature[i]);
-	}
+	output_row(ctx, ui,
+		"Manifold T:",
+		&ui->manifold_temperature_unit,
+		ui->manifold_temperature);
 }
 
 static void
 volume_flow_rate_row(mu_Context *ctx, UI *ui) {
+	output_row(ctx, ui,
+		"Volume flow rate:",
+		&ui->volume_flow_rate_unit,
+		ui->volume_flow_rate);
+}
+
+static void
+output_row(mu_Context *ctx, UI *ui, const char *label, w_Select *unit, w_Number outputs[]) {
 	int i;
 
 	mu_layout_row(ctx, 0, NULL, 0);
 	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Volume flow rate:");
+	mu_label(ctx, label);
 	mu_layout_width(ctx, UNIT_WIDTH);
-	if (w_select(ctx, &ui->volume_flow_rate_unit) & MU_RES_CHANGE) {
+	if (w_select(ctx, unit) & MU_RES_CHANGE) {
 		compute_all(ui);
 	}
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {
-		w_number(ctx, ui->volume_flow_rate[i]);
+		w_number(ctx, outputs[i]);
 	}
-}	
+}
 
 static void
 hpad(mu_Context *ctx, int w) {
