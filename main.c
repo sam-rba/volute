@@ -59,6 +59,7 @@ static void main_window(mu_Context *ctx, UI *ui);
 static void displacement_row(mu_Context *ctx, UI *ui);
 static void ambient_temperature_row(mu_Context *ctx, UI *ui);
 static void ambient_pressure_row(mu_Context *ctx, UI *ui);
+static void global_input_row(mu_Context *ctx, UI *ui, const char *label, w_Field *input, void (*callback)(UI *ui), w_Select *unit, void (*unit_callback)(UI *ui));
 static void rpm_row(mu_Context *ctx, UI *ui);
 static void map_row(mu_Context *ctx, UI *ui);
 static void ve_row(mu_Context *ctx, UI *ui);
@@ -165,40 +166,42 @@ main_window(mu_Context *ctx, UI *ui) {
 
 static void
 displacement_row(mu_Context *ctx, UI *ui) {
-	mu_layout_row(ctx, 3, (int[]) {LABEL_WIDTH, FIELD_WIDTH, UNIT_WIDTH}, 0);
-	mu_label(ctx, "Displacement:");
-	if (w_field(ctx, &ui->displacement) & MU_RES_CHANGE) {
-		set_displacement(ui);
-		compute_all(ui);
-	}
-	if (w_select(ctx, &ui->displacement_unit) & MU_RES_CHANGE) {
-		set_displacement_unit(ui);
-	}
+	global_input_row(ctx, ui,
+		"Displacement:",
+		&ui->displacement, set_displacement,
+		&ui->displacement_unit, set_displacement_unit);
 }
 
 static void
 ambient_temperature_row(mu_Context *ctx, UI *ui) {
-	mu_layout_row(ctx, 3, (int[]) {LABEL_WIDTH, FIELD_WIDTH, UNIT_WIDTH}, 0);
-	mu_label(ctx, "Ambient T:");
-	if (w_field(ctx, &ui->ambient_temperature) & MU_RES_CHANGE) {
-		set_ambient_temperature(ui);
-		compute_all(ui);
-	}
-	if (w_select(ctx, &ui->ambient_temperature_unit) & MU_RES_CHANGE) {
-		set_ambient_temperature_unit(ui);
-	}
+	global_input_row(ctx, ui,
+		"Ambient T:",
+		&ui->ambient_temperature, set_ambient_temperature,
+		&ui->ambient_temperature_unit, set_ambient_temperature_unit);
 }
 
 static void
 ambient_pressure_row(mu_Context *ctx, UI *ui) {
+	global_input_row(ctx, ui,
+		"Ambient P:",
+		&ui->ambient_pressure, set_ambient_pressure,
+		&ui->ambient_pressure_unit, set_ambient_pressure_unit);
+}
+
+static void
+global_input_row(mu_Context *ctx, UI *ui,
+	const char *label,
+	w_Field *input, void (*callback)(UI *ui),
+	w_Select *unit, void (*unit_callback)(UI *ui)
+) {
 	mu_layout_row(ctx, 3, (int[]) {LABEL_WIDTH, FIELD_WIDTH, UNIT_WIDTH}, 0);
-	mu_label(ctx, "Ambient P:");
-	if (w_field(ctx, &ui->ambient_pressure) & MU_RES_CHANGE) {
-		set_ambient_pressure(ui);
+	mu_label(ctx, label);
+	if (w_field(ctx, input) & MU_RES_CHANGE) {
+		callback(ui);
 		compute_all(ui);
 	}
-	if (w_select(ctx, &ui->ambient_pressure_unit) & MU_RES_CHANGE) {
-		set_ambient_pressure_unit(ui);
+	if (w_select(ctx, unit) & MU_RES_CHANGE) {
+		unit_callback(ui);
 	}
 }
 
