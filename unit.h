@@ -1,3 +1,7 @@
+#define STANDARD_PRESSURE millibar(1013)
+#define STANDARD_TEMPERATURE celsius(20)
+
+
 typedef double AngularSpeed;
 typedef AngularSpeed (*AngularSpeedMaker)(double);
 typedef double (*AngularSpeedReader)(AngularSpeed);

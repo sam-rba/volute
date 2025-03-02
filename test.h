@@ -69,3 +69,4 @@ void test_comp_outlet_temperature(void);
 void test_manifold_temperature(void);
 void test_volume_flow_rate(void);
 void test_mass_flow_rate(void);
+void test_mass_flow_rate_corrected(void);

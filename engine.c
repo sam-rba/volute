@@ -116,3 +116,16 @@ mass_flow_rate(const Engine *e) {
 	t = e->ambient_temperature;
 	return (p * v) / (R_AIR * t);
 }
+
+/* Mass flow rate through the engine (corrected to standard conditions). */
+MassFlowRate
+mass_flow_rate_corrected(const Engine *e) {
+	Pressure p;
+	Temperature t;
+	VolumeFlowRate v;
+
+	p = STANDARD_PRESSURE;
+	t = STANDARD_TEMPERATURE;
+	v = volume_flow_rate(e);
+	return (p * v) / (R_AIR * t);
+}

@@ -63,4 +63,5 @@ main(void) {
 	test_manifold_temperature();
 	test_volume_flow_rate();
 	test_mass_flow_rate();
+	test_mass_flow_rate_corrected();
 }
