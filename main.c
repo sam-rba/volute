@@ -25,7 +25,7 @@ enum window {
 
 enum layout {
 	LABEL_WIDTH = 128,
-	UNIT_WIDTH = 48,
+	UNIT_WIDTH = 52,
 	FIELD_WIDTH = 64,
 };
 
@@ -73,6 +73,8 @@ static void pressure_ratio_row(mu_Context *ctx, UI *ui);
 static void comp_outlet_temperature_row(mu_Context *ctx, UI *ui);
 static void manifold_temperature_row(mu_Context *ctx, UI *ui);
 static void volume_flow_rate_row(mu_Context *ctx, UI *ui);
+static void mass_flow_rate_row(mu_Context *ctx, UI *ui);
+static void mass_flow_rate_corrected_row(mu_Context *ctx, UI *ui);
 static void output_row(mu_Context *ctx, UI *ui, const char *label, w_Select *unit, w_Number outputs[]);
 static void hpad(mu_Context *ctx, int w);
 static void vpad(mu_Context *ctx, int h);
@@ -160,6 +162,8 @@ main_window(mu_Context *ctx, UI *ui) {
 	comp_outlet_temperature_row(ctx, ui);
 	manifold_temperature_row(ctx, ui);
 	volume_flow_rate_row(ctx, ui);
+	mass_flow_rate_row(ctx, ui);
+	mass_flow_rate_corrected_row(ctx, ui);
 
 	mu_end_window(ctx);
 }
@@ -352,9 +356,25 @@ manifold_temperature_row(mu_Context *ctx, UI *ui) {
 static void
 volume_flow_rate_row(mu_Context *ctx, UI *ui) {
 	output_row(ctx, ui,
-		"Volume flow rate:",
+		"Volume flow:",
 		&ui->volume_flow_rate_unit,
 		ui->volume_flow_rate);
+}
+
+static void
+mass_flow_rate_row(mu_Context *ctx, UI *ui) {
+	output_row(ctx, ui,
+		"Mass flow:",
+		&ui->mass_flow_rate_unit,
+		ui->mass_flow_rate);
+}
+
+static void
+mass_flow_rate_corrected_row(mu_Context *ctx, UI *ui) {
+	output_row(ctx, ui,
+		"Mass flow at STP:",
+		&ui->mass_flow_rate_corrected_unit,
+		ui->mass_flow_rate_corrected);
 }
 
 static void

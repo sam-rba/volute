@@ -37,6 +37,12 @@ typedef struct {
 
 	w_Select volume_flow_rate_unit;
 	w_Number volume_flow_rate[MAX_POINTS];
+
+	w_Select mass_flow_rate_unit;
+	w_Number mass_flow_rate[MAX_POINTS];
+
+	w_Select mass_flow_rate_corrected_unit;
+	w_Number mass_flow_rate_corrected[MAX_POINTS];
 } UI;
 
 void init_ui(UI *ui);

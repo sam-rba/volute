@@ -50,6 +50,11 @@ static const VolumeFlowRateReader volume_flow_rate_readers[nelem(volume_flow_rat
 	as_cubic_metre_per_sec, as_cubic_foot_per_min,
 };
 
+static const char *const mass_flow_rate_units[] = {"kg/s", "lb/min"};
+static const MassFlowRateReader mass_flow_rate_readers[nelem(volume_flow_rate_units)] = {
+	as_kilo_per_sec, as_pound_per_min,
+};
+
 
 static void init_displacement(UI *ui);
 static void init_ambient_temperature(UI *ui);
@@ -64,10 +69,14 @@ static void init_pressure_ratio(UI *ui);
 static void init_comp_outlet_temperature(UI *ui);
 static void init_manifold_temperature(UI *ui);
 static void init_volume_flow_rate(UI *ui);
+static void init_mass_flow_rate(UI *ui);
+static void init_mass_flow_rate_corrected(UI *ui);
 static void compute_pressure_ratio(UI *ui, int idx);
 static void compute_comp_outlet_temperature(UI *ui, int idx);
 static void compute_manifold_temperature(UI *ui, int idx);
 static void compute_volume_flow_rate(UI *ui, int idx);
+static void compute_mass_flow_rate(UI *ui, int idx);
+static void compute_mass_flow_rate_corrected(UI *ui, int idx);
 
 
 void
@@ -90,6 +99,8 @@ init_ui(UI *ui) {
 	init_comp_outlet_temperature(ui);
 	init_manifold_temperature(ui);
 	init_volume_flow_rate(ui);
+	init_mass_flow_rate(ui);
+	init_mass_flow_rate_corrected(ui);
 
 	compute(ui, 0);
 }
@@ -217,6 +228,18 @@ static void
 init_volume_flow_rate(UI *ui) {
 	w_init_select(&ui->volume_flow_rate_unit, nelem(volume_flow_rate_units), volume_flow_rate_units);
 	w_init_number(ui->volume_flow_rate[0]);
+}
+
+static void
+init_mass_flow_rate(UI *ui) {
+	w_init_select(&ui->mass_flow_rate_unit, nelem(mass_flow_rate_units), mass_flow_rate_units);
+	w_init_number(ui->mass_flow_rate[0]);
+}
+
+static void
+init_mass_flow_rate_corrected(UI *ui) {
+	w_init_select(&ui->mass_flow_rate_corrected_unit, nelem(mass_flow_rate_units), mass_flow_rate_units);
+	w_init_number(ui->mass_flow_rate_corrected[0]);
 }
 
 void
@@ -390,6 +413,8 @@ compute(UI *ui, int idx) {
 	compute_comp_outlet_temperature(ui, idx);
 	compute_manifold_temperature(ui, idx);
 	compute_volume_flow_rate(ui, idx);
+	compute_mass_flow_rate(ui, idx);
+	compute_mass_flow_rate_corrected(ui, idx);
 }
 
 void
@@ -451,6 +476,34 @@ compute_volume_flow_rate(UI *ui, int idx) {
 	w_set_number(ui->volume_flow_rate[idx], v);
 }
 
+static void
+compute_mass_flow_rate(UI *ui, int idx) {
+	int unit_idx;
+	MassFlowRateReader convert;
+	double v;
+
+	unit_idx = ui->mass_flow_rate_unit.idx;
+	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(mass_flow_rate_units));
+
+	convert = mass_flow_rate_readers[unit_idx];
+	v = convert(mass_flow_rate(&ui->points[idx]));
+	w_set_number(ui->mass_flow_rate[idx], v);
+}
+
+static void
+compute_mass_flow_rate_corrected(UI *ui, int idx) {
+	int unit_idx;
+	MassFlowRateReader convert;
+	double v;
+
+	unit_idx = ui->mass_flow_rate_corrected_unit.idx;
+	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(mass_flow_rate_units));
+
+	convert = mass_flow_rate_readers[unit_idx];
+	v = convert(mass_flow_rate_corrected(&ui->points[idx]));
+	w_set_number(ui->mass_flow_rate_corrected[idx], v);
+}
+
 void
 insert_point(UI *ui, int idx) {
 	int i;
@@ -473,6 +526,8 @@ insert_point(UI *ui, int idx) {
 		memmove(&ui->comp_outlet_temperature[i], &ui->comp_outlet_temperature[i-1], sizeof(ui->comp_outlet_temperature[i-1]));
 		memmove(&ui->manifold_temperature[i], &ui->manifold_temperature[i-1], sizeof(ui->manifold_temperature[i-1]));
 		memmove(&ui->volume_flow_rate[i], &ui->volume_flow_rate[i-1], sizeof(ui->volume_flow_rate[i-1]));
+		memmove(&ui->mass_flow_rate[i], &ui->mass_flow_rate[i-1], sizeof(ui->mass_flow_rate[i-1]));
+		memmove(&ui->mass_flow_rate_corrected[i], &ui->mass_flow_rate_corrected[i-1], sizeof(ui->mass_flow_rate_corrected[i-1]));
 	}
 	ui->npoints++;
 }
@@ -497,6 +552,8 @@ remove_point(UI *ui, int idx) {
 		memmove(&ui->comp_outlet_temperature[idx], &ui->comp_outlet_temperature[idx+1], sizeof(ui->comp_outlet_temperature[idx]));
 		memmove(&ui->manifold_temperature[idx], &ui->manifold_temperature[idx+1], sizeof(ui->manifold_temperature[idx]));
 		memmove(&ui->volume_flow_rate[idx], &ui->volume_flow_rate[idx+1], sizeof(ui->volume_flow_rate[idx]));
+		memmove(&ui->mass_flow_rate[idx], &ui->mass_flow_rate[idx+1], sizeof(ui->mass_flow_rate[idx]));
+		memmove(&ui->mass_flow_rate_corrected[idx], &ui->mass_flow_rate_corrected[idx+1], sizeof(ui->mass_flow_rate_corrected[idx]));
 	}
 	ui->npoints--;
 }
