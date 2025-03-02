@@ -46,11 +46,13 @@ Temperature
 comp_outlet_temperature(const Engine *e) {
 	Temperature t1;
 	Pressure p1, p2;
+	double exp;
 
 	t1 = e->ambient_temperature;
 	p1 = e->ambient_pressure;
 	p2 = comp_outlet_pressure(e);
-	return t1 * pow(p2/p1, (GAMMA_AIR-1.0)/GAMMA_AIR);
+	exp = (GAMMA_AIR - 1.0) / GAMMA_AIR;
+	return t1 * pow(p2/p1, exp) / e->comp_efficiency;
 }
 
 Temperature
