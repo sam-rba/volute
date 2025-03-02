@@ -65,6 +65,7 @@ static void ve_row(mu_Context *ctx, UI *ui);
 static void comp_efficiency_row(mu_Context *ctx, UI *ui);
 static void intercooler_efficiency_row(mu_Context *ctx, UI *ui);
 static void intercooler_deltap_row(mu_Context *ctx, UI *ui);
+static void input_row(mu_Context *ctx, UI *ui, const char *label, w_Select *unit, void (*unit_callback)(UI *ui), w_Field inputs[], void (*callback)(UI *ui, int idx));
 static void dup_del_row(mu_Context *ctx, UI *ui);
 static void pressure_ratio_row(mu_Context *ctx, UI *ui);
 static void comp_outlet_temperature_row(mu_Context *ctx, UI *ui);
@@ -220,22 +221,10 @@ rpm_row(mu_Context *ctx, UI *ui) {
 
 static void
 map_row(mu_Context *ctx, UI *ui) {
-	int i;
-
-	mu_layout_row(ctx, 0, NULL, 0);
-	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Manifold P:");
-	mu_layout_width(ctx, UNIT_WIDTH);
-	if (w_select(ctx, &ui->map_unit) & MU_RES_CHANGE) {
-		set_map_unit(ui);
-	}
-	mu_layout_width(ctx, FIELD_WIDTH);
-	for (i = 0; i <ui->npoints; i++) {
-		if (w_field(ctx, &ui->map[i])) {
-			set_map(ui, i);
-			compute(ui, i);
-		}
-	}
+	input_row(ctx, ui,
+		"Manifold P:",
+		&ui->map_unit, set_map_unit,
+		ui->map, set_map);
 }
 
 static void
@@ -294,19 +283,31 @@ intercooler_efficiency_row(mu_Context *ctx, UI *ui) {
 
 static void
 intercooler_deltap_row(mu_Context *ctx, UI *ui) {
+	input_row(ctx, ui,
+		"Intercooler ΔP:",
+		&ui->intercooler_deltap_unit, set_intercooler_deltap_unit,
+		ui->intercooler_deltap, set_intercooler_deltap);
+}
+
+static void
+input_row(mu_Context *ctx, UI *ui,
+	const char *label,
+	w_Select *unit, void (*unit_callback)(UI *ui),
+	w_Field inputs[], void (*callback)(UI *ui, int idx)
+) {
 	int i;
 
 	mu_layout_row(ctx, 0, NULL, 0);
 	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Intercooler ΔP:");
+	mu_label(ctx, label);
 	mu_layout_width(ctx, UNIT_WIDTH);
-	if (w_select(ctx, &ui->intercooler_deltap_unit) & MU_RES_CHANGE) {
-		set_intercooler_deltap_unit(ui);
+	if (w_select(ctx, unit) & MU_RES_CHANGE) {
+		unit_callback(ui);
 	}
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {
-		if (w_field(ctx, &ui->intercooler_deltap[i])) {
-			set_intercooler_deltap(ui, i);
+		if (w_field(ctx, &inputs[i])) {
+			callback(ui, i);
 			compute(ui, i);
 		}
 	}
