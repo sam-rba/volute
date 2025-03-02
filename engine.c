@@ -18,9 +18,18 @@ static const double C_V_AIR = 718.0;
 static const double GAMMA_AIR = C_P_AIR / C_V_AIR;
 
 
+static VolumeFlowRate port_volume_flow_rate(const Engine *e);
+static double density_ratio(const Engine *e);
+
+
 void
 init_engine(Engine *e) {
 	memset(e, 0, sizeof(*e));
+}
+
+Pressure
+comp_outlet_pressure(const Engine *e) {
+	return e->map + e->intercooler_deltap;
 }
 
 /* Pressure ratio across the compressor. */
@@ -31,11 +40,6 @@ pressure_ratio(const Engine *e) {
 	p1 = e->ambient_pressure;
 	p2 = comp_outlet_pressure(e);
 	return p2 / p1;
-}
-
-Pressure
-comp_outlet_pressure(const Engine *e) {
-	return e->map + e->intercooler_deltap;
 }
 
 Temperature
@@ -49,10 +53,46 @@ comp_outlet_temperature(const Engine *e) {
 	return t1 * pow(p2/p1, (GAMMA_AIR-1.0)/GAMMA_AIR);
 }
 
+Temperature
+manifold_temperature(const Engine *e) {
+	Temperature t1, t2;
+
+	t1 = e->ambient_temperature;
+	t2 = comp_outlet_temperature(e);
+	return t2 - (t2 - t1)*e->intercooler_efficiency;
+}
+
+/* Volume flow rate throught the compressor inlet. */
 VolumeFlowRate
 volume_flow_rate(const Engine *e) {
-	double n = as_rpm(e->rpm);
-	double d = as_cubic_metre(e->displacement);
-	double ve = e->ve;
+	VolumeFlowRate v3;
+	double r;
+
+	v3 = port_volume_flow_rate(e);
+	r = density_ratio(e);
+	return v3 * r;
+}
+
+/* Volume flow rate through the intake ports. */
+static VolumeFlowRate
+port_volume_flow_rate(const Engine *e) {
+	double n, d, ve;
+
+	n = as_rpm(e->rpm);
+	d = as_cubic_metre(e->displacement);
+	ve = e->ve;
 	return cubic_metre_per_min(n * d * ve / REV_PER_CYCLE);
+}
+
+/* Density ratio between the ports and the compressor inlet. */
+static double
+density_ratio(const Engine *e) {
+	Pressure p1, p3;
+	Temperature t1, t3;
+
+	p1 = e->ambient_pressure;
+	p3 = e->map;
+	t1 = e->ambient_temperature;
+	t3 = manifold_temperature(e);
+	return (p1 * t3) / (p3 * t1);
 }
