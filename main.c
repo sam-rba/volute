@@ -373,6 +373,7 @@ manifold_temperature_row(mu_Context *ctx, UI *ui) {
 	if (w_select(ctx, &ui->manifold_temperature_unit) & MU_RES_CHANGE) {
 		compute_all(ui);
 	}
+	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {
 		w_number(ctx, ui->manifold_temperature[i]);
 	}
