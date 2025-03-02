@@ -235,3 +235,24 @@ double
 as_cubic_foot_per_min(VolumeFlowRate x) {
 	return x * SEC_PER_MIN / pow(M_PER_FT, 3);
 }
+
+
+MassFlowRate
+kilo_per_sec(double x) {
+	return x;
+}
+
+MassFlowRate
+pound_per_min(double x) {
+	return x * KG_PER_LB / SEC_PER_MIN;
+}
+
+double
+as_kilo_per_sec(MassFlowRate m) {
+	return m;
+}
+
+double
+as_pound_per_min(MassFlowRate m) {
+	return m / KG_PER_LB * SEC_PER_MIN;
+}

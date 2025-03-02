@@ -74,3 +74,13 @@ VolumeFlowRate cubic_foot_per_min(double x);
 double as_cubic_metre_per_sec(VolumeFlowRate x);
 double as_cubic_metre_per_min(VolumeFlowRate x);
 double as_cubic_foot_per_min(VolumeFlowRate x);
+
+
+typedef double MassFlowRate;
+typedef MassFlowRate (*MassFlowRateMaker)(double);
+typedef double (*MassFlowRateReader)(MassFlowRate);
+
+MassFlowRate kilo_per_sec(double x);
+MassFlowRate pound_per_min(double x);
+double as_kilo_per_sec(MassFlowRate m);
+double as_pound_per_min(MassFlowRate m);
