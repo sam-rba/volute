@@ -56,6 +56,11 @@ void test_as_cubic_metre_per_sec(void);
 void test_as_cubic_metre_per_min(void);
 void test_as_cubic_foot_per_min(void);
 
+void test_kilo_per_sec(void);
+void test_pound_per_min(void);
+void test_as_kilo_per_sec(void);
+void test_as_pound_per_min(void);
+
 void test_comp_outlet_pressure(void);
 void test_pressure_ratio(void);
 void test_pressure_ratio_intercooled(void);

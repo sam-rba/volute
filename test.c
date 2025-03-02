@@ -50,6 +50,11 @@ main(void) {
 	test_as_cubic_metre_per_min();
 	test_as_cubic_foot_per_min();
 
+	test_kilo_per_sec();
+	test_pound_per_min();
+	test_as_kilo_per_sec();
+	test_as_pound_per_min();
+
 	test_comp_outlet_pressure();
 	test_pressure_ratio();
 	test_pressure_ratio_intercooled();
