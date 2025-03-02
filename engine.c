@@ -44,7 +44,7 @@ pressure_ratio(const Engine *e) {
 
 Temperature
 comp_outlet_temperature(const Engine *e) {
-	Temperature t1;
+	Temperature t1, dt;
 	Pressure p1, p2;
 	double exp;
 
@@ -52,7 +52,9 @@ comp_outlet_temperature(const Engine *e) {
 	p1 = e->ambient_pressure;
 	p2 = comp_outlet_pressure(e);
 	exp = (GAMMA_AIR - 1.0) / GAMMA_AIR;
-	return t1 * pow(p2/p1, exp) / e->comp_efficiency;
+	dt = t1 * (pow(p2/p1, exp) - 1.0) / e->comp_efficiency;
+
+	return  t1 + dt;
 }
 
 Temperature
