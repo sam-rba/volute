@@ -61,8 +61,10 @@ static void init_comp_efficiency(UI *ui);
 static void init_intercooler_efficiency(UI *ui);
 static void init_intercooler_deltap(UI *ui);
 static void init_pressure_ratio(UI *ui);
+static void init_comp_outlet_temperature(UI *ui);
 static void init_volume_flow_rate(UI *ui);
 static void compute_pressure_ratio(UI *ui, int idx);
+static void compute_comp_outlet_temperature(UI *ui, int idx);
 static void compute_volume_flow_rate(UI *ui, int idx);
 
 
@@ -83,6 +85,7 @@ init_ui(UI *ui) {
 	init_intercooler_deltap(ui);
 
 	init_pressure_ratio(ui);
+	init_comp_outlet_temperature(ui);
 	init_volume_flow_rate(ui);
 
 	compute(ui, 0);
@@ -193,6 +196,12 @@ init_intercooler_deltap(UI *ui) {
 static void
 init_pressure_ratio(UI *ui) {
 	w_init_number(ui->pressure_ratio[0]);
+}
+
+static void
+init_comp_outlet_temperature(UI *ui) {
+	w_init_number(ui->comp_outlet_temperature[0]);
+	w_init_select(&ui->comp_outlet_temperature_unit, nelem(temperature_units), temperature_units);
 }
 
 static void
@@ -369,6 +378,7 @@ set_intercooler_deltap_unit(UI *ui) {
 void
 compute(UI *ui, int idx) {
 	compute_pressure_ratio(ui, idx);
+	compute_comp_outlet_temperature(ui, idx);
 	compute_volume_flow_rate(ui, idx);
 }
 
@@ -390,10 +400,24 @@ compute_pressure_ratio(UI *ui, int idx) {
 }
 
 static void
+compute_comp_outlet_temperature(UI *ui, int idx) {
+	int unit_idx;
+	TemperatureReader convert;
+	double v;
+
+	unit_idx = ui->comp_outlet_temperature_unit.idx;
+	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(temperature_units));
+
+	convert = temperature_readers[unit_idx];
+	v = convert(comp_outlet_temperature(&ui->points[idx]));
+	w_set_number(ui->comp_outlet_temperature[idx], v);
+}
+
+static void
 compute_volume_flow_rate(UI *ui, int idx) {
 	int unit_idx;
 	VolumeFlowRateReader convert;
-	VolumeFlowRate v;
+	double v;
 
 	unit_idx = ui->volume_flow_rate_unit.idx;
 	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(volume_flow_rate_units));
@@ -422,6 +446,7 @@ insert_point(UI *ui, int idx) {
 		memmove(&ui->intercooler_deltap[i], &ui->intercooler_deltap[i-1], sizeof(ui->intercooler_deltap[i-1]));
 
 		memmove(&ui->pressure_ratio[i], &ui->pressure_ratio[i-1], sizeof(ui->pressure_ratio[i-1]));
+		memmove(&ui->comp_outlet_temperature[i], &ui->comp_outlet_temperature[i-1], sizeof(ui->comp_outlet_temperature[i-1]));
 		memmove(&ui->volume_flow_rate[i], &ui->volume_flow_rate[i-1], sizeof(ui->volume_flow_rate[i-1]));
 	}
 	ui->npoints++;
@@ -444,6 +469,7 @@ remove_point(UI *ui, int idx) {
 		memmove(&ui->intercooler_deltap[idx], &ui->intercooler_deltap[idx+1], sizeof(ui->intercooler_deltap[idx]));
 
 		memmove(&ui->pressure_ratio[idx], &ui->pressure_ratio[idx+1], sizeof(ui->pressure_ratio[idx]));
+		memmove(&ui->comp_outlet_temperature[idx], &ui->comp_outlet_temperature[idx+1], sizeof(ui->comp_outlet_temperature[idx]));
 		memmove(&ui->volume_flow_rate[idx], &ui->volume_flow_rate[idx+1], sizeof(ui->volume_flow_rate[idx]));
 	}
 	ui->npoints--;

@@ -1,11 +1,11 @@
 CFLAGS = -std=c99 -Wall -Wextra -pedantic -Wno-deprecated-declarations -D_XOPEN_SOURCE=700L
-LDFLAGS = -lSDL2 -lSDL2_ttf
+LDFLAGS = -lSDL2 -lSDL2_ttf -lm
 
 SRC = main.c microui.c renderer.c widget.c ui.c unit.c engine.c
 OBJ = ${SRC:.c=.o}
 HDR = microui.h renderer.h widget.h ui.h unit.h engine.h
 
-TEST_SRC = test.c test_angular_speed.c test_pressure.c test_temperature.c test_volume.c test_volume_flow_rate.c test_fraction.c unit.c
+TEST_SRC = test.c test_angular_speed.c test_pressure.c test_temperature.c test_volume.c test_volume_flow_rate.c test_fraction.c test_engine.c unit.c engine.c
 TEST_OBJ = ${TEST_SRC:.c=.o}
 
 volute: ${OBJ}

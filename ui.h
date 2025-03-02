@@ -29,6 +29,9 @@ typedef struct {
 
 	w_Number pressure_ratio[MAX_POINTS];
 
+	w_Number comp_outlet_temperature[MAX_POINTS];
+	w_Select comp_outlet_temperature_unit;
+
 	w_Select volume_flow_rate_unit;
 	w_Number volume_flow_rate[MAX_POINTS];
 } UI;

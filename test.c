@@ -47,4 +47,9 @@ main(void) {
 	test_as_cubic_metre_per_sec();
 	test_as_cubic_metre_per_min();
 	test_as_cubic_foot_per_min();
+
+	test_comp_outlet_pressure();
+	test_comp_outlet_temperature();
+	test_pressure_ratio();
+	test_volume_flow_rate();
 }
