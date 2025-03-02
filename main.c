@@ -354,6 +354,7 @@ comp_outlet_temperature_row(mu_Context *ctx, UI *ui) {
 	if (w_select(ctx, &ui->comp_outlet_temperature_unit) & MU_RES_CHANGE) {
 		compute_all(ui);
 	}
+	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {
 		w_number(ctx, ui->comp_outlet_temperature[i]);
 	}
