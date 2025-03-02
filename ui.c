@@ -471,6 +471,7 @@ insert_point(UI *ui, int idx) {
 
 		memmove(&ui->pressure_ratio[i], &ui->pressure_ratio[i-1], sizeof(ui->pressure_ratio[i-1]));
 		memmove(&ui->comp_outlet_temperature[i], &ui->comp_outlet_temperature[i-1], sizeof(ui->comp_outlet_temperature[i-1]));
+		memmove(&ui->manifold_temperature[i], &ui->manifold_temperature[i-1], sizeof(ui->manifold_temperature[i-1]));
 		memmove(&ui->volume_flow_rate[i], &ui->volume_flow_rate[i-1], sizeof(ui->volume_flow_rate[i-1]));
 	}
 	ui->npoints++;
@@ -494,6 +495,7 @@ remove_point(UI *ui, int idx) {
 
 		memmove(&ui->pressure_ratio[idx], &ui->pressure_ratio[idx+1], sizeof(ui->pressure_ratio[idx]));
 		memmove(&ui->comp_outlet_temperature[idx], &ui->comp_outlet_temperature[idx+1], sizeof(ui->comp_outlet_temperature[idx]));
+		memmove(&ui->manifold_temperature[idx], &ui->manifold_temperature[idx+1], sizeof(ui->manifold_temperature[idx]));
 		memmove(&ui->volume_flow_rate[idx], &ui->volume_flow_rate[idx+1], sizeof(ui->volume_flow_rate[idx]));
 	}
 	ui->npoints--;
