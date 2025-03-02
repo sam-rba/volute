@@ -66,6 +66,7 @@ static void comp_efficiency_row(mu_Context *ctx, UI *ui);
 static void intercooler_efficiency_row(mu_Context *ctx, UI *ui);
 static void intercooler_deltap_row(mu_Context *ctx, UI *ui);
 static void input_row(mu_Context *ctx, UI *ui, const char *label, w_Select *unit, void (*unit_callback)(UI *ui), w_Field inputs[], void (*callback)(UI *ui, int idx));
+static void input_row_static_unit(mu_Context *ctx, UI *ui, const char *label, const char *unit, w_Field inputs[], void (*callback)(UI *ui, int idx));
 static void dup_del_row(mu_Context *ctx, UI *ui);
 static void pressure_ratio_row(mu_Context *ctx, UI *ui);
 static void comp_outlet_temperature_row(mu_Context *ctx, UI *ui);
@@ -203,20 +204,10 @@ ambient_pressure_row(mu_Context *ctx, UI *ui) {
 
 static void
 rpm_row(mu_Context *ctx, UI *ui) {
-	int i;
-
-	mu_layout_row(ctx, 0, NULL, 0);
-	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Speed:");
-	mu_layout_width(ctx, UNIT_WIDTH);
-	mu_label(ctx, "(rpm)");
-	mu_layout_width(ctx, FIELD_WIDTH);
-	for (i = 0; i < ui->npoints; i++) {
-		if (w_field(ctx, &ui->rpm[i])) {
-			set_rpm(ui, i);
-			compute(ui, i);
-		}
-	}
+	input_row_static_unit(ctx, ui,
+		"Speed:",
+		"(rpm)",
+		ui->rpm, set_rpm);
 }
 
 static void
@@ -229,56 +220,26 @@ map_row(mu_Context *ctx, UI *ui) {
 
 static void
 ve_row(mu_Context *ctx, UI *ui) {
-	int i;
-
-	mu_layout_row(ctx, 0, NULL, 0);
-	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Volumetric η:");
-	mu_layout_width(ctx, UNIT_WIDTH);
-	mu_label(ctx, "(%)");
-	mu_layout_width(ctx, FIELD_WIDTH);
-	for (i = 0; i < ui->npoints; i++) {
-		if (w_field(ctx, &ui->ve[i])) {
-			set_ve(ui, i);
-			compute(ui, i);
-		}
-	}
+	input_row_static_unit(ctx, ui,
+		"Volumetric η:",
+		"(%)",
+		ui->ve, set_ve);
 }
 
 static void
 comp_efficiency_row(mu_Context *ctx, UI *ui) {
-	int i;
-
-	mu_layout_row(ctx, 0, NULL, 0);
-	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Compressor η:");
-	mu_layout_width(ctx, UNIT_WIDTH);
-	mu_label(ctx, "(%)");
-	mu_layout_width(ctx, FIELD_WIDTH);
-	for (i = 0; i < ui->npoints; i++) {
-		if (w_field(ctx, &ui->comp_efficiency[i])) {
-			set_comp_efficiency(ui, i);
-			compute(ui, i);
-		}
-	}
+	input_row_static_unit(ctx, ui,
+		"Compressor η:",
+		"(%)",
+		ui->comp_efficiency, set_comp_efficiency);
 }
 
 static void
 intercooler_efficiency_row(mu_Context *ctx, UI *ui) {
-	int i;
-
-	mu_layout_row(ctx, 0, NULL, 0);
-	mu_layout_width(ctx, LABEL_WIDTH);
-	mu_label(ctx, "Intercooler η:");
-	mu_layout_width(ctx, UNIT_WIDTH);
-	mu_label(ctx, "(%)");
-	mu_layout_width(ctx, FIELD_WIDTH);
-	for (i = 0; i < ui->npoints; i++) {
-		if (w_field(ctx, &ui->intercooler_efficiency[i])) {
-			set_intercooler_efficiency(ui, i);
-			compute(ui, i);
-		}
-	}
+	input_row_static_unit(ctx, ui,
+		"Intercooler η:",
+		"(%)",
+		ui->intercooler_efficiency, set_intercooler_efficiency);
 }
 
 static void
@@ -304,6 +265,28 @@ input_row(mu_Context *ctx, UI *ui,
 	if (w_select(ctx, unit) & MU_RES_CHANGE) {
 		unit_callback(ui);
 	}
+	mu_layout_width(ctx, FIELD_WIDTH);
+	for (i = 0; i < ui->npoints; i++) {
+		if (w_field(ctx, &inputs[i])) {
+			callback(ui, i);
+			compute(ui, i);
+		}
+	}
+}
+
+static void
+input_row_static_unit(mu_Context *ctx, UI *ui,
+	const char *label,
+	const char *unit,
+	w_Field inputs[], void (*callback)(UI *ui, int idx)
+) {
+	int i;
+
+	mu_layout_row(ctx, 0, NULL, 0);
+	mu_layout_width(ctx, LABEL_WIDTH);
+	mu_label(ctx, label);
+	mu_layout_width(ctx, UNIT_WIDTH);
+	mu_label(ctx, unit);
 	mu_layout_width(ctx, FIELD_WIDTH);
 	for (i = 0; i < ui->npoints; i++) {
 		if (w_field(ctx, &inputs[i])) {
