@@ -98,5 +98,5 @@ density_ratio(const Engine *e) {
 	p3 = e->map;
 	t1 = e->ambient_temperature;
 	t3 = manifold_temperature(e);
-	return (p1 * t3) / (p3 * t1);
+	return (p3 * t1) / (p1 * t3);
 }

@@ -2,7 +2,7 @@
 
 #define test(got, want) { \
 	if (got < want-EPSILON || got > want+EPSILON) { \
-		fprintf(stderr, "got %f; want %f\n", got, want); \
+		fprintf(stderr, "got %.7f; want %.7f\n", got, want); \
 		assert(got == want); \
 	} \
 }
@@ -53,3 +53,11 @@ void test_cubic_foot_per_min(void);
 void test_as_cubic_metre_per_sec(void);
 void test_as_cubic_metre_per_min(void);
 void test_as_cubic_foot_per_min(void);
+
+void test_comp_outlet_pressure(void);
+void test_pressure_ratio(void);
+void test_pressure_ratio_intercooled(void);
+void test_comp_outlet_temperature_adiabatic(void);
+void test_comp_outlet_temperature(void);
+void test_manifold_temperature(void);
+void test_volume_flow_rate(void);
