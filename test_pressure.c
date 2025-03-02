@@ -30,6 +30,11 @@ test_psi(void) {
 }
 
 void
+test_inch_mercury(void) {
+	test(inch_mercury(123.456), 418070.040384);
+}
+
+void
 test_as_pascal(void) {
 	test(as_pascal(pascal(123.456)), 123.456);
 }
@@ -52,4 +57,9 @@ test_as_bar(void) {
 void
 test_as_psi(void) {
 	test(as_psi(psi(123.456)), 123.456);
+}
+
+void
+test_as_inch_mercury(void) {
+	test(as_inch_mercury(inch_mercury(123.456)), 123.456);
 }

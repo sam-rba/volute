@@ -37,12 +37,12 @@ static const TemperatureReader temperature_readers[nelem(temperature_units)] = {
 	as_celsius, as_kelvin, as_fahrenheit, as_rankine,
 };
 
-static const char *const pressure_units[] = {"mbar", "kPa", "bar", "psi"};
+static const char *const pressure_units[] = {"mbar", "kPa", "bar", "psi", "inHG"};
 static const PressureMaker pressure_makers[nelem(pressure_units)] = {
-	millibar, kilopascal, bar, psi,
+	millibar, kilopascal, bar, psi, inch_mercury,
 };
 static const PressureReader pressure_readers[nelem(pressure_units)] = {
-	as_millibar, as_kilopascal, as_bar, as_psi,
+	as_millibar, as_kilopascal, as_bar, as_psi, as_inch_mercury,
 };
 
 static const char *const volume_flow_rate_units[] = {"m³/s", "CFM"};

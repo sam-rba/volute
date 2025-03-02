@@ -27,11 +27,13 @@ Pressure millibar(double x);
 Pressure kilopascal(double x);
 Pressure bar(double x);
 Pressure psi(double x);
+Pressure inch_mercury(double x);
 double as_pascal(Pressure x);
 double as_millibar(Pressure x);
 double as_kilopascal(Pressure x);
 double as_bar(Pressure x);
 double as_psi(Pressure x);
+double as_inch_mercury(Pressure x);
 
 
 typedef double Temperature;

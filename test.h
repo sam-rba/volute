@@ -23,11 +23,13 @@ void test_millibar(void);
 void test_kilopascal(void);
 void test_bar(void);
 void test_psi(void);
+void test_inch_mercury(void);
 void test_as_pascal(void);
 void test_as_millibar(void);
 void test_as_kilopascal(void);
 void test_as_bar(void);
 void test_as_psi(void);
+void test_as_inch_mercury(void);
 
 void test_kelvin(void);
 void test_celsius(void);

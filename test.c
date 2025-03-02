@@ -17,11 +17,13 @@ main(void) {
 	test_kilopascal();
 	test_bar();
 	test_psi();
+	test_inch_mercury();
 	test_as_pascal();
 	test_as_millibar();
 	test_as_kilopascal();
 	test_as_bar();
 	test_as_psi();
+	test_as_inch_mercury();
 
 	test_kelvin();
 	test_celsius();

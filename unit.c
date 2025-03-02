@@ -85,6 +85,11 @@ psi(double x) {
 	return x * KG_PER_LB * G / pow(M_PER_IN, 2);
 }
 
+Pressure
+inch_mercury(double x) {
+	return x * 3386.389;
+}
+
 double
 as_pascal(Pressure x) {
 	return x;
@@ -108,6 +113,11 @@ as_bar(Pressure x) {
 double
 as_psi(Pressure x) {
 	return x * pow(M_PER_IN, 2) / (KG_PER_LB * G);
+}
+
+double
+as_inch_mercury(Pressure x) {
+	return x / 3386.389;
 }
 
 
