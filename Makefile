@@ -1,7 +1,7 @@
 CFLAGS = -std=c99 -Wall -Wextra -pedantic -Wno-deprecated-declarations -D_XOPEN_SOURCE=700L
 LDFLAGS = -lSDL2 -lSDL2_ttf -lm
 
-SRC = main.c microui.c renderer.c widget.c ui.c unit.c engine.c
+SRC = main.c microui.c renderer.c widget.c ui.c unit.c engine.c compressor.c
 OBJ = ${SRC:.c=.o}
 HDR = microui.h renderer.h widget.h ui.h unit.h engine.h
 
