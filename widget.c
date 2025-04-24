@@ -3,9 +3,7 @@
 
 #include "microui.h"
 #include "widget.h"
-
-
-#define nelem(arr) (sizeof(arr)/sizeof(arr[0]))
+#include "util.h"
 
 
 #define FORMAT "%.5g"
