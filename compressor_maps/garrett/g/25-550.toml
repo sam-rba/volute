@@ -1,8 +1,0 @@
-name = "Garrett G25-550"
-minx = 205
-miny = 1854
-maxx = 1716
-maxy = 119
-maxpr = 4.0
-flowval = 60
-flowunit = "lb/min"

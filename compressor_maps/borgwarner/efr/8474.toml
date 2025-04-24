@@ -1,8 +1,0 @@
-name = "BorgWarner EFR8474"
-minx = 68
-miny = 587
-maxx = 853
-maxy = 16
-maxpr = 5.2
-flowval = 0.72
-flowunit = "kg/s"

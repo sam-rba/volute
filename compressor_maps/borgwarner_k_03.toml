@@ -1,0 +1,17 @@
+brand = "Borgwarner"
+series = "K"
+model = "03"
+
+flowunit = "kg/s"
+
+[origin]
+x = 30
+y = 714
+pr = 1.0
+flow = 0.0
+
+[ref]
+x = 876
+y = 4
+pr = 2.8
+flow = 0.13

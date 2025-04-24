@@ -1,0 +1,17 @@
+brand = "Borgwarner"
+series = "EFR"
+model = "8374"
+
+flowunit = "kg/s"
+
+[origin]
+x = 47
+y = 455
+pr = 1.0
+flow = 0.0
+
+[ref]
+x = 744
+y = 6
+pr = 5.2
+flow = 0.72

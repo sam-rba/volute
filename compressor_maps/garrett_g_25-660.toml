@@ -1,0 +1,17 @@
+brand = "Garrett"
+series = "G"
+model = "25-660"
+
+flowunit = "lb/min"
+
+[origin]
+x = 204
+y = 1885
+pr = 1.0
+flow = 0.0
+
+[ref]
+x = 1665
+y = 25
+pr = 4.0
+flow = 70

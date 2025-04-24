@@ -1,8 +1,0 @@
-name = "BorgWarner EFR6258"
-minx = 47
-miny = 455
-maxx = 773
-maxy = 6
-maxpr = 3.8
-flowval = 0.50
-flowunit = "kg/s"
