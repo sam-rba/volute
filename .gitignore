@@ -1,3 +1,4 @@
 /volute
-*.o
+/*.o
 /test
+/acme.dump
