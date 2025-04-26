@@ -1,34 +1,221 @@
 #include <errno.h>
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 
 #include <dirent.h>
 
+#include "cwalk.h"
+#include "toml.h"
 #include "unit.h"
+#include "compressor.h"
+#include "eprintf.h"
+#include "util.h"
 
 
-static const char ROOT[] = "compressor_maps/";
+static const char ROOT[NAME_MAX+1] = "compressor_maps";
 
 
-typedef struct {
-	int x, y;
-} Point;
+static int load_compressor(const char *path, Compressor *comp);
+static int load_point(const toml_table_t *tbl, const char *key, const char *flowunit, Point *pt);
+static int toml_filter(const struct dirent *de);
+static void free_arr(void **arr, int n);
 
-typedef enum { MASS_FLOW, VOLUME_FLOW } FlowType;
 
-typedef union {
-	MassFlowRate mfr;
-	VolumeFlowRate vfr;
-} Flow;
+/* Load descriptions of all of the compressor maps.
+ * Places a malloc-allocated array of compressors at *comps,
+ * and the number of compressors at *n.
+ * Returns 0 on success. */
+int
+load_compressors(Compressor **comps, int *n) {
+	struct dirent **files;
+	int nfiles;
+	char path[3 * NAME_MAX];
+	Compressor comp;
 
-typedef struct {
-	char brand[NAME_MAX+1]; /* e.g. Borgwarner. */
-	char series[NAME_MAX+1]; /* e.g. Airwerks. */
-	char model[NAME_MAX+1]; /* e.g. S200SX-E. */
-	char imgfile[NAME_MAX+1]; /* name of file containing image of the compressor map. */
-	Point origin, refpt; /* pixel coords of origin and reference point. */
-	double originpr, refpr; /* pressure ratio at origin and reference point. */
-	Flow originflow, refflow; /* flow at origin and reference point. */
-	FlowType flowtype; /* mass-flow or volume-flow (x-axis). */
-} Compressor;
+	*comps = NULL;
+	*n = 0;
+
+	nfiles = scandir(ROOT, &files, toml_filter, alphasort);
+	if (nfiles < 0) {
+		weprintf("failed to scan %s", ROOT);
+		return 1;
+	}
+
+	*comps = malloc(nfiles * sizeof(Compressor));
+	if (*comps == NULL) {
+		weprintf("malloc failed");
+		return 1;
+	}
+
+	/* TODO: parallelize. */
+	while (nfiles > 0) {
+		(void) cwk_path_join(ROOT, files[nfiles-1]->d_name, path, nelem(path));
+		if (load_compressor(path, &comp) != 0) {
+			weprintf("failed to load compressor from %s", path);
+			free_arr((void **) files, nfiles);
+			free(*comps);
+			return 1;
+		}
+		(*comps)[(*n)++] = comp;
+		free(files[--nfiles]);
+	}
+	free(files);
+
+	return 0;
+}
+
+/* Load a compressor toml file into *comp. Returns 0 on success. */
+static int
+load_compressor(const char *path, Compressor *comp) {
+	FILE *f;
+	char errbuf[256];
+	toml_table_t *tbl;
+	toml_value_t brand, series, model, flowunit;
+	int err;
+
+	f = fopen(path, "r");
+	if (f == NULL) {
+		weprintf("failed to open %s", path);
+		return 1;
+	}
+
+	tbl = toml_parse_file(f, errbuf, sizeof(errbuf));
+	if (!tbl) {
+		weprintf("failed to parse %s: %s", path, errbuf);
+		return 1;
+	}
+
+	if (fclose(f) != 0) {
+		weprintf("failed to close %s", path);
+		toml_free(tbl);
+		return 1;
+	}
+
+	err = 0;
+	brand = toml_table_string(tbl, "brand");
+	if (!brand.ok) {
+		weprintf("%s: missing 'brand'", path);
+		err = 1;
+	}
+	series = toml_table_string(tbl, "series");
+	if (!series.ok) {
+		weprintf("%s: missing 'series'", path);
+		err = 1;
+	}
+	model = toml_table_string(tbl, "model");
+	if (!model.ok) {
+		weprintf("%s: missing 'model'", path);
+		err = 1;
+	}
+	flowunit = toml_table_string(tbl, "flowunit");
+	if (!flowunit.ok) {
+		weprintf("%s: missing 'flowunit'", path);
+		err = 1;
+	}
+	if (err) {
+		toml_free(tbl);
+		return 1;
+	}
+
+	strncpy(comp->brand, brand.u.s, nelem(comp->brand)-1);
+	strncpy(comp->series, series.u.s, nelem(comp->series)-1);
+	strncpy(comp->model, model.u.s, nelem(comp->model)-1);
+
+	(void) cwk_path_change_extension(path, "jpg", comp->imgfile, sizeof(comp->imgfile));
+
+	if (load_point(tbl, "origin", flowunit.u.s, &comp->origin) != 0) {
+		weprintf("%s: failed to load 'origin'", path);
+		toml_free(tbl);
+		return 1;
+	}
+	if (load_point(tbl, "ref", flowunit.u.s, &comp->ref) != 0) {
+		weprintf("%s: failed to load 'ref'", path);
+		toml_free(tbl);
+		return 1;
+	}
+
+	toml_free(tbl);
+
+	return 0;
+}
+
+/* load a Point from a compressor toml file.
+ * key - the name of the toml subtable containing the point.
+ * pt - the returned point.
+ * Returns 0 on success. */
+static int
+load_point(const toml_table_t *tbl, const char *key, const char *flowunit, Point *pt) {
+	toml_table_t *subtbl;
+	int err;
+	toml_value_t x, y, pr, flowval;
+	Flow flow;
+	
+	subtbl = toml_table_table(tbl, key);
+	if (!subtbl) {
+		weprintf("missing table '%s'", key);
+		return 1;
+	}
+
+	err = 0;
+	x = toml_table_int(subtbl, "x");
+	if (!x.ok) {
+		weprintf("%s: missing 'x'", key);
+		err = 1;
+	}
+	y = toml_table_int(subtbl, "y");
+	if (!y.ok) {
+		weprintf("%s: missing 'y'", key);
+		err = 1;
+	}
+	pr = toml_table_double(subtbl, "pr");
+	if (!pr.ok) {
+		weprintf("%s: missing 'pr'", key);
+		err = 1;
+	}
+	flowval = toml_table_double(subtbl, "flow");
+	if (!flowval.ok) {
+		weprintf("%s: missing 'flow'", key);
+		err = 1;
+	}
+	if (err) {
+		toml_free(subtbl);
+		return 1;
+	}
+
+	if (parse_flow(flowval.u.d, flowunit, &flow) != 0) {
+		weprintf("invalid flow: %d %s", flowval.u.d, flowunit);
+		toml_free(subtbl);
+		return 1;
+	}
+
+	pt->x = x.u.i;
+	pt->y = y.u.i;
+	pt->pr = pr.u.d;
+	pt->flow = flow;
+
+	toml_free(subtbl);
+	return 0;
+}
+
+static int
+toml_filter(const struct dirent *de) {
+	const char *extension;
+	size_t length, n;
+	char toml[] = ".toml";
+
+	if (!cwk_path_get_extension(de->d_name, &extension, &length)) {
+		return 0; /* no extension. */
+	}
+	n = min(nelem(toml)-1, length);
+	return strncmp(".toml", extension, n) == 0; /* extension is ".toml". */
+}
+
+static void
+free_arr(void **arr, int n) {
+	while (n-- > 0) {
+		free(arr[n]);
+	}
+	free(arr);
+}
