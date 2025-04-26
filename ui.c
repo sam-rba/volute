@@ -8,8 +8,6 @@
 #include "ui.h"
 
 
-#define nelem(arr) (sizeof(arr)/sizeof(arr[0]))
-
 #define DEFAULT_DISPLACEMENT (litre(1.5))
 #define DEFAULT_AMBIENT_TEMPERATURE (celsius(20))
 #define DEFAULT_AMBIENT_PRESSURE (millibar(1013))
@@ -19,41 +17,6 @@
 #define DEFAULT_COMPRESSOR_EFFICIENCY (percent(70))
 #define DEFAULT_INTERCOOLER_EFFICIENCY (percent(90))
 #define DEFAULT_INTERCOOLER_DELTAP (psi(0.2))
-
-
-static const char *const volume_units[] = {"cc", "l", "ci"};
-static const VolumeMaker volume_makers[nelem(volume_units)] = {
-	cubic_centimetre, litre, cubic_inch,
-};
-static const VolumeReader volume_readers[nelem(volume_units)] = {
-	as_cubic_centimetre, as_litre, as_cubic_inch,
-};
-
-static const char *const temperature_units[] = {"°C", "K", "°F", "°R"};
-static const TemperatureMaker temperature_makers[nelem(temperature_units)] = {
-	celsius, kelvin, fahrenheit, rankine,
-};
-static const TemperatureReader temperature_readers[nelem(temperature_units)] = {
-	as_celsius, as_kelvin, as_fahrenheit, as_rankine,
-};
-
-static const char *const pressure_units[] = {"mbar", "kPa", "bar", "psi", "inHG"};
-static const PressureMaker pressure_makers[nelem(pressure_units)] = {
-	millibar, kilopascal, bar, psi, inch_mercury,
-};
-static const PressureReader pressure_readers[nelem(pressure_units)] = {
-	as_millibar, as_kilopascal, as_bar, as_psi, as_inch_mercury,
-};
-
-static const char *const volume_flow_rate_units[] = {"m³/s", "CFM"};
-static const VolumeFlowRateReader volume_flow_rate_readers[nelem(volume_flow_rate_units)] = {
-	as_cubic_metre_per_sec, as_cubic_foot_per_min,
-};
-
-static const char *const mass_flow_rate_units[] = {"kg/s", "lb/min"};
-static const MassFlowRateReader mass_flow_rate_readers[nelem(volume_flow_rate_units)] = {
-	as_kilo_per_sec, as_pound_per_min,
-};
 
 
 static void init_displacement(UI *ui);
@@ -111,7 +74,7 @@ init_displacement(UI *ui) {
 	double v;
 
 	w_init_field(&ui->displacement);
-	w_init_select(&ui->displacement_unit, nelem(volume_units), volume_units);
+	w_init_select(&ui->displacement_unit, n_volume_units, volume_units);
 	i = ui->displacement_unit.idx;
 	v = volume_readers[i](DEFAULT_DISPLACEMENT);
 	w_set_field(&ui->displacement, v);
@@ -125,7 +88,7 @@ init_ambient_temperature(UI *ui) {
 	double v;
 
 	w_init_field(&ui->ambient_temperature);
-	w_init_select(&ui->ambient_temperature_unit, nelem(temperature_units), temperature_units);
+	w_init_select(&ui->ambient_temperature_unit, n_temperature_units, temperature_units);
 	i = ui->ambient_temperature_unit.idx;
 	v = temperature_readers[i](DEFAULT_AMBIENT_TEMPERATURE);
 	w_set_field(&ui->ambient_temperature, v);
@@ -139,7 +102,7 @@ init_ambient_pressure(UI *ui) {
 	double v;
 
 	w_init_field(&ui->ambient_pressure);
-	w_init_select(&ui->ambient_pressure_unit, nelem(pressure_units), pressure_units);
+	w_init_select(&ui->ambient_pressure_unit, n_pressure_units, pressure_units);
 	i = ui->ambient_pressure_unit.idx;
 	v = pressure_readers[i](DEFAULT_AMBIENT_PRESSURE);
 	w_set_field(&ui->ambient_pressure, v);
@@ -161,7 +124,7 @@ init_map(UI *ui) {
 	double v;
 
 	w_init_field(&ui->map[0]);
-	w_init_select(&ui->map_unit, nelem(pressure_units), pressure_units);
+	w_init_select(&ui->map_unit, n_pressure_units, pressure_units);
 	i = ui->map_unit.idx;
 	v = pressure_readers[i](DEFAULT_MAP);
 	w_set_field(&ui->map[0], v);
@@ -199,7 +162,7 @@ init_intercooler_deltap(UI *ui) {
 	double v;
 
 	w_init_field(&ui->intercooler_deltap[0]);
-	w_init_select(&ui->intercooler_deltap_unit, nelem(pressure_units), pressure_units);
+	w_init_select(&ui->intercooler_deltap_unit, n_pressure_units, pressure_units);
 	i = ui->intercooler_deltap_unit.idx;
 	v = pressure_readers[i](DEFAULT_INTERCOOLER_DELTAP);
 	w_set_field(&ui->intercooler_deltap[0], v);
@@ -215,30 +178,30 @@ init_pressure_ratio(UI *ui) {
 static void
 init_comp_outlet_temperature(UI *ui) {
 	w_init_number(ui->comp_outlet_temperature[0]);
-	w_init_select(&ui->comp_outlet_temperature_unit, nelem(temperature_units), temperature_units);
+	w_init_select(&ui->comp_outlet_temperature_unit, n_temperature_units, temperature_units);
 }
 
 static void
 init_manifold_temperature(UI *ui) {
 	w_init_number(ui->manifold_temperature[0]);
-	w_init_select(&ui->manifold_temperature_unit, nelem(temperature_units), temperature_units);
+	w_init_select(&ui->manifold_temperature_unit, n_temperature_units, temperature_units);
 }
 
 static void
 init_volume_flow_rate(UI *ui) {
-	w_init_select(&ui->volume_flow_rate_unit, nelem(volume_flow_rate_units), volume_flow_rate_units);
+	w_init_select(&ui->volume_flow_rate_unit, n_volume_flow_rate_units, volume_flow_rate_units);
 	w_init_number(ui->volume_flow_rate[0]);
 }
 
 static void
 init_mass_flow_rate(UI *ui) {
-	w_init_select(&ui->mass_flow_rate_unit, nelem(mass_flow_rate_units), mass_flow_rate_units);
+	w_init_select(&ui->mass_flow_rate_unit, n_mass_flow_rate_units, mass_flow_rate_units);
 	w_init_number(ui->mass_flow_rate[0]);
 }
 
 static void
 init_mass_flow_rate_corrected(UI *ui) {
-	w_init_select(&ui->mass_flow_rate_corrected_unit, nelem(mass_flow_rate_units), mass_flow_rate_units);
+	w_init_select(&ui->mass_flow_rate_corrected_unit, n_mass_flow_rate_units, mass_flow_rate_units);
 	w_init_number(ui->mass_flow_rate_corrected[0]);
 }
 
@@ -249,7 +212,7 @@ set_displacement(UI *ui) {
 	Volume disp;
 
 	idx = ui->displacement_unit.idx;
-	assert(idx >= 0 && (long unsigned int) idx < nelem(volume_units));
+	assert(idx >= 0 && (size_t) idx < n_volume_units);
 
 	convert = volume_makers[idx];
 	disp = convert(ui->displacement.value);
@@ -278,7 +241,7 @@ set_ambient_temperature(UI *ui) {
 	Temperature t;
 
 	idx = ui->ambient_temperature_unit.idx;
-	assert(idx >= 0 && (long unsigned int) idx < nelem(temperature_units));
+	assert(idx >= 0 && (size_t) idx < n_temperature_units);
 
 	convert = temperature_makers[idx];
 	t = convert(ui->ambient_temperature.value);
@@ -307,7 +270,7 @@ set_ambient_pressure(UI *ui) {
 	Pressure p;
 
 	idx = ui->ambient_pressure_unit.idx;
-	assert(idx >= 0 && (long unsigned int) idx < nelem(pressure_units));
+	assert(idx >= 0 && (size_t) idx < n_pressure_units);
 
 	convert = pressure_makers[idx];
 	p = convert(ui->ambient_pressure.value);
@@ -341,7 +304,7 @@ set_map(UI *ui, int idx) {
 	Pressure p;
 
 	unit_idx = ui->map_unit.idx;
-	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(pressure_units));
+	assert(unit_idx >= 0 && (size_t) unit_idx < n_pressure_units);
 
 	convert = pressure_makers[unit_idx];
 	p = convert(ui->map[idx].value);
@@ -385,7 +348,7 @@ set_intercooler_deltap(UI *ui, int idx) {
 	Pressure p;
 
 	unit_idx = ui->intercooler_deltap_unit.idx;
-	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(pressure_units));
+	assert(unit_idx >= 0 && (size_t) unit_idx < n_pressure_units);
 
 	convert = pressure_makers[unit_idx];
 	p = convert(ui->intercooler_deltap[idx].value);
@@ -441,7 +404,7 @@ compute_comp_outlet_temperature(UI *ui, int idx) {
 	double v;
 
 	unit_idx = ui->comp_outlet_temperature_unit.idx;
-	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(temperature_units));
+	assert(unit_idx >= 0 && (size_t) unit_idx < n_temperature_units);
 
 	convert = temperature_readers[unit_idx];
 	v = convert(comp_outlet_temperature(&ui->points[idx]));
@@ -455,7 +418,7 @@ compute_manifold_temperature(UI *ui, int idx) {
 	double v;
 
 	unit_idx = ui->manifold_temperature_unit.idx;
-	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(temperature_units));
+	assert(unit_idx >= 0 && (size_t) unit_idx < n_temperature_units);
 
 	convert = temperature_readers[unit_idx];
 	v = convert(manifold_temperature(&ui->points[idx]));
@@ -469,7 +432,7 @@ compute_volume_flow_rate(UI *ui, int idx) {
 	double v;
 
 	unit_idx = ui->volume_flow_rate_unit.idx;
-	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(volume_flow_rate_units));
+	assert(unit_idx >= 0 && (size_t) unit_idx < n_volume_flow_rate_units);
 
 	convert = volume_flow_rate_readers[unit_idx];
 	v = convert(volume_flow_rate(&ui->points[idx]));
@@ -483,7 +446,7 @@ compute_mass_flow_rate(UI *ui, int idx) {
 	double v;
 
 	unit_idx = ui->mass_flow_rate_unit.idx;
-	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(mass_flow_rate_units));
+	assert(unit_idx >= 0 && (size_t) unit_idx < n_mass_flow_rate_units);
 
 	convert = mass_flow_rate_readers[unit_idx];
 	v = convert(mass_flow_rate(&ui->points[idx]));
@@ -497,7 +460,7 @@ compute_mass_flow_rate_corrected(UI *ui, int idx) {
 	double v;
 
 	unit_idx = ui->mass_flow_rate_corrected_unit.idx;
-	assert(unit_idx >= 0 && (long unsigned int) unit_idx < nelem(mass_flow_rate_units));
+	assert(unit_idx >= 0 && (size_t) unit_idx < n_mass_flow_rate_units);
 
 	convert = mass_flow_rate_readers[unit_idx];
 	v = convert(mass_flow_rate_corrected(&ui->points[idx]));

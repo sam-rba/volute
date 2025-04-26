@@ -39,6 +39,11 @@ double as_bar(Pressure x);
 double as_psi(Pressure x);
 double as_inch_mercury(Pressure x);
 
+extern const size_t n_pressure_units;
+extern const char *const pressure_units[];
+extern const PressureMaker pressure_makers[];
+extern const PressureReader pressure_readers[];
+
 
 typedef double Temperature;
 typedef Temperature (*TemperatureMaker)(double);
@@ -52,6 +57,11 @@ double as_kelvin(Temperature t);
 double as_celsius(Temperature t);
 double as_fahrenheit(Temperature t);
 double as_rankine(Temperature t);
+
+extern const size_t n_temperature_units;
+extern const char *const temperature_units[];
+extern const TemperatureMaker temperature_makers[];
+extern const TemperatureReader temperature_readers[];
 
 
 typedef double Volume;
@@ -67,6 +77,11 @@ double as_litre(Volume x);
 double as_cubic_metre(double x);
 double as_cubic_inch(double x);
 
+extern const size_t n_volume_units;
+extern const char *const volume_units[];
+extern const VolumeMaker volume_makers[];
+extern const VolumeReader volume_readers[];
+
 
 typedef double VolumeFlowRate;
 typedef VolumeFlowRate (*VolumeFlowRateMaker)(double);
@@ -79,6 +94,11 @@ double as_cubic_metre_per_sec(VolumeFlowRate x);
 double as_cubic_metre_per_min(VolumeFlowRate x);
 double as_cubic_foot_per_min(VolumeFlowRate x);
 
+extern const size_t n_volume_flow_rate_units;
+extern const char *const volume_flow_rate_units[];
+extern const VolumeFlowRateMaker volume_flow_rate_makers[];
+extern const VolumeFlowRateReader volume_flow_rate_readers[];
+
 
 typedef double MassFlowRate;
 typedef MassFlowRate (*MassFlowRateMaker)(double);
@@ -88,3 +108,8 @@ MassFlowRate kilo_per_sec(double x);
 MassFlowRate pound_per_min(double x);
 double as_kilo_per_sec(MassFlowRate m);
 double as_pound_per_min(MassFlowRate m);
+
+extern const size_t n_mass_flow_rate_units;
+extern const char *const mass_flow_rate_units[];
+extern const MassFlowRateMaker mass_flow_rate_makers[];
+extern const MassFlowRateReader mass_flow_rate_readers[];

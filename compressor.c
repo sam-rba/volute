@@ -8,6 +8,7 @@
 
 #include "cwalk.h"
 #include "toml.h"
+#include "util.h"
 #include "unit.h"
 #include "compressor.h"
 #include "eprintf.h"
@@ -19,7 +20,12 @@ static const char ROOT[NAME_MAX+1] = "compressor_maps";
 
 static int load_compressor(const char *path, Compressor *comp);
 static int load_point(const toml_table_t *tbl, const char *key, const char *flowunit, Point *pt);
+static int parse_flow(double val, const char *unit, Flow *flow);
+static int parse_mass_flow(double val, const char *unit, Flow *flow);
+static int parse_volume_flow(double val, const char *unit, Flow *flow);
+static int index(const void *key, const void *base, size_t n, size_t size, int (*cmp)(const void *keyval, const void *datum));
 static int toml_filter(const struct dirent *de);
+static int cmp_flow_unit(const void *key, const void *datum);
 static void free_arr(void **arr, int n);
 
 
@@ -197,6 +203,67 @@ load_point(const toml_table_t *tbl, const char *key, const char *flowunit, Point
 
 	toml_free(subtbl);
 	return 0;
+}
+
+static int
+parse_flow(double val, const char *unit, Flow *flow) {
+	if (parse_mass_flow(val, unit, flow) == 0) {
+		return 0;
+	}
+	if (parse_volume_flow(val, unit, flow) == 0) {
+		return 0;
+	}
+	return 1;
+}
+
+static int
+parse_mass_flow(double val, const char *unit, Flow *flow) {
+	int i;
+
+	i = index(unit, mass_flow_rate_units, n_mass_flow_rate_units, sizeof(mass_flow_rate_units[0]), cmp_flow_unit);
+	if (i >= 0) {
+		flow->u.mfr = mass_flow_rate_makers[i](val);
+		flow->t = MASS_FLOW;
+		return 0;
+	}
+
+	return 1;
+}
+
+static int
+parse_volume_flow(double val, const char *unit, Flow *flow) {
+	int i;
+
+	i = index(unit, volume_flow_rate_units, n_volume_flow_rate_units, sizeof(volume_flow_rate_units[0]), cmp_flow_unit);
+	if (i >= 0) {
+		flow->u.vfr = volume_flow_rate_makers[i](val);
+		flow->t = VOLUME_FLOW;
+		return 0;
+	}
+
+	return 1;
+}
+
+/* index linearly searches base[0]...base[n-1] for an item that matches *key.
+ * The function cmp must return zero if its first argument (the search key)
+ * equals its second (a table entry), non-zero if not equal.
+ * Returns the index of the first occurrence of key in base, or -1 if not present. */
+static int
+index(const void *key, const void *base, size_t n, size_t size, int (*cmp)(const void *keyval, const void *datum)) {
+	int i;
+
+	for (i = 0; i < n; i++) {
+		if (cmp(key, base) == 0) {
+			return i;
+		}
+		base += size;
+	}
+	return -1;
+}
+
+static int
+cmp_flow_unit(const void *key, const void *datum) {
+	return strcmp((char *) key, (char *) datum);
 }
 
 static int
