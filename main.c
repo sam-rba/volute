@@ -1,12 +1,14 @@
 /* Headers. */
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "microui.h"
 #include "renderer.h"
-#include "widget.h"
 #include "unit.h"
+#include "compressor.h"
+#include "widget.h"
 #include "engine.h"
 #include "ui.h"
 

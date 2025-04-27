@@ -1,7 +1,11 @@
+#include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "microui.h"
+#include "unit.h"
+#include "compressor.h"
 #include "widget.h"
 #include "util.h"
 
@@ -104,6 +108,56 @@ w_select(mu_Context *ctx, w_Select *select) {
 	mu_layout_end_column(ctx);
 
 	return res;
+}
+
+/* Returns non-zero on error. */
+int
+w_init_select_compressor(w_Select_Compressor *select, int n, const Compressor *comps) {
+	int i;
+	size_t namesize;
+
+	select->comps = comps;
+	select->n = n;
+
+	select->filtered = malloc(n * sizeof(*select->filtered));
+	if (select->filtered == NULL) {
+		return 1;
+	}
+	/* TODO: parallelize. */
+	for (i = 0; i < n; i++) {
+		select->filtered[i] = i;
+	}
+	select->nfiltered = n;
+
+	namesize = sizeof((*comps).brand) + sizeof((*comps).series) + sizeof((*comps).model) + 3;
+	select->names = malloc(n * namesize);
+	if (select->names == NULL) {
+		free(select->filtered);
+		return 1;
+	}
+	/* TODO: parallelize. */
+	for (i = 0; i < n; i++) {
+		snprintf(select->names[i], namesize, "%s %s %s",
+			comps[i].brand, comps[i].series, comps[i].model);
+	}
+
+	select->idx = 0;
+	select -> oldidx = 0;
+
+	select->active = 0;
+
+	return 0;
+}
+
+void
+w_free_select_compressor(w_Select_Compressor *select) {
+	free(select->filtered);
+	free(select->names);
+}
+
+int
+w_select_compressor(mu_Context *ctx, w_Select_Compressor *select) {
+	/* TODO */
 }
 
 void
