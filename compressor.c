@@ -191,7 +191,7 @@ load_point(const toml_table_t *tbl, const char *key, const char *flowunit, Point
 	}
 
 	if (parse_flow(flowval.u.d, flowunit, &flow) != 0) {
-		weprintf("invalid flow: %d %s", flowval.u.d, flowunit);
+		weprintf("invalid flow: %f %s", flowval.u.d, flowunit);
 		toml_free(subtbl);
 		return 1;
 	}
