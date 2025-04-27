@@ -250,13 +250,13 @@ parse_volume_flow(double val, const char *unit, Flow *flow) {
  * Returns the index of the first occurrence of key in base, or -1 if not present. */
 static int
 index(const void *key, const void *base, size_t n, size_t size, int (*cmp)(const void *keyval, const void *datum)) {
-	int i;
+	size_t i;
 
 	for (i = 0; i < n; i++) {
 		if (cmp(key, base) == 0) {
 			return i;
 		}
-		base += size;
+		base = (char *) base + size;
 	}
 	return -1;
 }
