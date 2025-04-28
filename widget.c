@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <omp.h>
+
 #include "microui.h"
 #include "unit.h"
 #include "compressor.h"
@@ -245,8 +247,8 @@ sc_filter(w_Select_Compressor *select) {
 	series = select->series_filter;
 	model = select->model_filter;
 
-	/* TODO: parallelize */
 	select->nfiltered = 0;
+	#pragma omp parallel for ordered
 	for (i = 0; i < select->n; i++) {
 		comp = &select->comps[i];
 
@@ -258,6 +260,7 @@ sc_filter(w_Select_Compressor *select) {
 			continue;
 		}
 
+		#pragma omp ordered
 		select->filtered[select->nfiltered++] = i;
 	}
 }
