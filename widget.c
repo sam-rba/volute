@@ -204,19 +204,17 @@ static int
 select_compressor_active(mu_Context *ctx, w_Select_Compressor *select) {
 	int filter_changed, res, i, j, width;
 
-	const int widths[] = {LABEL_WIDTH, LABEL_WIDTH, LABEL_WIDTH};
-
-	mu_layout_row(ctx, nelem(widths), widths, 0);
+	mu_layout_row(ctx, 3, (int[]) {LABEL_WIDTH, LABEL_WIDTH, LABEL_WIDTH}, 0);
 	mu_label(ctx, "brand");
 	mu_label(ctx, "series");
 	mu_label(ctx, "model");
 
-	mu_layout_row(ctx, nelem(widths), widths, 0);
+	mu_layout_row(ctx, 4, (int[]) {LABEL_WIDTH, LABEL_WIDTH, LABEL_WIDTH, FIELD_WIDTH}, 0);
 	filter_changed = 0;
-	filter_changed |= mu_textbox(ctx, select->brand_filter, sizeof(select->brand_filter));
-	filter_changed |= mu_textbox(ctx, select->series_filter, sizeof(select->series_filter));
-	filter_changed |= mu_textbox(ctx, select->model_filter, sizeof(select->model_filter));
-	filter_changed &= MU_RES_SUBMIT;
+	filter_changed |= mu_textbox(ctx, select->brand_filter, sizeof(select->brand_filter)) & MU_RES_SUBMIT;
+	filter_changed |= mu_textbox(ctx, select->series_filter, sizeof(select->series_filter)) & MU_RES_SUBMIT;
+	filter_changed |= mu_textbox(ctx, select->model_filter, sizeof(select->model_filter)) & MU_RES_SUBMIT;
+	filter_changed |= mu_button(ctx, "filter");
 	if (filter_changed) {
 		sc_filter(select);
 	}
