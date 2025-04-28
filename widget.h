@@ -48,7 +48,7 @@ typedef struct {
 	int *filtered; /* indices of compressors accepted by the filter. */
 	int nfiltered; /* len(filtered) */
 
-	int idx; /* index of selected in filtered. */
+	int idx; /* index of selected in comps. */
 	int oldidx; /* index of previously selected. */
 
 	int active;

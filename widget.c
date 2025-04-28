@@ -16,6 +16,7 @@ static const mu_Color RED = {255, 0, 0, 255};
 
 static const char *sc_selected_name(w_Select_Compressor *select);
 static int select_compressor_active(mu_Context *ctx, w_Select_Compressor *select);
+static void sc_filter(w_Select_Compressor *select);
 static void update_active(mu_Context *ctx, mu_Id id, mu_Rect r, int *active);
 
 
@@ -192,14 +193,11 @@ w_select_compressor(mu_Context *ctx, w_Select_Compressor *select) {
 static const char *
 sc_selected_name(w_Select_Compressor *select) {
 	static const char *none = "";
-	int i;
 
-	if (select->idx < 0 || select->idx >= select->nfiltered) {
+	if (select->idx < 0 || select->idx >= select->n) {
 		return none;
 	}
-
-	i = select->filtered[select->idx];
-	return select->names[i];
+	return select->names[select->idx];
 }
 
 static int
@@ -220,7 +218,7 @@ select_compressor_active(mu_Context *ctx, w_Select_Compressor *select) {
 	filter_changed |= mu_textbox(ctx, select->model_filter, sizeof(select->model_filter));
 	filter_changed &= MU_RES_SUBMIT;
 	if (filter_changed) {
-		/* TODO: filter. */
+		sc_filter(select);
 	}
 
 	res = 0;
@@ -236,9 +234,34 @@ select_compressor_active(mu_Context *ctx, w_Select_Compressor *select) {
 		}
 	}
 
-	/* TODO */
-
 	return res;
+}
+
+static void
+sc_filter(w_Select_Compressor *select) {
+	const char *brand, *series, *model;
+	int i;
+	const Compressor *comp;
+
+	brand = select->brand_filter;
+	series = select->series_filter;
+	model = select->model_filter;
+
+	/* TODO: parallelize */
+	select->nfiltered = 0;
+	for (i = 0; i < select->n; i++) {
+		comp = &select->comps[i];
+
+		if (strspn(comp->brand, brand) != strlen(brand)) {
+			continue;
+		} else if (strspn(comp->series, series) != strlen(series)) {
+			continue;
+		} else if (strspn(comp->model, model) != strlen(model)) {
+			continue;
+		}
+
+		select->filtered[select->nfiltered++] = i;
+	}
 }
 
 void
