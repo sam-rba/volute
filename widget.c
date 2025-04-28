@@ -130,13 +130,19 @@ w_init_select_compressor(w_Select_Compressor *select, int n, const Compressor *c
 	select->nfiltered = n;
 
 	namesize = sizeof((*comps).brand) + sizeof((*comps).series) + sizeof((*comps).model) + 3;
-	select->names = malloc(n * namesize);
+	select->names = malloc(n * sizeof(*select->names));
 	if (select->names == NULL) {
 		free(select->filtered);
 		return 1;
 	}
 	/* TODO: parallelize. */
 	for (i = 0; i < n; i++) {
+		select->names[i] = malloc(namesize * sizeof(char));
+		if (select->names[i] == NULL) {
+			free_arr((void **) select->names, i);
+			free(select->filtered);
+			return 1;
+		}
 		snprintf(select->names[i], namesize, "%s %s %s",
 			comps[i].brand, comps[i].series, comps[i].model);
 	}
@@ -152,7 +158,7 @@ w_init_select_compressor(w_Select_Compressor *select, int n, const Compressor *c
 void
 w_free_select_compressor(w_Select_Compressor *select) {
 	free(select->filtered);
-	free(select->names);
+	free_arr((void **) select->names, select->n);
 }
 
 int
