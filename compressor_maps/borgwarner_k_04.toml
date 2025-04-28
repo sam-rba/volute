@@ -5,8 +5,8 @@ model = "04"
 flowunit = "kg/s"
 
 [origin]
-minx = 33
-miny = 712
+x = 33
+y = 712
 pr = 1.0
 flow = 0.0
 
