@@ -123,18 +123,18 @@ load_compressor(const char *path, Compressor *comp) {
 		return 1;
 	}
 
-	strncpy(comp->brand, brand.u.s, nelem(comp->brand)-1);
-	strncpy(comp->series, series.u.s, nelem(comp->series)-1);
-	strncpy(comp->model, model.u.s, nelem(comp->model)-1);
+	strncpy(comp->brand, brand.u.s.s, nelem(comp->brand)-1);
+	strncpy(comp->series, series.u.s.s, nelem(comp->series)-1);
+	strncpy(comp->model, model.u.s.s, nelem(comp->model)-1);
 
 	(void) cwk_path_change_extension(path, "jpg", comp->imgfile, sizeof(comp->imgfile));
 
-	if (load_point(tbl, "origin", flowunit.u.s, &comp->origin) != 0) {
+	if (load_point(tbl, "origin", flowunit.u.s.s, &comp->origin) != 0) {
 		weprintf("%s: failed to load 'origin'", path);
 		toml_free(tbl);
 		return 1;
 	}
-	if (load_point(tbl, "ref", flowunit.u.s, &comp->ref) != 0) {
+	if (load_point(tbl, "ref", flowunit.u.s.s, &comp->ref) != 0) {
 		weprintf("%s: failed to load 'ref'", path);
 		toml_free(tbl);
 		return 1;

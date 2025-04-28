@@ -90,8 +90,8 @@ struct toml_value_t {
 	union {
 		struct {
 			char* s;  // string value; must be freed after use.
-			int   sl; // string length, excluding NULL.
-		};
+			int   len; // string length, excluding NULL.
+		} s;
 		toml_timestamp_t ts; // datetime
 		bool             b;  // bool
 		int64_t          i;  // int
