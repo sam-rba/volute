@@ -33,10 +33,14 @@ typedef struct {
 	const Compressor *comps;
 	int n; /* len(comps) */
 
+	char **names; /* buffer to hold names of compressors. */
+
+	char brand_filter[NAME_SIZE];
+	char series_filter[NAME_SIZE];
+	char model_filter[NAME_SIZE];
+
 	int *filtered; /* indices of compressors accepted by the filter. */
 	int nfiltered; /* len(filtered) */
-
-	char **names; /* buffer to hold names of compressors. */
 
 	int idx; /* index of selected in filtered. */
 	int oldidx; /* index of previously selected. */
