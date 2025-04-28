@@ -269,14 +269,12 @@ cmp_flow_unit(const void *key, const void *datum) {
 static int
 toml_filter(const struct dirent *de) {
 	const char *extension;
-	size_t length, n;
-	char toml[] = ".toml";
+	size_t length;
 
 	if (!cwk_path_get_extension(de->d_name, &extension, &length)) {
 		return 0; /* no extension. */
 	}
-	n = min(nelem(toml)-1, length);
-	return strncmp(".toml", extension, n) == 0; /* extension is ".toml". */
+	return strcmp(".toml", extension) == 0; /* extension is ".toml". */
 }
 
 static void
