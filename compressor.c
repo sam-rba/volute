@@ -154,54 +154,47 @@ load_compressor(const char *path, Compressor *comp) {
 static int
 load_point(const toml_table_t *tbl, const char *key, const char *flowunit, Point *pt) {
 	toml_table_t *subtbl;
-	int err;
 	toml_value_t x, y, pr, flowval;
 	Flow flow;
-	
+
 	subtbl = toml_table_table(tbl, key);
 	if (!subtbl) {
 		weprintf("missing table '%s'", key);
 		return 1;
 	}
 
-	err = 0;
 	x = toml_table_int(subtbl, "x");
 	if (!x.ok) {
 		weprintf("%s: missing 'x'", key);
-		err = 1;
+		return 1;
 	}
+	pt->x = x.u.i;
+
 	y = toml_table_int(subtbl, "y");
 	if (!y.ok) {
 		weprintf("%s: missing 'y'", key);
-		err = 1;
+		return 1;
 	}
+	pt->y = y.u.i;
+
 	pr = toml_table_double(subtbl, "pr");
 	if (!pr.ok) {
 		weprintf("%s: missing 'pr'", key);
-		err = 1;
+		return 1;
 	}
+	pt->pr = pr.u.d;
+
 	flowval = toml_table_double(subtbl, "flow");
 	if (!flowval.ok) {
 		weprintf("%s: missing 'flow'", key);
-		err = 1;
-	}
-	if (err) {
-		toml_free(subtbl);
 		return 1;
 	}
-
 	if (parse_flow(flowval.u.d, flowunit, &flow) != 0) {
 		weprintf("invalid flow: %f %s", flowval.u.d, flowunit);
-		toml_free(subtbl);
 		return 1;
 	}
-
-	pt->x = x.u.i;
-	pt->y = y.u.i;
-	pt->pr = pr.u.d;
 	pt->flow = flow;
 
-	toml_free(subtbl);
 	return 0;
 }
 
