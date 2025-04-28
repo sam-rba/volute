@@ -25,11 +25,6 @@ enum window {
 	WIN_OPTS = MU_OPT_NOINTERACT | MU_OPT_NOTITLE | MU_OPT_AUTOSIZE | MU_OPT_NOFRAME,
 };
 
-enum layout {
-	LABEL_WIDTH = 128,
-	UNIT_WIDTH = 52,
-	FIELD_WIDTH = 64,
-};
 
 static const mu_Color BLACK = {0, 0, 0, 255};
 static const mu_Color WHITE = {255, 255, 255, 255};
@@ -77,6 +72,7 @@ static void manifold_temperature_row(mu_Context *ctx, UI *ui);
 static void volume_flow_rate_row(mu_Context *ctx, UI *ui);
 static void mass_flow_rate_row(mu_Context *ctx, UI *ui);
 static void mass_flow_rate_corrected_row(mu_Context *ctx, UI *ui);
+static void comp_select(mu_Context *ctx, UI *ui);
 static void output_row(mu_Context *ctx, UI *ui, const char *label, w_Select *unit, w_Number outputs[]);
 static void hpad(mu_Context *ctx, int w);
 static void vpad(mu_Context *ctx, int h);
@@ -170,6 +166,8 @@ main_window(mu_Context *ctx, UI *ui) {
 	volume_flow_rate_row(ctx, ui);
 	mass_flow_rate_row(ctx, ui);
 	mass_flow_rate_corrected_row(ctx, ui);
+
+	comp_select(ctx, ui);
 
 	mu_end_window(ctx);
 }
@@ -381,6 +379,13 @@ mass_flow_rate_corrected_row(mu_Context *ctx, UI *ui) {
 		"Mass flow at STP:",
 		&ui->mass_flow_rate_corrected_unit,
 		ui->mass_flow_rate_corrected);
+}
+
+static void
+comp_select(mu_Context *ctx, UI *ui) {
+	if (w_select_compressor(ctx, &ui->comp_select) & MU_RES_CHANGE) {
+		/* TODO */
+	}
 }
 
 static void

@@ -14,6 +14,10 @@
 
 static const mu_Color RED = {255, 0, 0, 255};
 
+static const char *sc_selected_name(w_Select_Compressor *select);
+static int select_compressor_active(mu_Context *ctx, w_Select_Compressor *select);
+static void update_active(mu_Context *ctx, mu_Id id, mu_Rect r, int *active);
+
 
 void
 w_init_field(w_Field *f) {
@@ -84,9 +88,7 @@ w_select(mu_Context *ctx, w_Select *select) {
 
 	id = mu_get_id(ctx, &select, sizeof(select));
 	r = mu_layout_next(ctx);
-	mu_update_control(ctx, id, r, 0);
-
-	select->active ^= (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == id);
+	update_active(ctx, id, r, &select->active);
 
 	mu_draw_control_frame(ctx, id, r, MU_COLOR_BUTTON, 0);
 	const char *label = select->opts[select->idx];
@@ -167,7 +169,76 @@ w_free_select_compressor(w_Select_Compressor *select) {
 
 int
 w_select_compressor(mu_Context *ctx, w_Select_Compressor *select) {
+	int width;
+	mu_Id id;
+	mu_Rect r;
+
+	width = 3*LABEL_WIDTH + 2*ctx->style->spacing;
+	mu_layout_row(ctx, 1, &width, 0);
+	id = mu_get_id(ctx, &select, sizeof(select));
+	r = mu_layout_next(ctx);
+	update_active(ctx, id, r, &select->active);
+
+	mu_draw_control_frame(ctx, id, r, MU_COLOR_BUTTON, 0);
+	mu_draw_control_text(ctx, sc_selected_name(select), r, MU_COLOR_TEXT, 0);
+
+	if (select->active) {
+		return select_compressor_active(ctx, select);
+	}
+
+	return 0;
+}
+
+static const char *
+sc_selected_name(w_Select_Compressor *select) {
+	static const char *none = "";
+	int i;
+
+	if (select->idx < 0 || select->idx >= select->nfiltered) {
+		return none;
+	}
+
+	i = select->filtered[select->idx];
+	return select->names[i];
+}
+
+static int
+select_compressor_active(mu_Context *ctx, w_Select_Compressor *select) {
+	int filter_changed, res, i, j, width;
+
+	const int widths[] = {LABEL_WIDTH, LABEL_WIDTH, LABEL_WIDTH};
+
+	mu_layout_row(ctx, nelem(widths), widths, 0);
+	mu_label(ctx, "brand");
+	mu_label(ctx, "series");
+	mu_label(ctx, "model");
+
+	mu_layout_row(ctx, nelem(widths), widths, 0);
+	filter_changed = 0;
+	filter_changed |= mu_textbox(ctx, select->brand_filter, sizeof(select->brand_filter));
+	filter_changed |= mu_textbox(ctx, select->series_filter, sizeof(select->series_filter));
+	filter_changed |= mu_textbox(ctx, select->model_filter, sizeof(select->model_filter));
+	filter_changed &= MU_RES_SUBMIT;
+	if (filter_changed) {
+		/* TODO: filter. */
+	}
+
+	res = 0;
+	for (i = 0; i < select->nfiltered; i++) {
+		width = 3*LABEL_WIDTH + 2*ctx->style->spacing;
+		mu_layout_row(ctx, 1, &width, 0);
+		j = select->filtered[i];
+		if (mu_button(ctx, select->names[j])) {
+			select->oldidx = select->idx;
+			select->idx = j;
+			res = MU_RES_CHANGE;
+			select->active = 0;
+		}
+	}
+
 	/* TODO */
+
+	return res;
 }
 
 void
@@ -183,4 +254,12 @@ w_set_number(w_Number num, double val) {
 void
 w_number(mu_Context *ctx, const w_Number num) {
 	mu_label(ctx, num);
+}
+
+/* Update the active/selected status of a widget. id is the microui ID of the widget.
+ * *active is the active flag of the widget that will be toggled if anywhere in r is clicked. */
+static void
+update_active(mu_Context *ctx, mu_Id id, mu_Rect r, int *active) {
+	mu_update_control(ctx, id, r, 0);
+	*active ^= (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == id);
 }

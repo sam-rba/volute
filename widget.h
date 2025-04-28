@@ -1,3 +1,9 @@
+enum layout {
+	LABEL_WIDTH = 128,
+	UNIT_WIDTH = 52,
+	FIELD_WIDTH = 64,
+};
+
 enum {
 	FIELD_SIZE = 64,
 	NUMBER_SIZE = 128,
