@@ -240,7 +240,6 @@ init_comps(UI *ui) {
 		free(ui->comps);
 		return 1;
 	}
-	printf("init'd comp select widget\n");
 
 	return 0;
 }
