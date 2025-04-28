@@ -263,7 +263,7 @@ index(const void *key, const void *base, size_t n, size_t size, int (*cmp)(const
 
 static int
 cmp_flow_unit(const void *key, const void *datum) {
-	return strcmp((char *) key, (char *) datum);
+	return strcmp((char *) key, *(char **) datum);
 }
 
 static int
