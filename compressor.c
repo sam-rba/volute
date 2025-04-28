@@ -91,6 +91,7 @@ load_compressor(const char *path, Compressor *comp) {
 	tbl = toml_parse_file(f, errbuf, sizeof(errbuf));
 	if (!tbl) {
 		weprintf("failed to parse %s: %s", path, errbuf);
+		(void) fclose(f);
 		return 1;
 	}
 
