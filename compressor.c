@@ -25,6 +25,7 @@ static int parse_mass_flow(double val, const char *unit, Flow *flow);
 static int parse_volume_flow(double val, const char *unit, Flow *flow);
 static int toml_filter(const struct dirent *de);
 static int cmp_flow_unit(const void *key, const void *datum);
+static int cmp_comp(const void *keyval, const void *datum);
 
 
 /* Load descriptions of all of the compressor maps.
@@ -66,6 +67,8 @@ load_compressors(Compressor **comps, int *n) {
 		free(files[--nfiles]);
 	}
 	free(files);
+
+	qsort(*comps, *n, sizeof(**comps), cmp_comp);
 
 	return 0;
 }
@@ -249,4 +252,20 @@ toml_filter(const struct dirent *de) {
 		return 0; /* no extension. */
 	}
 	return strcmp(".toml", extension) == 0; /* extension is ".toml". */
+}
+
+static int
+cmp_comp(const void *keyval, const void *datum) {
+	Compressor a, b;
+	int ord;
+
+	a = *(Compressor *) keyval;
+	b = *(Compressor *) datum;
+
+	if ((ord = strncmp(a.brand, b.brand, sizeof(a.brand)))) {
+		return ord;
+	} else if ((ord = strncmp(a.series, b.series, sizeof(a.series)))) {
+		return ord;
+	}
+	return strncmp(a.model, b.model, sizeof(a.model));
 }
