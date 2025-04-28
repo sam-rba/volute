@@ -26,7 +26,6 @@ static int parse_volume_flow(double val, const char *unit, Flow *flow);
 static int lsearch(const void *key, const void *base, size_t n, size_t size, int (*cmp)(const void *keyval, const void *datum));
 static int toml_filter(const struct dirent *de);
 static int cmp_flow_unit(const void *key, const void *datum);
-static void free_arr(void **arr, int n);
 
 
 /* Load descriptions of all of the compressor maps.
@@ -268,12 +267,4 @@ toml_filter(const struct dirent *de) {
 		return 0; /* no extension. */
 	}
 	return strcmp(".toml", extension) == 0; /* extension is ".toml". */
-}
-
-static void
-free_arr(void **arr, int n) {
-	while (n-- > 0) {
-		free(arr[n]);
-	}
-	free(arr);
 }
