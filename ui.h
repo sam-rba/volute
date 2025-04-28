@@ -43,9 +43,14 @@ typedef struct {
 
 	w_Select mass_flow_rate_corrected_unit;
 	w_Number mass_flow_rate_corrected[MAX_POINTS];
+
+	Compressor *comps;
+	int ncomps;
+	w_Select_Compressor comp_select;
 } UI;
 
-void init_ui(UI *ui);
+int init_ui(UI *ui);
+void free_ui(UI *ui);
 void set_displacement(UI *ui);
 void set_displacement_unit(UI* ui);
 void set_ambient_temperature(UI *ui);

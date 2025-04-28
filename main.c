@@ -94,9 +94,13 @@ main(void) {
 
 	/* Init data structures. */
 	static UI ui;
-	init_ui(&ui);
+	if (init_ui(&ui) != 0) {
+		return 1;
+	}
 
 	main_loop(&ctx, &ui);
+
+	free_ui(&ui);
 
 	return 0;
 }

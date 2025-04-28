@@ -1,5 +1,7 @@
 #include <assert.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "microui.h"
@@ -8,6 +10,7 @@
 #include "widget.h"
 #include "engine.h"
 #include "ui.h"
+#include "eprintf.h"
 
 
 #define DEFAULT_DISPLACEMENT (litre(1.5))
@@ -36,6 +39,7 @@ static void init_manifold_temperature(UI *ui);
 static void init_volume_flow_rate(UI *ui);
 static void init_mass_flow_rate(UI *ui);
 static void init_mass_flow_rate_corrected(UI *ui);
+static int init_comps(UI *ui);
 static void compute_pressure_ratio(UI *ui, int idx);
 static void compute_comp_outlet_temperature(UI *ui, int idx);
 static void compute_manifold_temperature(UI *ui, int idx);
@@ -44,7 +48,8 @@ static void compute_mass_flow_rate(UI *ui, int idx);
 static void compute_mass_flow_rate_corrected(UI *ui, int idx);
 
 
-void
+/* Returns non-zero on error. */
+int
 init_ui(UI *ui) {
 	ui->npoints = 1;
 	init_engine(&ui->points[0]);
@@ -67,7 +72,19 @@ init_ui(UI *ui) {
 	init_mass_flow_rate(ui);
 	init_mass_flow_rate_corrected(ui);
 
+	if (init_comps(ui) != 0) {
+		return 1;
+	}
+
 	compute(ui, 0);
+
+	return 0;
+}
+
+void
+free_ui(UI *ui) {
+	w_free_select_compressor(&ui->comp_select);
+	free(ui->comps);
 }
 
 static void
@@ -205,6 +222,27 @@ static void
 init_mass_flow_rate_corrected(UI *ui) {
 	w_init_select(&ui->mass_flow_rate_corrected_unit, n_mass_flow_rate_units, mass_flow_rate_units);
 	w_init_number(ui->mass_flow_rate_corrected[0]);
+}
+
+static int
+init_comps(UI *ui) {
+	int i;
+
+	if (load_compressors(&ui->comps, &ui->ncomps) != 0) {
+		weprintf("failed to load compressors");
+		return 1;
+	}
+	for (i = 0; i < ui->ncomps; i++) {
+		printf("%s %s %s\n", ui->comps[i].brand, ui->comps[i].series, ui->comps[i].model);
+	}
+
+	if (w_init_select_compressor(&ui->comp_select, ui->ncomps, ui->comps) != 0) {
+		free(ui->comps);
+		return 1;
+	}
+	printf("init'd comp select widget\n");
+
+	return 0;
 }
 
 void
