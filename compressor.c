@@ -23,7 +23,6 @@ static int load_point(const toml_table_t *tbl, const char *key, const char *flow
 static int parse_flow(double val, const char *unit, Flow *flow);
 static int parse_mass_flow(double val, const char *unit, Flow *flow);
 static int parse_volume_flow(double val, const char *unit, Flow *flow);
-static int lsearch(const void *key, const void *base, size_t n, size_t size, int (*cmp)(const void *keyval, const void *datum));
 static int toml_filter(const struct dirent *de);
 static int cmp_flow_unit(const void *key, const void *datum);
 
@@ -234,23 +233,6 @@ parse_volume_flow(double val, const char *unit, Flow *flow) {
 	}
 
 	return 1;
-}
-
-/* lsearch linearly searches base[0]...base[n-1] for an item that matches *key.
- * The function cmp must return zero if its first argument (the search key)
- * equals its second (a table entry), non-zero if not equal.
- * Returns the index of the first occurrence of key in base, or -1 if not present. */
-static int
-lsearch(const void *key, const void *base, size_t n, size_t size, int (*cmp)(const void *keyval, const void *datum)) {
-	size_t i;
-
-	for (i = 0; i < n; i++) {
-		if (cmp(key, base) == 0) {
-			return i;
-		}
-		base = (char *) base + size;
-	}
-	return -1;
 }
 
 static int
