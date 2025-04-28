@@ -167,6 +167,8 @@ main_window(mu_Context *ctx, UI *ui) {
 	mass_flow_rate_row(ctx, ui);
 	mass_flow_rate_corrected_row(ctx, ui);
 
+	vpad(ctx, 0);
+
 	comp_select(ctx, ui);
 
 	mu_end_window(ctx);
