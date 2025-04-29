@@ -64,3 +64,13 @@ typedef char w_Number[NUMBER_SIZE];
 void w_init_number(w_Number num);
 void w_set_number(w_Number num, double val);
 void w_number(mu_Context *ctx, const w_Number num);
+
+
+typedef struct {
+	int id; /* icon id. */
+} w_Image;
+
+void w_init_image(w_Image *img);
+void w_free_image(w_Image *img);
+int w_set_image(w_Image *img, const char *path);
+void w_image(mu_Context *ctx, w_Image *img);

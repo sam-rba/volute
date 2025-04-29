@@ -6,15 +6,18 @@
 #include <omp.h>
 
 #include "microui.h"
+#include "renderer.h"
 #include "unit.h"
 #include "compressor.h"
 #include "widget.h"
 #include "util.h"
+#include "eprintf.h"
 
 
 #define FORMAT "%.5g"
 
 static const mu_Color RED = {255, 0, 0, 255};
+static const mu_Color WHITE = {255, 255, 255, 255};
 
 static const char *sc_selected_name(w_Select_Compressor *select);
 static int select_compressor_active(mu_Context *ctx, w_Select_Compressor *select);
@@ -278,6 +281,49 @@ w_set_number(w_Number num, double val) {
 void
 w_number(mu_Context *ctx, const w_Number num) {
 	mu_label(ctx, num);
+}
+
+void
+w_init_image(w_Image *img) {
+	img->id = -1;
+}
+
+void
+w_free_image(w_Image *img) {
+	if (img->id >= 0) {
+		r_remove_icon(img->id);
+		img->id = -1;
+	}
+}
+
+/* Load an image from a file. Returns non-zero on error. */
+int
+w_set_image(w_Image *img, const char *path) {
+	int id;
+
+	/* Remove old image. */
+	w_free_image(img);
+
+	/* Load new image. */
+	id = r_add_icon(path);
+	if (id < 0) {
+		weprintf("failed to load image %s", path);
+		return 1;
+	}
+	img->id = id;
+
+	return 0;
+}
+
+void
+w_image(mu_Context *ctx, w_Image *img) {
+	int id;
+	mu_Rect r;
+
+	id = mu_get_id(ctx, &img, sizeof(img));
+	r = mu_layout_next(ctx);
+	mu_update_control(ctx, id, r, 0);
+	mu_draw_icon(ctx, 0, r, WHITE);
 }
 
 /* Update the active/selected status of a widget. id is the microui ID of the widget.

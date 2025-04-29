@@ -47,6 +47,8 @@ typedef struct {
 	Compressor *comps;
 	int ncomps;
 	w_Select_Compressor comp_select;
+
+	w_Image comp_img;
 } UI;
 
 int init_ui(UI *ui);

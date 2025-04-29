@@ -298,8 +298,9 @@ r_get_window_size(int *w, int*h) {
 	}
 }
 
+/* Load an image and add it to the list of icons. Returns the id of the icon, or -1 on error. */
 int
-r_push_icon(const char *path) {
+r_add_icon(const char *path) {
 	SDL_Surface *surface;
 
 	expect(icon_list.idx < ICONLIST_SIZE);
@@ -307,23 +308,32 @@ r_push_icon(const char *path) {
 	surface = IMG_Load(path);
 	if (!surface) {
 		fprintf(stderr, "failed to load %s: %s\n", path, SDL_GetError());
-		return 1;
+		return -1;
 	}
 	icon_list.items[icon_list.idx] = SDL_CreateTextureFromSurface(renderer, surface);
 	if (!icon_list.items[icon_list.idx]) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 		SDL_FreeSurface(surface);
-		return 1;
+		return -1;
 	}
-	icon_list.idx++;
 	SDL_FreeSurface(surface);
-	return 0;
+	return icon_list.idx++;
 }
 
+/* Remove the icon with the specified id from the icons list. */
 void
-r_pop_icon(void) {
-	if (icon_list.idx <= 0) {
-		return;
-	}
-	SDL_DestroyTexture(icon_list.items[--icon_list.idx]);
+r_remove_icon(int id) {
+	SDL_Texture **dst, **src;
+	size_t size;
+
+	expect(id >= 0 && id < icon_list.idx);
+
+	SDL_DestroyTexture(icon_list.items[id]);
+
+	dst = icon_list.items + id;
+	src = icon_list.items + id + 1;
+	size = (icon_list.idx - id - 1) * sizeof(*icon_list.items);
+	memmove(dst, src, size);
+
+	icon_list.idx--;
 }

@@ -396,24 +396,18 @@ comp_select(mu_Context *ctx, UI *ui) {
 
 static void
 comp_img(mu_Context *ctx, UI *ui) {
+	int w, h;
 	mu_Rect r;
-	const char *data;
-	int id, w, h;
 
+	/* Row that covers the rest of the window. */
 	r_get_window_size(&w, &h);
 	mu_layout_row(ctx, 1, &w, h);
-
-	data = ui->comps[ui->comp_select.idx].imgfile;
-	id = mu_get_id(ctx, &data, sizeof(data));
-
 	r = mu_layout_next(ctx);
 	r.w = w - r.x - ctx->style->spacing;
 	r.h = h - r.y - ctx->style->spacing;
 	mu_layout_set_next(ctx, r, 0);
 
-	mu_update_control(ctx, id, r, 0);
-
-	mu_draw_icon(ctx, 0, r, (mu_Color) {0, 0, 0, 0});
+	w_image(ctx, &ui->comp_img);
 }
 
 static void
