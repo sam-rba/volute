@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 #include "microui.h"
 #include "unit.h"
 #include "compressor.h"
@@ -40,6 +43,7 @@ static void init_volume_flow_rate(UI *ui);
 static void init_mass_flow_rate(UI *ui);
 static void init_mass_flow_rate_corrected(UI *ui);
 static int init_comps(UI *ui);
+static int init_comp_img(UI *ui);
 static void compute_pressure_ratio(UI *ui, int idx);
 static void compute_comp_outlet_temperature(UI *ui, int idx);
 static void compute_manifold_temperature(UI *ui, int idx);
@@ -76,6 +80,11 @@ init_ui(UI *ui) {
 		return 1;
 	}
 
+	if (init_comp_img(ui) != 0) {
+		free_ui(ui);
+		return 1;
+	}
+
 	compute(ui, 0);
 
 	return 0;
@@ -85,6 +94,7 @@ void
 free_ui(UI *ui) {
 	w_free_select_compressor(&ui->comp_select);
 	free(ui->comps);
+	SDL_FreeSurface(ui->comp_img);
 }
 
 static void
@@ -241,6 +251,19 @@ init_comps(UI *ui) {
 		return 1;
 	}
 
+	return 0;
+}
+
+static int
+init_comp_img(UI *ui) {
+	const Compressor *comp;
+
+	comp = &ui->comps[ui->comp_select.idx];
+	ui->comp_img = IMG_Load(comp->imgfile);
+	if (ui->comp_img == NULL) {
+		weprintf("failed to load %s", comp->imgfile);
+		return 1;
+	}
 	return 0;
 }
 

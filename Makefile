@@ -1,5 +1,5 @@
 CFLAGS = -std=c99 -I ./ -fopenmp -Wall -Wextra -pedantic -Wno-deprecated-declarations -D_XOPEN_SOURCE=700L
-LDFLAGS = -lSDL2 -lSDL2_ttf -lm -fopenmp
+LDFLAGS = -lSDL2 -lSDL2_ttf -lSDL2_image -lm -fopenmp
 
 SRC = main.c microui.c renderer.c widget.c ui.c unit.c engine.c compressor.c eprintf.c cwalk.c toml.c util.c
 OBJ = ${SRC:.c=.o}
