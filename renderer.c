@@ -9,6 +9,15 @@
 #include "renderer.h"
 
 
+#define expect(x) do {                                               \
+    if (!(x)) {                                                      \
+      fprintf(stderr, "Fatal error: %s:%d: assertion '%s' failed\n", \
+        __FILE__, __LINE__, #x);                                     \
+      abort();                                                       \
+    }                                                                \
+  } while (0)
+
+
 enum window {
 	WIDTH = 640,
 	HEIGHT = 480,
@@ -52,7 +61,7 @@ static void render_command(mu_Command *cmd);
 static void clip(mu_Rect rect);
 static void draw_rect(mu_Rect rect, mu_Color color);
 static void draw_text(mu_Font font, mu_Vec2 pos, mu_Color color, const char *str);
-
+static void draw_icon(int id, mu_Rect r);
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -208,6 +217,9 @@ render_command(mu_Command *cmd) {
 		break; case MU_COMMAND_TEXT: {
 			draw_text(cmd->text.font, cmd->text.pos, cmd->text.color, cmd->text.str);
 		}
+		break; case MU_COMMAND_ICON: {
+			draw_icon(cmd->icon.id, cmd->icon.rect);
+		}
 	}
 }
 
@@ -258,6 +270,24 @@ draw_text(mu_Font font, mu_Vec2 pos, mu_Color color, const char *str) {
 
 	SDL_DestroyTexture(texture);
 	SDL_FreeSurface(surface);
+}
+
+static void
+draw_icon(int id, mu_Rect r) {
+	SDL_Texture *texture;
+	SDL_Rect rect;
+
+	expect(id >= 0 && id < icon_list.idx);
+	texture = SDL_CreateTextureFromSurface(renderer, icon_list.items[id]);
+	if (!texture) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return;
+	}
+	rect = (SDL_Rect) {r.x, r.y, r.w, r.h};
+	if (SDL_RenderCopy(renderer, texture, NULL, &rect) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+	}
+	SDL_DestroyTexture(texture);
 }
 
 void
