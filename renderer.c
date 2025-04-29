@@ -337,3 +337,13 @@ r_remove_icon(int id) {
 
 	icon_list.idx--;
 }
+
+void
+r_get_icon_size(int id, int *w, int *h) {
+	expect(id >= 0 && id < icon_list.idx);
+
+	*w = *h = 0;
+	if (SDL_QueryTexture(icon_list.items[id], NULL, NULL, w, h) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+	}
+}

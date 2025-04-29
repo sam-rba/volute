@@ -74,6 +74,7 @@ static void mass_flow_rate_row(mu_Context *ctx, UI *ui);
 static void mass_flow_rate_corrected_row(mu_Context *ctx, UI *ui);
 static void comp_select(mu_Context *ctx, UI *ui);
 static void comp_img(mu_Context *ctx, UI *ui);
+static void scale_preserve_aspect_ratio(mu_Rect *r, int wmax, int hmax);
 static void output_row(mu_Context *ctx, UI *ui, const char *label, w_Select *unit, w_Number outputs[]);
 static void hpad(mu_Context *ctx, int w);
 static void vpad(mu_Context *ctx, int h);
@@ -396,18 +397,36 @@ comp_select(mu_Context *ctx, UI *ui) {
 
 static void
 comp_img(mu_Context *ctx, UI *ui) {
-	int w, h;
-	mu_Rect r;
+	mu_Rect win, area, img;
 
-	/* Row that covers the rest of the window. */
-	r_get_window_size(&w, &h);
-	mu_layout_row(ctx, 1, &w, h);
-	r = mu_layout_next(ctx);
-	r.w = w - r.x - ctx->style->spacing;
-	r.h = h - r.y - ctx->style->spacing;
-	mu_layout_set_next(ctx, r, 0);
+	win.x = win.y = 0;
+	r_get_window_size(&win.w, &win.h);
+	mu_layout_row(ctx, 1, &win.w, win.h);
+
+	area = mu_layout_next(ctx);
+	area.w = win.w - area.x - ctx->style->padding;
+	area.h = win.h - area.y - ctx->style->padding;
+
+	img.x = area.x;
+	img.y = area.y;
+	r_get_icon_size(ui->comp_img.id, &img.w, &img.h);
+
+	scale_preserve_aspect_ratio(&img, area.w, area.h);
+
+	mu_layout_set_next(ctx, img, 0);
 
 	w_image(ctx, &ui->comp_img);
+}
+
+static void
+scale_preserve_aspect_ratio(mu_Rect *r, int wmax, int hmax) {
+	double wscale, hscale, scale;
+
+	wscale = (double) wmax / (double) r->w;
+	hscale = (double) hmax / (double) r->h;
+	scale = mu_min(wscale, hscale);
+	r->w *= scale;
+	r->h *= scale;
 }
 
 static void

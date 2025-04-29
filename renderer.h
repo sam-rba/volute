@@ -5,3 +5,4 @@ void r_render(mu_Context *ctx);
 void r_get_window_size(int *w, int *h);
 int r_add_icon(const char *path);
 void r_remove_icon(int);
+void r_get_icon_size(int id, int *w, int *h);
