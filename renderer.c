@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include "microui.h"
 #include "renderer.h"
 
@@ -14,6 +15,8 @@ enum window {
 	WINFLAGS = SDL_WINDOW_RESIZABLE,
 	RENDERFLAGS = SDL_RENDERER_PRESENTVSYNC,
 };
+
+enum { ICONLIST_SIZE = 32 };
 
 static const char FONT[] = "font/P052-Roman.ttf";
 enum font { FONTSIZE = 14, };
@@ -37,6 +40,9 @@ static const char key_map[256] = {
 	[SDLK_BACKSPACE & 0xff] = MU_KEY_BACKSPACE,
 };
 
+mu_stack(SDL_Surface *, ICONLIST_SIZE) icon_list;
+
+
 static void print_info(void);
 static int text_width(mu_Font mufont, const char *str, int len);
 static int text_height(mu_Font mufont);
@@ -54,6 +60,8 @@ static SDL_Renderer *renderer = NULL;
 /* Initialize the window and renderer. Returns non-zero on error. */
 int
 r_init(mu_Context *ctx, const char *title) {
+	icon_list.idx = 0;
+
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 		return 1;
@@ -178,30 +186,6 @@ r_render(mu_Context *ctx) {
 	SDL_RenderPresent(renderer);
 }
 
-/* Render an image. Returns non-zero on error. */
-int
-r_image(SDL_Surface *img, mu_Rect r) {
-	SDL_Texture *texture;
-	SDL_Rect rect;
-
-	texture = SDL_CreateTextureFromSurface(renderer, img);
-	if (!texture) {
-		fprintf(stderr, "%s\n", SDL_GetError());
-		return 1;
-	}
-
-	rect = (SDL_Rect) {r.x, r.y, r.w, r.h};
-	if (SDL_RenderCopy(renderer, texture, NULL, &rect) != 0) {
-		fprintf(stderr, "%s\n", SDL_GetError());
-		SDL_DestroyTexture(texture);
-		return 1;
-	}
-
-	SDL_DestroyTexture(texture);
-
-	return 0;
-}
-
 static void
 clear(void) {
 	if (SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, bg.a) != 0) {
@@ -281,4 +265,30 @@ r_get_window_size(int *w, int*h) {
 	if (SDL_GetRendererOutputSize(renderer, w, h) != 0) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 	}
+}
+
+int
+r_push_icon(const char *path) {
+	SDL_Surface **p;
+
+	if (icon_list.idx >= ICONLIST_SIZE) {
+		fprintf(stderr, "icon list overflow\n");
+		return 1;
+	}
+	p = icon_list.items + icon_list.idx;
+	*p = IMG_Load(path);
+	if (*p == NULL) {
+		fprintf(stderr, "failed to load %s: %s\n", path, SDL_GetError());
+		return 1;
+	}
+	icon_list.idx++;
+	return 0;
+}
+
+void
+r_pop_icon(void) {
+	if (icon_list.idx >= 0) {
+		return;
+	}
+	SDL_FreeSurface(icon_list.items[--icon_list.idx]);
 }

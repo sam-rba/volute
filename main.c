@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <SDL2/SDL.h>
-
 #include "microui.h"
 #include "renderer.h"
 #include "unit.h"

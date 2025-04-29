@@ -47,8 +47,6 @@ typedef struct {
 	Compressor *comps;
 	int ncomps;
 	w_Select_Compressor comp_select;
-
-	SDL_Surface *comp_img; /* image of compressor map. */
 } UI;
 
 int init_ui(UI *ui);
