@@ -415,8 +415,11 @@ r_add_canvas(const char *bg_img_path) {
 	Canvas *c;
 
 	expect(canvas_list.idx < CANVASLIST_SIZE);
+	expect(icon_list.idx < ICONLIST_SIZE);
 
 	c = &canvas_list.items[canvas_list.idx];
+
+	c->icon_id = icon_list.idx;
 
 	c->bg = IMG_Load(bg_img_path);
 	if (!c->bg) {
@@ -439,6 +442,7 @@ r_add_canvas(const char *bg_img_path) {
 		return -1;
 	}
 
+	icon_list.idx++;
 	return canvas_list.idx++;
 }
 
