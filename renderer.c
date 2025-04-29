@@ -49,7 +49,7 @@ static const char key_map[256] = {
 	[SDLK_BACKSPACE & 0xff] = MU_KEY_BACKSPACE,
 };
 
-mu_stack(SDL_Surface *, ICONLIST_SIZE) icon_list;
+mu_stack(SDL_Texture *, ICONLIST_SIZE) icon_list;
 
 
 static void print_info(void);
@@ -111,7 +111,7 @@ r_init(mu_Context *ctx, const char *title) {
 void
 r_free(void) {
 	while (icon_list.idx-- > 0) {
-		SDL_FreeSurface(icon_list.items[icon_list.idx]);
+		SDL_DestroyTexture(icon_list.items[icon_list.idx]);
 	}
 }
 
@@ -281,20 +281,14 @@ draw_text(mu_Font font, mu_Vec2 pos, mu_Color color, const char *str) {
 
 static void
 draw_icon(int id, mu_Rect r) {
-	SDL_Texture *texture;
 	SDL_Rect rect;
 
 	expect(id >= 0 && id < icon_list.idx);
-	texture = SDL_CreateTextureFromSurface(renderer, icon_list.items[id]);
-	if (!texture) {
-		fprintf(stderr, "%s\n", SDL_GetError());
-		return;
-	}
+
 	rect = (SDL_Rect) {r.x, r.y, r.w, r.h};
-	if (SDL_RenderCopy(renderer, texture, NULL, &rect) != 0) {
+	if (SDL_RenderCopy(renderer, icon_list.items[id], NULL, &rect) != 0) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 	}
-	SDL_DestroyTexture(texture);
 }
 
 void
@@ -306,26 +300,30 @@ r_get_window_size(int *w, int*h) {
 
 int
 r_push_icon(const char *path) {
-	SDL_Surface **p;
+	SDL_Surface *surface;
 
-	if (icon_list.idx >= ICONLIST_SIZE) {
-		fprintf(stderr, "icon list overflow\n");
-		return 1;
-	}
-	p = icon_list.items + icon_list.idx;
-	*p = IMG_Load(path);
-	if (*p == NULL) {
+	expect(icon_list.idx < ICONLIST_SIZE);
+
+	surface = IMG_Load(path);
+	if (!surface) {
 		fprintf(stderr, "failed to load %s: %s\n", path, SDL_GetError());
 		return 1;
 	}
+	icon_list.items[icon_list.idx] = SDL_CreateTextureFromSurface(renderer, surface);
+	if (!icon_list.items[icon_list.idx]) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		SDL_FreeSurface(surface);
+		return 1;
+	}
 	icon_list.idx++;
+	SDL_FreeSurface(surface);
 	return 0;
 }
 
 void
 r_pop_icon(void) {
-	if (icon_list.idx >= 0) {
+	if (icon_list.idx <= 0) {
 		return;
 	}
-	SDL_FreeSurface(icon_list.items[--icon_list.idx]);
+	SDL_DestroyTexture(icon_list.items[--icon_list.idx]);
 }
