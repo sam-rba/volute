@@ -178,6 +178,30 @@ r_render(mu_Context *ctx) {
 	SDL_RenderPresent(renderer);
 }
 
+/* Render an image. Returns non-zero on error. */
+int
+r_image(SDL_Surface *img, mu_Rect r) {
+	SDL_Texture *texture;
+	SDL_Rect rect;
+
+	texture = SDL_CreateTextureFromSurface(renderer, img);
+	if (!texture) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return 1;
+	}
+
+	rect = (SDL_Rect) {r.x, r.y, r.w, r.h};
+	if (SDL_RenderCopy(renderer, texture, NULL, &rect) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		SDL_DestroyTexture(texture);
+		return 1;
+	}
+
+	SDL_DestroyTexture(texture);
+
+	return 0;
+}
+
 static void
 clear(void) {
 	if (SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, bg.a) != 0) {
