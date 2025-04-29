@@ -453,6 +453,8 @@ r_remove_canvas(int id) {
 
 	expect(id >= 0 && id < canvas_list.idx);
 
+	r_remove_icon(canvas_list.items[id].icon_id);
+
 	free_canvas(canvas_list.items[id]);
 
 	dst = canvas_list.items + id;
