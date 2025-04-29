@@ -323,7 +323,7 @@ w_image(mu_Context *ctx, w_Image *img) {
 	id = mu_get_id(ctx, &img, sizeof(img));
 	r = mu_layout_next(ctx);
 	mu_update_control(ctx, id, r, 0);
-	mu_draw_icon(ctx, 0, r, WHITE);
+	mu_draw_icon(ctx, img->id, r, WHITE);
 }
 
 /* Update the active/selected status of a widget. id is the microui ID of the widget.
