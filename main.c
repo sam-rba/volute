@@ -97,6 +97,7 @@ main(void) {
 	main_loop(&ctx, &ui);
 
 	free_ui(&ui);
+	r_free();
 
 	return 0;
 }

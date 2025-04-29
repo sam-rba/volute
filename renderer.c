@@ -108,6 +108,13 @@ r_init(mu_Context *ctx, const char *title) {
 	return 0;
 }
 
+void
+r_free(void) {
+	while (icon_list.idx-- > 0) {
+		SDL_FreeSurface(icon_list.items[icon_list.idx]);
+	}
+}
+
 static void
 print_info(void) {
 	SDL_RendererInfo info;
