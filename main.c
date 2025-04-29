@@ -73,6 +73,7 @@ static void volume_flow_rate_row(mu_Context *ctx, UI *ui);
 static void mass_flow_rate_row(mu_Context *ctx, UI *ui);
 static void mass_flow_rate_corrected_row(mu_Context *ctx, UI *ui);
 static void comp_select(mu_Context *ctx, UI *ui);
+static void comp_img(mu_Context *ctx);
 static void output_row(mu_Context *ctx, UI *ui, const char *label, w_Select *unit, w_Number outputs[]);
 static void hpad(mu_Context *ctx, int w);
 static void vpad(mu_Context *ctx, int h);
@@ -171,6 +172,8 @@ main_window(mu_Context *ctx, UI *ui) {
 	vpad(ctx, 0);
 
 	comp_select(ctx, ui);
+
+	comp_img(ctx);
 
 	mu_end_window(ctx);
 }
@@ -389,6 +392,20 @@ comp_select(mu_Context *ctx, UI *ui) {
 	if (w_select_compressor(ctx, &ui->comp_select) & MU_RES_CHANGE) {
 		/* TODO */
 	}
+}
+
+static void
+comp_img(mu_Context *ctx) {
+	mu_Rect r;
+	int w, h;
+
+	mu_layout_row(ctx, 1, (int[]) {-1}, -1);
+	r = mu_layout_next(ctx);
+	r_get_window_size(&w, &h);
+	r.w = w - r.x;
+	r.h = h - r.y;
+	mu_layout_set_next(ctx, r, 0);
+	mu_draw_icon(ctx, 0, r, (mu_Color) {0, 0, 0, 0});
 }
 
 static void

@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "microui.h"
+#include "renderer.h"
 #include "unit.h"
 #include "compressor.h"
 #include "widget.h"
@@ -40,6 +41,7 @@ static void init_volume_flow_rate(UI *ui);
 static void init_mass_flow_rate(UI *ui);
 static void init_mass_flow_rate_corrected(UI *ui);
 static int init_comps(UI *ui);
+static int init_comp_img(UI *ui);
 static void compute_pressure_ratio(UI *ui, int idx);
 static void compute_comp_outlet_temperature(UI *ui, int idx);
 static void compute_manifold_temperature(UI *ui, int idx);
@@ -48,7 +50,7 @@ static void compute_mass_flow_rate(UI *ui, int idx);
 static void compute_mass_flow_rate_corrected(UI *ui, int idx);
 
 
-/* Returns non-zero on error. */
+/* Returns non-zero on error. The renderer must already be initialized. */
 int
 init_ui(UI *ui) {
 	ui->npoints = 1;
@@ -73,6 +75,11 @@ init_ui(UI *ui) {
 	init_mass_flow_rate_corrected(ui);
 
 	if (init_comps(ui) != 0) {
+		return 1;
+	}
+
+	if (init_comp_img(ui) != 0) {
+		free_ui(ui);
 		return 1;
 	}
 
@@ -242,6 +249,13 @@ init_comps(UI *ui) {
 	}
 
 	return 0;
+}
+
+static int
+init_comp_img(UI *ui) {
+	const Compressor *comp;
+	comp = &ui->comps[ui->comp_select.idx];
+	return r_push_icon(comp->imgfile);
 }
 
 void
