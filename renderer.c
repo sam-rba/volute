@@ -481,6 +481,16 @@ r_canvas_draw_circle(int id, int x, int y, int r, mu_Color color) {
 	return 0;
 }
 
+void
+r_clear_canvas(int id) {
+	Canvas canvas;
+
+	expect(id >= 0 && id < canvas_list.idx);
+
+	canvas = canvas_list.items[id];
+	clear_surface(canvas.fg);
+}
+
 /* Render a canvas to its underlying icon texture. Returns the id of the icon, or -1 on error. */
 int
 r_render_canvas(int id) {
