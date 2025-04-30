@@ -81,7 +81,6 @@ static void clip(mu_Rect rect);
 static void draw_rect(mu_Rect rect, mu_Color color);
 static void draw_text(mu_Font font, mu_Vec2 pos, mu_Color color, const char *str);
 static void draw_icon(int id, mu_Rect r);
-static int render_canvas(Canvas c);
 static void clear_surface(SDL_Surface *s);
 static SDL_Rect surface_rect(const SDL_Surface *s);
 static void free_canvas(Canvas *c);
@@ -482,36 +481,42 @@ r_canvas_draw_circle(int id, int x, int y, int r, mu_Color color) {
 	return 0;
 }
 
-static int
-render_canvas(Canvas c) {
+/* Render a canvas to its underlying icon texture. Returns the id of the icon, or -1 on error. */
+int
+r_render_canvas(int id) {
+	Canvas canvas;
 	SDL_Rect src_rect, dst_rect;
 	SDL_Texture **texture;
 
-	clear_surface(c.dst);
+	expect(id >= 0 && id < canvas_list.idx);
 
-	src_rect = surface_rect(c.bg);
-	dst_rect = surface_rect(c.dst);
-	if (SDL_BlitSurface(c.bg, &src_rect, c.dst, &dst_rect) != 0) {
+	canvas = canvas_list.items[id];
+
+	clear_surface(canvas.dst);
+
+	src_rect = surface_rect(canvas.bg);
+	dst_rect = surface_rect(canvas.dst);
+	if (SDL_BlitSurface(canvas.bg, &src_rect, canvas.dst, &dst_rect) != 0) {
 		fprintf(stderr, "%s\n", SDL_GetError());
-		return 1;
+		return -1;
 	}
 
-	src_rect = surface_rect(c.fg);
-	dst_rect = surface_rect(c.dst);
-	if (SDL_BlitSurface(c.fg, &src_rect, c.dst, &dst_rect) != 0) {
+	src_rect = surface_rect(canvas.fg);
+	dst_rect = surface_rect(canvas.dst);
+	if (SDL_BlitSurface(canvas.fg, &src_rect, canvas.dst, &dst_rect) != 0) {
 		fprintf(stderr, "%s\n", SDL_GetError());
-		return 1;
+		return -1;
 	}
 
-	texture = &icon_list.items[c.icon_id];
+	texture = &icon_list.items[canvas.icon_id];
 	SDL_DestroyTexture(*texture);
-	*texture = SDL_CreateTextureFromSurface(renderer, c.dst);
+	*texture = SDL_CreateTextureFromSurface(renderer, canvas.dst);
 	if (!*texture) {
 		fprintf(stderr, "%s\n", SDL_GetError());
-		return 1;
+		return -1;
 	}
 
-	return 0;
+	return canvas.icon_id;
 }
 
 static void
