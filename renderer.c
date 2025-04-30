@@ -72,7 +72,6 @@ typedef struct {
 
 
 static void print_info(void);
-static int draw_circle(void);
 static int text_width(mu_Font mufont, const char *str, int len);
 static int text_height(mu_Font mufont);
 static void handle_event(SDL_Event e, mu_Context *ctx);
@@ -82,7 +81,10 @@ static void clip(mu_Rect rect);
 static void draw_rect(mu_Rect rect, mu_Color color);
 static void draw_text(mu_Font font, mu_Vec2 pos, mu_Color color, const char *str);
 static void draw_icon(int id, mu_Rect r);
-static void free_canvas(Canvas c);
+static int render_canvas(Canvas c);
+static void clear_surface(SDL_Surface *s);
+static SDL_Rect surface_rect(const SDL_Surface *s);
+static void free_canvas(Canvas *c);
 
 
 static SDL_Window *window = NULL;
@@ -90,8 +92,6 @@ static SDL_Renderer *renderer = NULL;
 
 mu_stack(SDL_Texture *, ICONLIST_SIZE) icon_list;
 mu_stack(Canvas, CANVASLIST_SIZE) canvas_list;
-
-SDL_Surface *circle;
 
 
 /* Initialize the window and renderer. Returns non-zero on error. */
@@ -133,22 +133,17 @@ r_init(mu_Context *ctx, const char *title) {
 	ctx->text_width = text_width;
 	ctx->text_height = text_height;
 
-	if (draw_circle() != 0) {
-		return 1;
-	}
-
 	return 0;
 }
 
 void
 r_free(void) {
-	while (icon_list.idx > 0) {
-		r_remove_icon(icon_list.idx-1);
-	}
 	while (canvas_list.idx > 0) {
 		r_remove_canvas(canvas_list.idx-1);
 	}
-	SDL_FreeSurface(circle);
+	while (icon_list.idx > 0) {
+		r_remove_icon(icon_list.idx-1);
+	}
 }
 
 static void
@@ -160,30 +155,6 @@ print_info(void) {
 	}
 	printf("Using renderer %s\n", info.name);
 	fflush(stdout);
-}
-
-static int
-draw_circle(void) {
-	int x, y;
-	uint8_t *p;
-
-	circle = SDL_CreateRGBSurface(0, 2*CIRCLE_RADIUS, 2*CIRCLE_RADIUS, RGBA_DEPTH, 0, 0, 0, 0);
-	if (!circle) {
-		fprintf(stderr, "%s\n", SDL_GetError());
-		return 1;
-	}
-
-	for (y = 0; y < circle->h; y++) {
-		for (x = 0; x < circle->w; x++) {
-			p = (uint8_t *) circle->pixels + y*circle->pitch + x*RGBA_BYTES_PER_PIXEL;
-			p[0] = RGB_RED;
-		}
-	}
-
-	return 0;
-
-	/* TODO */
-	
 }
 
 static int
@@ -413,13 +384,12 @@ r_get_icon_size(int id, int *w, int *h) {
 int
 r_add_canvas(const char *bg_img_path) {
 	Canvas *c;
+	SDL_Texture **texture;
 
 	expect(canvas_list.idx < CANVASLIST_SIZE);
 	expect(icon_list.idx < ICONLIST_SIZE);
 
 	c = &canvas_list.items[canvas_list.idx];
-
-	c->icon_id = icon_list.idx;
 
 	c->bg = IMG_Load(bg_img_path);
 	if (!c->bg) {
@@ -442,7 +412,18 @@ r_add_canvas(const char *bg_img_path) {
 		return -1;
 	}
 
+	c->icon_id = icon_list.idx;
+	texture = &icon_list.items[c->icon_id];
+	*texture = SDL_CreateTextureFromSurface(renderer, c->dst);
+	if (!*texture) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		SDL_FreeSurface(c->bg);
+		SDL_FreeSurface(c->fg);
+		SDL_FreeSurface(c->dst);
+		return -1;
+	}
 	icon_list.idx++;
+
 	return canvas_list.idx++;
 }
 
@@ -453,9 +434,7 @@ r_remove_canvas(int id) {
 
 	expect(id >= 0 && id < canvas_list.idx);
 
-	r_remove_icon(canvas_list.items[id].icon_id);
-
-	free_canvas(canvas_list.items[id]);
+	free_canvas(&canvas_list.items[id]);
 
 	dst = canvas_list.items + id;
 	src= canvas_list.items + id + 1;
@@ -465,9 +444,94 @@ r_remove_canvas(int id) {
 	canvas_list.idx--;
 }
 
+int
+r_canvas_draw_circle(int id, int x, int y, int r, mu_Color color) {
+	SDL_Surface *circle;
+	int i, j;
+	uint8_t *p;
+	SDL_Rect src_rect, dst_rect;
+	const Canvas *canvas;
+
+	expect(id >= 0 && id < canvas_list.idx);
+
+	circle = SDL_CreateRGBSurface(0, 2*r, 2*r, RGBA_DEPTH, 0, 0, 0, 0);
+	if (!circle) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return 1;
+	}
+
+	/* TODO */
+	for (j = 0; j < circle->h; j++) {
+		for (i = 0; i < circle->w; i++) {
+			p = (uint8_t *) circle->pixels + j*circle->pitch + i*RGBA_BYTES_PER_PIXEL;
+			p[0] = RGB_RED;
+		}
+	}
+
+	src_rect = (SDL_Rect) {0, 0, circle->w, circle->h};
+	canvas = &canvas_list.items[id];
+	dst_rect = (SDL_Rect) {x+r, y+r, 2*r, 2*r};
+	if (SDL_BlitSurface(circle, &src_rect, canvas->fg, &dst_rect) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		SDL_FreeSurface(circle);
+		return 1;
+	}
+
+	SDL_FreeSurface(circle);
+
+	return 0;
+}
+
+static int
+render_canvas(Canvas c) {
+	SDL_Rect src_rect, dst_rect;
+	SDL_Texture **texture;
+
+	clear_surface(c.dst);
+
+	src_rect = surface_rect(c.bg);
+	dst_rect = surface_rect(c.dst);
+	if (SDL_BlitSurface(c.bg, &src_rect, c.dst, &dst_rect) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return 1;
+	}
+
+	src_rect = surface_rect(c.fg);
+	dst_rect = surface_rect(c.dst);
+	if (SDL_BlitSurface(c.fg, &src_rect, c.dst, &dst_rect) != 0) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return 1;
+	}
+
+	texture = &icon_list.items[c.icon_id];
+	SDL_DestroyTexture(*texture);
+	*texture = SDL_CreateTextureFromSurface(renderer, c.dst);
+	if (!*texture) {
+		fprintf(stderr, "%s\n", SDL_GetError());
+		return 1;
+	}
+
+	return 0;
+}
+
 static void
-free_canvas(Canvas c) {
-	SDL_FreeSurface(c.bg);
-	SDL_FreeSurface(c.fg);
-	SDL_FreeSurface(c.dst);
+clear_surface(SDL_Surface *s) {
+	size_t size;
+
+	size = s->h * s->pitch;
+	memset((uint8_t *) s->pixels, 0, size);
+}
+
+static SDL_Rect
+surface_rect(const SDL_Surface *s) {
+	return (SDL_Rect)  {0, 0, s->w, s->h};
+}
+
+static void
+free_canvas(Canvas *c) {
+	r_remove_icon(c->icon_id);
+	c->icon_id = -1;
+	SDL_FreeSurface(c->bg);
+	SDL_FreeSurface(c->fg);
+	SDL_FreeSurface(c->dst);
 }
