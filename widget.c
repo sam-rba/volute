@@ -23,7 +23,7 @@ static const char *sc_selected_name(w_Select_Compressor *select);
 static int select_compressor_active(mu_Context *ctx, w_Select_Compressor *select);
 static void sc_filter(w_Select_Compressor *select);
 static void update_active(mu_Context *ctx, mu_Id id, mu_Rect r, int *active);
-
+static int render_canvas(w_Canvas *canvas);
 
 void
 w_init_field(w_Field *f) {
@@ -342,6 +342,8 @@ w_init_canvas(w_Canvas *c, const char *bg_img_path) {
 		weprintf("failed to create canvas widget");
 		return 1;
 	}
+	c->dirty = 1;
+	c->icon_id = -1;
 	return 0;
 }
 
@@ -349,4 +351,39 @@ void
 w_free_canvas(w_Canvas *c) {
 	r_remove_canvas(c->id);
 	c->id = -1;
+	c->icon_id = -1;
+}
+
+/* Returns non-zero on error. */
+int
+w_canvas(mu_Context *ctx, w_Canvas *canvas) {
+	int id, icon_id;
+	mu_Rect r;
+
+	id = mu_get_id(ctx, &canvas, sizeof(canvas));
+	r = mu_layout_next(ctx);
+	mu_update_control(ctx, id, r, 0);
+
+	icon_id = render_canvas(canvas);
+	if (icon_id < 0) {
+		weprintf("failed to render canvas");
+		return 1;
+	}
+	mu_draw_icon(ctx, icon_id, r, WHITE);
+	return 0;
+}
+
+/* Render the canvas if it is dirty. Returns the icon id, or -1 on error. */
+static int
+render_canvas(w_Canvas *canvas) {
+	if (!canvas->dirty) {
+		return canvas->icon_id;
+	}
+
+	canvas->icon_id = r_render_canvas(canvas->id);
+	if (canvas->icon_id < 0) {
+		return -1;
+	}
+	canvas->dirty = 0;
+	return canvas->icon_id;
 }

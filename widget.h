@@ -78,7 +78,10 @@ void w_image(mu_Context *ctx, w_Image *img);
 
 typedef struct {
 	int id; /* renderer canvas id. */
+	int dirty; /* the canvas must be re-rendered. */
+	int icon_id; /* renderer icon id. Only valid if !dirty. */
 } w_Canvas;
 
 int w_init_canvas(w_Canvas *c, const char *bg_img_path);
 void w_free_canvas(w_Canvas *c);
+int w_canvas(mu_Context *ctx, w_Canvas *canvas);
