@@ -92,7 +92,7 @@ void
 free_ui(UI *ui) {
 	w_free_select_compressor(&ui->comp_select);
 	free(ui->comps);
-	w_free_image(&ui->comp_img);
+	w_free_canvas(&ui->comp_img);
 }
 
 static void
@@ -256,9 +256,8 @@ static int
 init_comp_img(UI *ui) {
 	const Compressor *comp;
 
-	w_init_image(&ui->comp_img);
 	comp = &ui->comps[ui->comp_select.idx];
-	return w_set_image(&ui->comp_img, comp->imgfile);
+	return w_init_canvas(&ui->comp_img, comp->imgfile);
 }
 
 void

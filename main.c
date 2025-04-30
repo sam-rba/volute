@@ -415,7 +415,7 @@ comp_img(mu_Context *ctx, UI *ui) {
 
 	mu_layout_set_next(ctx, img, 0);
 
-	w_image(ctx, &ui->comp_img);
+	w_canvas(ctx, &ui->comp_img);
 }
 
 static void

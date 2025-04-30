@@ -354,8 +354,7 @@ w_free_canvas(w_Canvas *c) {
 	c->icon_id = -1;
 }
 
-/* Returns non-zero on error. */
-int
+void
 w_canvas(mu_Context *ctx, w_Canvas *canvas) {
 	int id, icon_id;
 	mu_Rect r;
@@ -367,10 +366,9 @@ w_canvas(mu_Context *ctx, w_Canvas *canvas) {
 	icon_id = render_canvas(canvas);
 	if (icon_id < 0) {
 		weprintf("failed to render canvas");
-		return 1;
+		return;
 	}
 	mu_draw_icon(ctx, icon_id, r, WHITE);
-	return 0;
 }
 
 /* Render the canvas if it is dirty. Returns the icon id, or -1 on error. */

@@ -84,4 +84,4 @@ typedef struct {
 
 int w_init_canvas(w_Canvas *c, const char *bg_img_path);
 void w_free_canvas(w_Canvas *c);
-int w_canvas(mu_Context *ctx, w_Canvas *canvas);
+void w_canvas(mu_Context *ctx, w_Canvas *canvas);
