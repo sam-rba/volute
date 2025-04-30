@@ -74,3 +74,11 @@ void w_init_image(w_Image *img);
 void w_free_image(w_Image *img);
 int w_set_image(w_Image *img, const char *path);
 void w_image(mu_Context *ctx, w_Image *img);
+
+
+typedef struct {
+	int id; /* renderer canvas id. */
+} w_Canvas;
+
+int w_init_canvas(w_Canvas *c, const char *bg_img_path);
+void w_free_canvas(w_Canvas *c);

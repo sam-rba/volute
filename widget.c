@@ -333,3 +333,20 @@ update_active(mu_Context *ctx, mu_Id id, mu_Rect r, int *active) {
 	mu_update_control(ctx, id, r, 0);
 	*active ^= (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == id);
 }
+
+/* Create a canvas with the background loaded from an image file. Returns non-zero on error. */
+int
+w_init_canvas(w_Canvas *c, const char *bg_img_path) {
+	c->id = r_add_canvas(bg_img_path);
+	if (c->id < 0) {
+		weprintf("failed to create canvas widget");
+		return 1;
+	}
+	return 0;
+}
+
+void
+w_free_canvas(w_Canvas *c) {
+	r_remove_canvas(c->id);
+	c->id = -1;
+}
