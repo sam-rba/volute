@@ -18,6 +18,12 @@
   } while (0)
 
 
+#define PIXEL_DEPTH 32
+#define RMASK 0xFF000000u
+#define GMASK 0x00FF0000u
+#define BMASK 0x0000FF00u
+#define AMASK 0x000000FFu
+
 enum window {
 	WIDTH = 640,
 	HEIGHT = 480,
@@ -31,16 +37,6 @@ enum {
 };
 
 enum { CIRCLE_RADIUS = 16 };
-
-enum rgb {
-	RGBA_DEPTH = 4*4,
-
-	RGB_RED = 0xFu << 3,
-	RGB_GREEN = 0xFu << 2,
-	RGB_BLUE = 0xFu << 1,
-
-	RGBA_BYTES_PER_PIXEL = RGBA_DEPTH / 8,
-};
 
 static const char FONT[] = "font/P052-Roman.ttf";
 enum font { FONTSIZE = 14, };
@@ -70,6 +66,8 @@ typedef struct {
 	int icon_id;
 } Canvas;
 
+typedef uint32_t Pixel;
+
 
 static void print_info(void);
 static int text_width(mu_Font mufont, const char *str, int len);
@@ -81,6 +79,8 @@ static void clip(mu_Rect rect);
 static void draw_rect(mu_Rect rect, mu_Color color);
 static void draw_text(mu_Font font, mu_Vec2 pos, mu_Color color, const char *str);
 static void draw_icon(int id, mu_Rect r);
+static void set_pixel(SDL_Surface *s, int x, int y, mu_Color color);
+static Pixel pixel(mu_Color c);
 static void clear_surface(SDL_Surface *s);
 static SDL_Rect surface_rect(const SDL_Surface *s);
 static void free_canvas(Canvas *c);
@@ -396,14 +396,14 @@ r_add_canvas(const char *bg_img_path) {
 		return -1;
 	}
 
-	c->fg = SDL_CreateRGBSurface(0, c->bg->w, c->bg->h, RGBA_DEPTH, 0, 0, 0, 0);
+	c->fg = SDL_CreateRGBSurface(0, c->bg->w, c->bg->h, PIXEL_DEPTH, RMASK, GMASK, BMASK, AMASK);
 	if (!c->fg) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 		SDL_FreeSurface(c->bg);
 		return -1;
 	}
 
-	c->dst = SDL_CreateRGBSurface(0, c->bg->w, c->bg->h, RGBA_DEPTH, 0, 0, 0, 0);
+	c->dst = SDL_CreateRGBSurface(0, c->bg->w, c->bg->h, PIXEL_DEPTH, RMASK, GMASK, BMASK, AMASK);
 	if (!c->dst) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 		SDL_FreeSurface(c->bg);
@@ -443,42 +443,35 @@ r_remove_canvas(int id) {
 	canvas_list.idx--;
 }
 
-int
+void
 r_canvas_draw_circle(int id, int x, int y, int r, mu_Color color) {
-	SDL_Surface *circle;
-	int i, j;
-	uint8_t *p;
-	SDL_Rect src_rect, dst_rect;
 	const Canvas *canvas;
+	int dy, dx;
 
 	expect(id >= 0 && id < canvas_list.idx);
 
-	circle = SDL_CreateRGBSurface(0, 2*r, 2*r, RGBA_DEPTH, 0, 0, 0, 0);
-	if (!circle) {
-		fprintf(stderr, "%s\n", SDL_GetError());
-		return 1;
-	}
+	canvas = &canvas_list.items[id];
 
-	/* TODO */
-	for (j = 0; j < circle->h; j++) {
-		for (i = 0; i < circle->w; i++) {
-			p = (uint8_t *) circle->pixels + j*circle->pitch + i*RGBA_BYTES_PER_PIXEL;
-			p[0] = RGB_RED;
+	for (dy = -r; dy <= r; dy++) {
+		for (dx = -r; dx <= r; dx++) {
+			if (dx*dx + dy*dy <= r*r) {
+				set_pixel(canvas->fg, x+dx, y+dy, color);
+			}
 		}
 	}
+}
 
-	src_rect = (SDL_Rect) {0, 0, circle->w, circle->h};
-	canvas = &canvas_list.items[id];
-	dst_rect = (SDL_Rect) {x+r, y+r, 2*r, 2*r};
-	if (SDL_BlitSurface(circle, &src_rect, canvas->fg, &dst_rect) != 0) {
-		fprintf(stderr, "%s\n", SDL_GetError());
-		SDL_FreeSurface(circle);
-		return 1;
-	}
+static void
+set_pixel(SDL_Surface *s, int x, int y, mu_Color color) {
+	Pixel *p;
 
-	SDL_FreeSurface(circle);
+	p = (Pixel *) ((uint8_t *) s->pixels + y*s->pitch + x*s->format->BytesPerPixel);
+	*p = pixel(color);
+}
 
-	return 0;
+static Pixel
+pixel(mu_Color c) {
+	return (c.r << 24) | (c.g << 16) | (c.b << 8) | (c.a << 0);
 }
 
 void

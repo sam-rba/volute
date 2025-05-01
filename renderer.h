@@ -10,6 +10,6 @@ void r_get_icon_size(int id, int *w, int *h);
 
 int r_add_canvas(const char *bg_img_path);
 void r_remove_canvas(int id);
-int r_canvas_draw_circle(int id, int x, int y, int r, mu_Color color);
+void r_canvas_draw_circle(int id, int x, int y, int r, mu_Color color);
 void r_clear_canvas(int id);
 int r_render_canvas(int id);
