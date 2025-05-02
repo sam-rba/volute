@@ -86,3 +86,4 @@ int w_init_canvas(w_Canvas *c, const char *bg_img_path);
 void w_free_canvas(w_Canvas *c);
 void w_canvas(mu_Context *ctx, w_Canvas *canvas);
 void w_canvas_draw_circle(w_Canvas *canvas, int x, int y, int r, mu_Color color);
+void w_clear_canvas(w_Canvas *canvas);

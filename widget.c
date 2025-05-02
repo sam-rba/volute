@@ -390,3 +390,9 @@ w_canvas_draw_circle(w_Canvas *canvas, int x, int y, int r, mu_Color color) {
 	r_canvas_draw_circle(canvas->id, x, y, r, color);
 	canvas->dirty = 1;
 }
+
+void
+w_clear_canvas(w_Canvas *canvas) {
+	r_clear_canvas(canvas->id);
+	canvas->dirty = 1;
+}

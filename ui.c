@@ -443,7 +443,7 @@ compute(UI *ui, int idx) {
 	compute_mass_flow_rate(ui, idx);
 	compute_mass_flow_rate_corrected(ui, idx);
 
-	/* TODO: clear canvas. */
+	w_clear_canvas(&ui->comp_img);
 	draw_point(ui, idx, POINT_COLOR);
 }
 
