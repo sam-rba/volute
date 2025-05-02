@@ -1,12 +1,14 @@
+typedef enum {
+	MASS_FLOW,
+	VOLUME_FLOW,
+} FlowType;
+
 typedef struct {
 	union {
 		MassFlowRate mfr;
 		VolumeFlowRate vfr;
 	} u;
-	enum {
-		MASS_FLOW,
-		VOLUME_FLOW
-	} t;
+	FlowType t;
 } Flow;
 
 typedef struct {

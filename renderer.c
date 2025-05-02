@@ -8,15 +8,7 @@
 #include "microui.h"
 #include "renderer.h"
 #include "color.h"
-
-
-#define expect(x) do {                                               \
-    if (!(x)) {                                                      \
-      fprintf(stderr, "Fatal error: %s:%d: assertion '%s' failed\n", \
-        __FILE__, __LINE__, #x);                                     \
-      abort();                                                       \
-    }                                                                \
-  } while (0)
+#include "util.h"
 
 
 #define PIXEL_DEPTH 32

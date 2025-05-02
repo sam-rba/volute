@@ -13,6 +13,7 @@
 #include "ui.h"
 #include "eprintf.h"
 #include "color.h"
+#include "util.h"
 
 
 #define DEFAULT_DISPLACEMENT (litre(1.5))
@@ -25,7 +26,7 @@
 #define DEFAULT_INTERCOOLER_EFFICIENCY (percent(90))
 #define DEFAULT_INTERCOOLER_DELTAP (psi(0.2))
 
-enum { POINT_RADIUS = 8 };
+enum { POINT_RADIUS = 6 };
 
 static const mu_Color POINT_COLOR = RED;
 
@@ -55,6 +56,7 @@ static void compute_mass_flow_rate(UI *ui, int idx);
 static void compute_mass_flow_rate_corrected(UI *ui, int idx);
 static void draw_point(UI *ui, int idx, mu_Color color);
 static void point_coords(UI *ui, int idx, int *x, int *y);
+static const Compressor *selected_compressor(UI *ui);
 
 
 /* Returns non-zero on error. The renderer must already be initialized. */
@@ -434,8 +436,6 @@ set_intercooler_deltap_unit(UI *ui) {
 
 void
 compute(UI *ui, int idx) {
-	draw_point(ui, idx, TRANSPARENT);
-
 	compute_pressure_ratio(ui, idx);
 	compute_comp_outlet_temperature(ui, idx);
 	compute_manifold_temperature(ui, idx);
@@ -443,6 +443,7 @@ compute(UI *ui, int idx) {
 	compute_mass_flow_rate(ui, idx);
 	compute_mass_flow_rate_corrected(ui, idx);
 
+	/* TODO: clear canvas. */
 	draw_point(ui, idx, POINT_COLOR);
 }
 
@@ -543,7 +544,38 @@ draw_point(UI *ui, int idx, mu_Color color) {
 
 static void
 point_coords(UI *ui, int idx, int *x, int *y) {
-	/* TODO */
+	const Compressor *comp;
+	const Engine *engine;
+	double flow, origin_flow, ref_flow, r, pr;
+
+	comp = selected_compressor(ui);
+	engine = &ui->points[idx];
+
+	expect(comp->origin.flow.t == comp->ref.flow.t);
+	switch (comp->origin.flow.t) {
+	case MASS_FLOW:
+		flow = mass_flow_rate_corrected(engine);
+		origin_flow = comp->origin.flow.u.mfr;
+		ref_flow = comp->ref.flow.u.mfr;
+	break; case VOLUME_FLOW:
+		flow = volume_flow_rate(engine);
+		origin_flow = comp->origin.flow.u.vfr;
+		ref_flow = comp->ref.flow.u.vfr;
+	break; default:
+		eprintf("impossible FlowType: %d", comp->origin.flow.t);
+	}
+
+	r = (flow - origin_flow) / (ref_flow - origin_flow);
+	*x = comp->origin.x + r * (comp->ref.x - comp->origin.x);
+
+	pr = pressure_ratio(engine);
+	r = (pr - comp->origin.pr) / (comp->ref.pr - comp->origin.pr);
+	*y = comp->origin.y + r * (comp->ref.y - comp->origin.y);
+}
+
+static const Compressor *
+selected_compressor(UI *ui) {
+	return &ui->comps[ui->comp_select.idx];
 }
 
 void
