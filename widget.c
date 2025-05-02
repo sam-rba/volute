@@ -387,6 +387,7 @@ render_canvas(w_Canvas *canvas) {
 }
 
 void
-w_canvas_draw_circle(w_Canvas canvas, int x, int y, int r, mu_Color color) {
-	r_canvas_draw_circle(canvas.id, x, y, r, color);
+w_canvas_draw_circle(w_Canvas *canvas, int x, int y, int r, mu_Color color) {
+	r_canvas_draw_circle(canvas->id, x, y, r, color);
+	canvas->dirty = 1;
 }
