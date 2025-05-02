@@ -396,3 +396,10 @@ w_clear_canvas(w_Canvas *canvas) {
 	r_clear_canvas(canvas->id);
 	canvas->dirty = 1;
 }
+
+/* Set the background image of the canvas. Returns non-zero on error. */
+int
+w_canvas_set_bg(w_Canvas *canvas, const char *path) {
+	r_remove_canvas(canvas->id);
+	return w_init_canvas(canvas, path);
+}

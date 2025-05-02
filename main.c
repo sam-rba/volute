@@ -12,6 +12,7 @@
 #include "engine.h"
 #include "ui.h"
 #include "color.h"
+#include "eprintf.h"
 
 
 /* Macros. */
@@ -386,8 +387,14 @@ mass_flow_rate_corrected_row(mu_Context *ctx, UI *ui) {
 
 static void
 comp_select(mu_Context *ctx, UI *ui) {
+	const Compressor *comp;
+
 	if (w_select_compressor(ctx, &ui->comp_select) & MU_RES_CHANGE) {
-		/* TODO */
+		comp = &ui->comps[ui->comp_select.idx];
+		if (w_canvas_set_bg(&ui->comp_img, comp->imgfile) != 0) {
+			weprintf("failed to set compressor image: %s", comp->imgfile);
+		}
+		compute_all(ui);
 	}
 }
 
