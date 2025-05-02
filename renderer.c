@@ -445,6 +445,7 @@ r_canvas_draw_circle(int id, int x, int y, int r, mu_Color color) {
 
 	canvas = &canvas_list.items[id];
 
+	#pragma omp parallel for
 	for (dy = -r; dy <= r; dy++) {
 		for (dx = -r; dx <= r; dx++) {
 			if (dx*dx + dy*dy <= r*r) {

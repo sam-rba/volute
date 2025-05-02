@@ -539,7 +539,7 @@ draw_points(UI *ui) {
 	int i;
 
 	w_clear_canvas(&ui->comp_img);
-	/* TODO: parallelize? */
+	#pragma omp parallel for
 	for (i = 0; i < ui->npoints; i++) {
 		draw_point(ui, i, POINT_COLOR);
 	}
