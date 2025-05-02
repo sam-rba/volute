@@ -54,6 +54,7 @@ static void compute_manifold_temperature(UI *ui, int idx);
 static void compute_volume_flow_rate(UI *ui, int idx);
 static void compute_mass_flow_rate(UI *ui, int idx);
 static void compute_mass_flow_rate_corrected(UI *ui, int idx);
+static void draw_points(UI *ui);
 static void draw_point(UI *ui, int idx, mu_Color color);
 static void point_coords(UI *ui, int idx, int *x, int *y);
 static const Compressor *selected_compressor(UI *ui);
@@ -443,8 +444,7 @@ compute(UI *ui, int idx) {
 	compute_mass_flow_rate(ui, idx);
 	compute_mass_flow_rate_corrected(ui, idx);
 
-	w_clear_canvas(&ui->comp_img);
-	draw_point(ui, idx, POINT_COLOR);
+	draw_points(ui);
 }
 
 void
@@ -532,6 +532,17 @@ compute_mass_flow_rate_corrected(UI *ui, int idx) {
 	convert = mass_flow_rate_readers[unit_idx];
 	v = convert(mass_flow_rate_corrected(&ui->points[idx]));
 	w_set_number(ui->mass_flow_rate_corrected[idx], v);
+}
+
+static void
+draw_points(UI *ui) {
+	int i;
+
+	w_clear_canvas(&ui->comp_img);
+	/* TODO: parallelize? */
+	for (i = 0; i < ui->npoints; i++) {
+		draw_point(ui, i, POINT_COLOR);
+	}
 }
 
 static void
