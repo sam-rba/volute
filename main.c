@@ -326,6 +326,7 @@ dup_del_row(mu_Context *ctx, UI *ui) {
 		}
 		if (mu_button(ctx, "Del")) {
 			remove_point(ui, i);
+			compute_all(ui);
 		}
 		mu_pop_id(ctx);
 	}
