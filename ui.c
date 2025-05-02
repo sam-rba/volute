@@ -12,6 +12,7 @@
 #include "engine.h"
 #include "ui.h"
 #include "eprintf.h"
+#include "color.h"
 
 
 #define DEFAULT_DISPLACEMENT (litre(1.5))
@@ -23,6 +24,10 @@
 #define DEFAULT_COMPRESSOR_EFFICIENCY (percent(70))
 #define DEFAULT_INTERCOOLER_EFFICIENCY (percent(90))
 #define DEFAULT_INTERCOOLER_DELTAP (psi(0.2))
+
+enum { POINT_RADIUS = 8 };
+
+static const mu_Color POINT_COLOR = RED;
 
 
 static void init_displacement(UI *ui);
@@ -48,6 +53,8 @@ static void compute_manifold_temperature(UI *ui, int idx);
 static void compute_volume_flow_rate(UI *ui, int idx);
 static void compute_mass_flow_rate(UI *ui, int idx);
 static void compute_mass_flow_rate_corrected(UI *ui, int idx);
+static void draw_point(UI *ui, int idx, mu_Color color);
+static void point_coords(UI *ui, int idx, int *x, int *y);
 
 
 /* Returns non-zero on error. The renderer must already be initialized. */
@@ -427,12 +434,16 @@ set_intercooler_deltap_unit(UI *ui) {
 
 void
 compute(UI *ui, int idx) {
+	draw_point(ui, idx, TRANSPARENT);
+
 	compute_pressure_ratio(ui, idx);
 	compute_comp_outlet_temperature(ui, idx);
 	compute_manifold_temperature(ui, idx);
 	compute_volume_flow_rate(ui, idx);
 	compute_mass_flow_rate(ui, idx);
 	compute_mass_flow_rate_corrected(ui, idx);
+
+	draw_point(ui, idx, POINT_COLOR);
 }
 
 void
@@ -520,6 +531,19 @@ compute_mass_flow_rate_corrected(UI *ui, int idx) {
 	convert = mass_flow_rate_readers[unit_idx];
 	v = convert(mass_flow_rate_corrected(&ui->points[idx]));
 	w_set_number(ui->mass_flow_rate_corrected[idx], v);
+}
+
+static void
+draw_point(UI *ui, int idx, mu_Color color) {
+	int x, y;
+
+	point_coords(ui, idx, &x, &y);
+	w_canvas_draw_circle(&ui->comp_img, x, y, POINT_RADIUS, color);
+}
+
+static void
+point_coords(UI *ui, int idx, int *x, int *y) {
+	/* TODO */
 }
 
 void

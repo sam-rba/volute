@@ -7,6 +7,7 @@
 #include <SDL2/SDL_image.h>
 #include "microui.h"
 #include "renderer.h"
+#include "color.h"
 
 
 #define expect(x) do {                                               \
@@ -41,7 +42,7 @@ enum { CIRCLE_RADIUS = 16 };
 static const char FONT[] = "font/P052-Roman.ttf";
 enum font { FONTSIZE = 14, };
 
-static const mu_Color bg = {255, 255, 255, 255};
+static const mu_Color bg = WHITE;
 
 static const char button_map[256] = {
 	[SDL_BUTTON_LEFT & 0xff] = MU_MOUSE_LEFT,

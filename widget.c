@@ -12,12 +12,11 @@
 #include "widget.h"
 #include "util.h"
 #include "eprintf.h"
+#include "color.h"
 
 
 #define FORMAT "%.5g"
 
-static const mu_Color RED = {255, 0, 0, 255};
-static const mu_Color WHITE = {255, 255, 255, 255};
 
 static const char *sc_selected_name(w_Select_Compressor *select);
 static int select_compressor_active(mu_Context *ctx, w_Select_Compressor *select);

@@ -11,6 +11,7 @@
 #include "widget.h"
 #include "engine.h"
 #include "ui.h"
+#include "color.h"
 
 
 /* Macros. */
@@ -25,11 +26,6 @@ enum window {
 	WIN_OPTS = MU_OPT_NOINTERACT | MU_OPT_NOTITLE | MU_OPT_AUTOSIZE | MU_OPT_NOFRAME,
 };
 
-
-static const mu_Color BLACK = {0, 0, 0, 255};
-static const mu_Color WHITE = {255, 255, 255, 255};
-static const mu_Color LIGHT_GRAY = {222, 222, 222, 255};
-static const mu_Color DARK_GRAY = {128, 128, 128, 255};
 
 static const mu_Color COLOR_TEXT = BLACK;
 static const mu_Color COLOR_BORDER = BLACK;
