@@ -18,6 +18,7 @@ Unfortunately, turbine data are not as readily available as compressor maps are.
 As a result, Volute neglects the turbine side and focuses only on the compressor.
 If you plan to use a BorgWarner turbo, then MatchBot is your best bet because it includes a turbine sizing selector to help you choose the right turbine and housing.
 
+![Screenshot](screenshot.png)
 
 ## Compiling on Linux/BSD/MacOS
 
